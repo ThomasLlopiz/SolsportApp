@@ -1,0 +1,116 @@
+Quiero crear 4 tablas en una base de datos llamada solsport
+Un usuario puede crear varios pedidos
+Un pedido puede tener varios artículos
+Un articulo puede tener varias etapas
+
+usuarios
+id
+nombre
+contrasena
+rool
+
+pedidos
+id
+numero_pedido
+nombre_cliente
+correo
+telefono
+localidad
+fecha_inicio (Esta fecha debe ser la de la primera etapa que se cree con la que esta relacionada este pedido)
+fecha_fin (Esta fecha debe ser la de la última etapa que se cree con la que esta relacionada este pedido)
+fecha_pago
+fecha_estimada
+usuario_id (esto debe ser el id del usuario)
+
+articulos
+id
+nombre
+cantidad
+talle
+fecha_inicio (Esta fecha debe ser la de la primera etapa que se cree con la que esta relacionada este articulo)
+fecha_fin (Esta fecha debe ser la de la última etapa que se cree con la que esta relacionada este articulo)
+etapa	(esta debe ser la última etapa)
+pedidos_id (esto debe ser el id del pedido)
+usuario_id (esto debe ser el id del usuario)
+
+etapas
+id
+nombre
+fecha_inicio
+fecha_fin
+articulos_id (esto debe ser el id del articulo)
+pedidos_id (esto debe ser el id del pedido)
+usuario_id (esto debe ser el id del usuario)
+
+También quiero llenar la tabla 
+
+Hacer backend
+1-Que consuma la base de datos(deben estar en un .env los datos). Listo
+2-Quiero dividir cada tabla por archivos. Listo
+2.1-Login. Listo
+2.2-Pedidos. Listo
+2.3-Aritculos. Listo
+2.4-Etapas. Listo
+3-Quiero un CRUD de cada tabla. Listo
+Hacer frontend
+1-Crear un proyecto de react y tailwindcss con vite. Listo
+2-Crear vista de Login (solo para ingresar). Listo
+3-Crear vista Pedidos.jsx (debe poder crear, mostrar, desconectarse del login y pedidos con un bóton de editar que me lleve al pedido que cliquie). Listo
+4-Mostrar el pedido con sus articulos en Pedido.jsx (debe mostrar el pedido, poder editar donde se muestra y mostra los articulos relacionado con ese pedido, poder crear un articulo y tener un bóton que te lleve al articulo). Listo
+5-Mostrar el articulo con sus etapas en Articulo.jsx (debe mostrar el articulo, poder editar donde se muestra y mostra las etapas relacionadas con ese articulo, se debe poder crear una etapa). Listo
+solsport
+    Estructura Back
+    /backend
+    |-- /controllers
+    |   |-- authController.js
+    |   |-- pedidosController.js
+    |   |-- articulosController.js
+    |   |-- etapasController.js
+    |-- /middlewares
+    |   |-- authMiddleware.js
+    |-- /models
+    |   |-- authModel.js
+    |   |-- pedidosModel.js
+    |   |-- articulosModel.js
+    |   |-- etapasModel.js
+    |-- /routes
+    |   |-- authRoutes.js
+    |   |-- pedidosRoutes.js
+    |   |-- articulosRoutes.js
+    |   |-- etapasRoutes.js
+    |-- /db
+    |   |-- connection.js
+    |-- app.js
+    |-- .env
+    |-- package-lock.json
+    |-- package.json
+    |-- node_modules
+
+    Estructura Front
+    my-app/f
+    ├── src/
+    │   ├── api/
+    │   │   └── axios.js
+    │   ├── assets/
+    │   ├── pages/
+    │   │   ├── Articulo.jsx
+    │   │   ├── Articulos.jsx
+    │   │   ├── Etapas.jsx
+    │   │   ├── Login.jsx
+    │   │   └── Pedido.jsx
+    │   │   └── Pedidos.jsx
+    │   ├── router/
+    │   │   └── AppRouter.jsx
+    │   ├── App.jsx
+    │   ├── index.css
+    │   └── main.jsx
+    ├── .env
+    ├── .eslintrc.cjs
+    ├── .gitignore
+    ├── index.html
+    └── package-lock.json
+    └── package.json
+    ├── package.json
+    └── tailwind.config.js
+    └── vite.config.js
+    └── node_modules
