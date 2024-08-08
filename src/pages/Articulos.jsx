@@ -20,6 +20,7 @@ export const Articulos = ({ pedidoId }) => {
     nombre: "",
     cantidad: "",
     talle: "",
+    comentario: "",
   });
   const [articulos, setArticulos] = useState([]);
   const [editArticulo, setEditArticulo] = useState(null);
@@ -71,12 +72,14 @@ export const Articulos = ({ pedidoId }) => {
   const handleUpdateArticulo = async (e) => {
     e.preventDefault();
     try {
-      const { id, numero_articulo, nombre, cantidad, talle } = editArticulo;
+      const { id, numero_articulo, nombre, cantidad, talle, comentario } =
+        editArticulo;
       const updatedArticulo = {
         numero_articulo,
         nombre,
         cantidad,
         talle,
+        comentario,
         pedidos_id: pedidoId,
       };
       await axios.put(`/articulos/${id}`, updatedArticulo);
@@ -97,6 +100,7 @@ export const Articulos = ({ pedidoId }) => {
         nombre: "",
         cantidad: "",
         talle: "",
+        comentario: "",
       });
       setIsCreateModalOpen(false);
       fetchArticulos();
