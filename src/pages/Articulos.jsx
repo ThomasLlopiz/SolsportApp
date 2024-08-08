@@ -97,6 +97,7 @@ export const Articulos = ({ pedidoId }) => {
         nombre: "",
         cantidad: "",
         talle: "",
+        pedidos_id: pedidoId,
       });
       setIsCreateModalOpen(false);
       fetchArticulos();
