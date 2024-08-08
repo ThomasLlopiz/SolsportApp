@@ -293,7 +293,8 @@ export const Articulos = ({ pedidoId }) => {
               </div>
               <div className="mb-4">
                 <label className="block text-gray-700">Comentario</label>
-                <select
+                <input
+                  type="text"
                   value={newArticulo.comentario}
                   onChange={(e) =>
                     setNewArticulo({
@@ -303,13 +304,7 @@ export const Articulos = ({ pedidoId }) => {
                   }
                   className="w-full border border-gray-300 p-2 rounded"
                   required
-                >
-                  {comentarios.map((comentario) => (
-                    <option key={comentario} value={comentario}>
-                      {comentario}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
               <div className="flex justify-end">
                 <button
