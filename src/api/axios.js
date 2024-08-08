@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const instance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: "https://solsport-backend-production.up.railway.app",
 });
 
 instance.interceptors.request.use(
