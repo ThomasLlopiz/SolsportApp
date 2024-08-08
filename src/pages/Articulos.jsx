@@ -20,6 +20,7 @@ export const Articulos = ({ pedidoId }) => {
     nombre: "",
     cantidad: "",
     talle: "",
+    pedidos_id: "",
   });
   const [articulos, setArticulos] = useState([]);
   const [editArticulo, setEditArticulo] = useState(null);
@@ -97,7 +98,6 @@ export const Articulos = ({ pedidoId }) => {
         nombre: "",
         cantidad: "",
         talle: "",
-        pedidos_id: pedidoId,
       });
       setIsCreateModalOpen(false);
       fetchArticulos();
