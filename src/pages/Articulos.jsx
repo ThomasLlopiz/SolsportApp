@@ -72,7 +72,7 @@ export const Articulos = ({ pedidoId }) => {
   const handleUpdateArticulo = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`/articulos/${updatedArticulo.id}`, {
+      await axios.put(`/articulos/${editArticulo.id}`, {
         numero_articulo: editArticulo.numero_articulo,
         nombre: editArticulo.nombre,
         cantidad: editArticulo.cantidad,
