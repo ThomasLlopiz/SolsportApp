@@ -27,9 +27,6 @@ id
 nombre
 cantidad
 talle
-fecha_inicio (Esta fecha debe ser la de la primera etapa que se cree con la que esta relacionada este articulo)
-fecha_fin (Esta fecha debe ser la de la última etapa que se cree con la que esta relacionada este articulo)
-etapa	(esta debe ser la última etapa)
 pedidos_id (esto debe ser el id del pedido)
 usuario_id (esto debe ser el id del usuario)
 
