@@ -72,17 +72,14 @@ export const Articulos = ({ pedidoId }) => {
   const handleUpdateArticulo = async (e) => {
     e.preventDefault();
     try {
-      const { id, numero_articulo, nombre, cantidad, talle, comentario } =
-        editArticulo;
-      const updatedArticulo = {
-        numero_articulo,
-        nombre,
-        cantidad,
-        talle,
-        comentario,
+      await axios.put(`/articulos/${updatedArticulo.id}`, {
+        numero_articulo: editArticulo.numero_articulo,
+        nombre: editArticulo.nombre,
+        cantidad: editArticulo.cantidad,
+        talle: editArticulo.talle,
+        comentario: editArticulo.comentario,
         pedidos_id: pedidoId,
-      };
-      await axios.put(`/articulos/${id}`, updatedArticulo);
+      });
       setEditArticulo(null);
       setIsEditModalOpen(false);
       fetchArticulos();
