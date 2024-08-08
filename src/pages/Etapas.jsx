@@ -34,6 +34,9 @@ export const Etapas = ({ articuloId, pedidosId }) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const navigate = useNavigate();
+  const [firstDate, setFirstDate] = useState("");
+  const [lastDate, setLastDate] = useState("");
+  const [lastEtapa, setLastEtapa] = useState(null);
 
   useEffect(() => {
     fetchEtapas();
