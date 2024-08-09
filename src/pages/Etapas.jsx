@@ -3,12 +3,21 @@ import axios from "../api/axios";
 import { PencilIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
 
-const formatDate = (dateString) => {
+const formatDateForInput = (dateString) => {
   if (!dateString) return "";
   const date = new Date(dateString);
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const year = date.getFullYear();
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const year = date.getUTCFullYear();
+  return `${year}-${month}-${day}`;
+};
+
+const formatDateForDisplay = (dateString) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const year = date.getUTCFullYear();
   return `${day}/${month}/${year}`;
 };
 
@@ -56,8 +65,8 @@ export const Etapas = ({ articuloId, pedidosId }) => {
         const firstDate = sortedEtapas[0].fecha_inicio;
         const lastDate = sortedEtapas[sortedEtapas.length - 1].fecha_fin;
 
-        setFirstDate(formatDate(firstDate));
-        setLastDate(formatDate(lastDate));
+        setFirstDate(formatDateForDisplay(firstDate));
+        setLastDate(formatDateForDisplay(lastDate));
 
         const lastEtapa = filteredEtapas.find(
           (etapa) => etapa.fecha_fin === lastDate
@@ -110,8 +119,8 @@ export const Etapas = ({ articuloId, pedidosId }) => {
   const handleEditClick = (etapa) => {
     setEditEtapa({
       ...etapa,
-      fecha_inicio: etapa.fecha_inicio ? etapa.fecha_inicio.slice(0, 10) : "",
-      fecha_fin: etapa.fecha_fin ? etapa.fecha_fin.slice(0, 10) : "",
+      fecha_inicio: formatDateForInput(etapa.fecha_inicio),
+      fecha_fin: formatDateForInput(etapa.fecha_fin),
     });
     setIsEditModalOpen(true);
   };
@@ -287,10 +296,10 @@ export const Etapas = ({ articuloId, pedidosId }) => {
             <tr key={etapa.id}>
               <td className="py-2 px-4 border-b">{etapa.nombre}</td>
               <td className="py-2 px-4 border-b">
-                {formatDate(etapa.fecha_inicio)}
+                {formatDateForDisplay(etapa.fecha_inicio)}
               </td>
               <td className="py-2 px-4 border-b">
-                {formatDate(etapa.fecha_fin)}
+                {formatDateForDisplay(etapa.fecha_fin)}
               </td>
               <td className="py-2 px-4 border-b">{etapa.usuario_nombre}</td>
               <td className="py-2 px-4 border-b">
