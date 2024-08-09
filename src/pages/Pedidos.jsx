@@ -11,9 +11,9 @@ import {
 const formatDate = (dateString) => {
   if (!dateString) return "";
   const date = new Date(dateString);
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const year = date.getFullYear();
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const year = date.getUTCFullYear();
   return `${day}/${month}/${year}`;
 };
 
@@ -100,23 +100,24 @@ export const Pedidos = () => {
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <h1 className="text-2xl font-bold mb-6 text-center">PEDIDOS</h1>
-      <div className="flex justify-between">
+      <div className="flex justify-between mb-4">
         <button
           onClick={() => setIsCreateModalOpen(true)}
-          className="bg-blue-500 text-white px-4 py-2 rounded mb-4 flex items-center"
+          className="bg-blue-500 text-white px-4 py-2 rounded flex items-center"
         >
           <PlusIcon className="h-5 w-5 mr-2" />
           Crear Nuevo Pedido
         </button>
         <button
           onClick={handleLogout}
-          className="bg-red-500 text-white px-4 py-2 rounded mb-4 flex items-center"
+          className="bg-red-500 text-white px-4 py-2 rounded flex items-center"
         >
           <ArrowRightOnRectangleIcon className="h-5 w-5 mr-2" />
           Cerrar sesión
         </button>
       </div>
 
+      {/* Modal de Crear Pedido */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
@@ -237,6 +238,7 @@ export const Pedidos = () => {
         </div>
       )}
 
+      {/* Modal de Editar Pedido */}
       {isEditModalOpen && editPedido && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
@@ -357,6 +359,7 @@ export const Pedidos = () => {
         </div>
       )}
 
+      {/* Tabla de Pedidos */}
       <div className="overflow-x-auto bg-white shadow-md rounded-lg">
         <table className="min-w-full bg-white">
           <thead className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
@@ -391,18 +394,18 @@ export const Pedidos = () => {
                   {formatDate(pedido.fecha_estimada)}
                 </td>
                 <td className="py-3 px-6 text-center">
-                  <div className="flex item-center justify-center">
+                  <div className="flex item-center justify-center space-x-2">
                     <button
                       onClick={() => handleEditClick(pedido)}
-                      className="w-4 mr-2 transform hover:text-purple-500 hover:scale-110"
+                      className="transform hover:text-purple-500 hover:scale-110"
                     >
                       <PencilIcon className="h-5 w-5" />
                     </button>
                     <button
                       onClick={() => handleViewClick(pedido.id)}
-                      className="w-4 mr-2 transform hover:text-blue-500 hover:scale-110"
+                      className="transform hover:text-blue-500 hover:scale-110"
                     >
-                      <EyeIcon className="h-6 w-6 ml-3" />
+                      <EyeIcon className="h-6 w-6" />
                     </button>
                   </div>
                 </td>
