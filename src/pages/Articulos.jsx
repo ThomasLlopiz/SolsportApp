@@ -98,6 +98,7 @@ export const Articulos = ({ pedidoId }) => {
         cantidad: "",
         talle: "",
         comentario: "",
+        pedidos_id: pedidoId,
       });
       setIsCreateModalOpen(false);
       fetchArticulos();
@@ -229,7 +230,7 @@ export const Articulos = ({ pedidoId }) => {
                   Número de Artículo
                 </label>
                 <input
-                  type="text"
+                  type="number"
                   value={newArticulo.numero_articulo}
                   onChange={(e) =>
                     setNewArticulo({
