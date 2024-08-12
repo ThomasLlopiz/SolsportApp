@@ -181,7 +181,7 @@ export const Articulos = ({ pedidoId }) => {
               <div className="mb-4">
                 <label className="block text-gray-700">Talle</label>
                 <select
-                  value={editArticulo.talle || ""}
+                  value={editArticulo.talle}
                   onChange={(e) =>
                     setEditArticulo({
                       ...editArticulo,
@@ -339,69 +339,73 @@ export const Articulos = ({ pedidoId }) => {
         </div>
       )}
 
-      <div className="mb-4 flex justify-end">
+      {/* Botón para abrir el modal de creación */}
+      <div className="flex mb-6">
         <button
           onClick={() => setIsCreateModalOpen(true)}
-          className="bg-green-500 text-white py-2 px-4 rounded flex items-center"
+          className="bg-blue-500 text-white py-2 px-4 rounded"
         >
-          <PlusIcon className="h-5 w-5 mr-2" />
+          <PlusIcon className="h-5 w-5 inline mr-2" />
           Agregar Artículo
         </button>
       </div>
 
-      <table className="min-w-full divide-y divide-gray-200">
+      {/* Tabla de Artículos */}
+      <table className="min-w-full bg-white border border-gray-200">
         <thead>
           <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Número de Artículo
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Nombre
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Cantidad
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Talle
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Comentario
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Acciones
-            </th>
+            <th className="py-2 px-4 border-b">Número de Artículo</th>
+            <th className="py-2 px-4 border-b">Nombre</th>
+            <th className="py-2 px-4 border-b">Cantidad</th>
+            <th className="py-2 px-4 border-b">Talle</th>
+            <th className="py-2 px-4 border-b">Fecha Inicio</th>
+            <th className="py-2 px-4 border-b">Fecha Fin</th>
+            <th className="py-2 px-4 border-b">Última Etapa</th>
+            <th className="py-2 px-4 border-b">Usuario</th>
+            <th className="py-2 px-4 border-b">Acciones</th>
           </tr>
         </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {articulos.map((articulo) => (
-            <tr key={articulo.id}>
-              <td className="px-6 py-4 whitespace-nowrap">
-                {articulo.numero_articulo}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">{articulo.nombre}</td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                {articulo.cantidad}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">{articulo.talle}</td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                {articulo.comentario}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <button
-                  onClick={() => handleEditClick(articulo)}
-                  className="text-blue-600 hover:text-blue-900"
-                >
-                  <PencilIcon className="h-5 w-5" />
-                </button>
-                <button
-                  onClick={() => handleViewClick(articulo.id)}
-                  className="text-blue-600 hover:text-blue-900 ml-4"
-                >
-                  <EyeIcon className="h-5 w-5" />
-                </button>
-              </td>
-            </tr>
-          ))}
+        <tbody>
+          {articulos.map((articulo) => {
+            const etapas = etapasMap[articulo.id] || [];
+            etapas.sort(
+              (a, b) => new Date(a.fecha_inicio) - new Date(b.fecha_inicio)
+            );
+            const firstDate = etapas.length
+              ? formatDate(etapas[0].fecha_inicio)
+              : "";
+            const lastDate = etapas.length
+              ? formatDate(etapas[etapas.length - 1].fecha_fin)
+              : "";
+            const lastEtapa = etapas.length
+              ? etapas[etapas.length - 1].nombre
+              : "";
+
+            return (
+              <tr key={articulo.id}>
+                <td className="py-2 px-4 border-b">
+                  {articulo.numero_articulo}
+                </td>
+                <td className="py-2 px-4 border-b">{articulo.nombre}</td>
+                <td className="py-2 px-4 border-b">{articulo.cantidad}</td>
+                <td className="py-2 px-4 border-b">{articulo.talle}</td>
+                <td className="py-2 px-4 border-b">{firstDate}</td>
+                <td className="py-2 px-4 border-b">{lastDate}</td>
+                <td className="py-2 px-4 border-b">{lastEtapa}</td>
+                <td className="py-2 px-4 border-b">
+                  {articulo.usuario_nombre}
+                </td>
+                <td className="py-2 px-4 border-b">
+                  <button onClick={() => handleEditClick(articulo)}>
+                    <PencilIcon className="h-5 w-5" />
+                  </button>
+                  <button onClick={() => handleViewClick(articulo.id)}>
+                    <EyeIcon className="h-5 w-5 ml-5" />
+                  </button>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
