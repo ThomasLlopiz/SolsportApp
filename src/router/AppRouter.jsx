@@ -8,14 +8,12 @@ import { Articulo } from "../pages/Articulo";
 
 export const AppRouter = () => {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/pedidos" element={<Pedidos />} />
-        <Route path="/pedidos/:id" element={<Pedido />} />
-        <Route path="/articulos" element={<Articulos />} />
-        <Route path="/articulos/:id" element={<Articulo />} />
-      </Routes>
-    </Router>
+    <Routes>
+      <Route path="/" element={<Login />} />
+      <Route path="/pedidos" element={<Pedidos />} />
+      <Route path="/pedidos/:id" element={<Pedido />} />
+      <Route path="/articulos" element={<Articulos />} />
+      <Route path="/articulos/:id" element={<Articulo />} />
+    </Routes>
   );
 };
