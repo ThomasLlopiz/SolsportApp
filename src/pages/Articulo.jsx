@@ -54,7 +54,7 @@ export const Articulo = () => {
         <div className="flex justify-between items-center mb-4">
           <div className="flex gap-3">
             <h1 className="text-2xl font-bold text-center bg-gray-300 rounded-md p-1">
-              Artículo: {articulo.numero_articulo}
+              Artículo: {articulo.id}
             </h1>
           </div>
 
