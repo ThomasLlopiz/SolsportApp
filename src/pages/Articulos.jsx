@@ -136,7 +136,7 @@ export const Articulos = ({ pedidoId }) => {
                   Número de Artículo
                 </label>
                 <input
-                  type="text"
+                  type="number"
                   value={editArticulo.numero_articulo}
                   onChange={(e) =>
                     setEditArticulo({
