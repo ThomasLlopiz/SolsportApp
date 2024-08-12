@@ -20,7 +20,6 @@ const formatDate = (dateString) => {
 export const Pedidos = () => {
   const [pedidos, setPedidos] = useState([]);
   const [newPedido, setNewPedido] = useState({
-    numero_pedido: "",
     nombre_cliente: "",
     correo: "",
     telefono: "",
@@ -51,7 +50,6 @@ export const Pedidos = () => {
     try {
       await axios.post("/pedidos", newPedido);
       setNewPedido({
-        numero_pedido: "",
         nombre_cliente: "",
         correo: "",
         telefono: "",
@@ -124,25 +122,7 @@ export const Pedidos = () => {
             <h2 className="text-xl font-semibold mb-4">Crear Nuevo Pedido</h2>
             <form onSubmit={handleCreatePedido}>
               <div className="mb-4">
-                <label className="block text-gray-700">Número de Pedido</label>
-                <input
-                  type="number"
-                  value={newPedido.numero_pedido}
-                  onChange={(e) =>
-                    setNewPedido({
-                      ...newPedido,
-                      numero_pedido: e.target.value,
-                    })
-                  }
-                  min="1"
-                  className="w-full p-2 border border-gray-300 rounded mt-1"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700">
-                  Nombre del Cliente
-                </label>
+                <label className="block text-gray-700">Nombre del Cliente</label>
                 <input
                   type="text"
                   value={newPedido.nombre_cliente}
@@ -245,26 +225,9 @@ export const Pedidos = () => {
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
             <h2 className="text-xl font-semibold mb-4">Editar Pedido</h2>
             <form onSubmit={handleUpdatePedido}>
+              {/* El ID ya no se edita ni se muestra en el formulario */}
               <div className="mb-4">
-                <label className="block text-gray-700">Número de Pedido</label>
-                <input
-                  type="text"
-                  value={editPedido.numero_pedido}
-                  onChange={(e) =>
-                    setEditPedido({
-                      ...editPedido,
-                      numero_pedido: e.target.value,
-                    })
-                  }
-                  min="1"
-                  className="w-full p-2 border border-gray-300 rounded mt-1"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700">
-                  Nombre del Cliente
-                </label>
+                <label className="block text-gray-700">Nombre del Cliente</label>
                 <input
                   type="text"
                   value={editPedido.nombre_cliente}
@@ -383,7 +346,7 @@ export const Pedidos = () => {
                 className="border-b border-gray-200 hover:bg-gray-100"
               >
                 <td className="py-3 px-6 text-left whitespace-nowrap">
-                  {pedido.numero_pedido}
+                  {pedido.id} {/* Mostrar el ID como el número de pedido */}
                 </td>
                 <td className="py-3 px-6 text-left">{pedido.nombre_cliente}</td>
                 <td className="py-3 px-6 text-left">{pedido.correo}</td>
