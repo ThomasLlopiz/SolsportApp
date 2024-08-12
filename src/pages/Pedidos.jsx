@@ -126,7 +126,7 @@ export const Pedidos = () => {
               <div className="mb-4">
                 <label className="block text-gray-700">Número de Pedido</label>
                 <input
-                  type="text"
+                  type="number"
                   value={newPedido.numero_pedido}
                   onChange={(e) =>
                     setNewPedido({
