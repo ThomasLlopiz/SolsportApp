@@ -12,8 +12,6 @@ const formatDate = (dateString) => {
   return `${day}/${month}/${year}`;
 };
 
-const talles = ["XS", "S", "M", "L", "XL", "XXL", "3XL"];
-
 export const Articulos = ({ pedidoId }) => {
   const [newArticulo, setNewArticulo] = useState({
     numero_articulo: "",
@@ -145,6 +143,7 @@ export const Articulos = ({ pedidoId }) => {
                     })
                   }
                   className="w-full border border-gray-300 p-2 rounded"
+                  min="1"
                   required
                 />
               </div>
@@ -175,12 +174,14 @@ export const Articulos = ({ pedidoId }) => {
                     })
                   }
                   className="w-full border border-gray-300 p-2 rounded"
+                  min="1"
                   required
                 />
               </div>
               <div className="mb-4">
                 <label className="block text-gray-700">Talle</label>
-                <select
+                <input
+                  type="text"
                   value={editArticulo.talle}
                   onChange={(e) =>
                     setEditArticulo({
@@ -190,13 +191,7 @@ export const Articulos = ({ pedidoId }) => {
                   }
                   className="w-full border border-gray-300 p-2 rounded"
                   required
-                >
-                  {talles.map((talle) => (
-                    <option key={talle} value={talle}>
-                      {talle}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
               <div className="mb-4">
                 <label className="block text-gray-700">Comentario</label>
@@ -252,6 +247,7 @@ export const Articulos = ({ pedidoId }) => {
                     })
                   }
                   className="w-full border border-gray-300 p-2 rounded"
+                  min="1"
                   required
                 />
               </div>
@@ -282,12 +278,14 @@ export const Articulos = ({ pedidoId }) => {
                     })
                   }
                   className="w-full border border-gray-300 p-2 rounded"
+                  min="1"
                   required
                 />
               </div>
               <div className="mb-4">
                 <label className="block text-gray-700">Talle</label>
-                <select
+                <input
+                  type="text"
                   value={newArticulo.talle}
                   onChange={(e) =>
                     setNewArticulo({
@@ -297,13 +295,7 @@ export const Articulos = ({ pedidoId }) => {
                   }
                   className="w-full border border-gray-300 p-2 rounded"
                   required
-                >
-                  {talles.map((talle) => (
-                    <option key={talle} value={talle}>
-                      {talle}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
               <div className="mb-4">
                 <label className="block text-gray-700">Comentario</label>

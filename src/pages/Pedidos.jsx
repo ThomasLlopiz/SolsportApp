@@ -134,6 +134,7 @@ export const Pedidos = () => {
                       numero_pedido: e.target.value,
                     })
                   }
+                  min="1"
                   className="w-full p-2 border border-gray-300 rounded mt-1"
                   required
                 />
@@ -255,6 +256,7 @@ export const Pedidos = () => {
                       numero_pedido: e.target.value,
                     })
                   }
+                  min="1"
                   className="w-full p-2 border border-gray-300 rounded mt-1"
                   required
                 />
