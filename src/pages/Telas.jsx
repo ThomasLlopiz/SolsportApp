@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "../api/axios";
 import { PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
+import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 
 export const Telas = () => {
   const [newTela, setNewTela] = useState({
@@ -20,7 +21,6 @@ export const Telas = () => {
     const fetchTelas = async () => {
       try {
         const response = await axios.get("/telas");
-        console.log(response.data); // Verifica los datos recibidos
         setTelas(response.data);
       } catch (error) {
         console.error("Error fetching telas", error);
@@ -74,9 +74,23 @@ export const Telas = () => {
     setIsDeleteModalOpen(true);
   };
 
+  const handleBackClick = () => {
+    navigate(`/prepage`);
+  };
+
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-6 text-center">TELAS</h1>
+      <div className="flex justify-between w-3/4 mx-auto">
+        <h1 className="text-2xl font-bold mb-6 text-center">TELAS</h1>
+
+        <button
+          onClick={handleBackClick}
+          className="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600 transition flex items-center"
+        >
+          <ArrowLeftIcon className="h-5 w-5 mr-2" />
+          Volver
+        </button>
+      </div>
 
       {/* Modal de edición */}
       {isEditModalOpen && editTela && (
@@ -209,7 +223,7 @@ export const Telas = () => {
       )}
 
       {/* Botón para abrir el modal de creación */}
-      <div className="flex mb-6">
+      <div className="flex mb-6 w-3/4 mx-auto">
         <button
           onClick={() => setIsCreateModalOpen(true)}
           className="bg-blue-500 text-white py-2 px-4 rounded flex items-center"
@@ -220,12 +234,12 @@ export const Telas = () => {
       </div>
 
       {/* Tabla de Telas */}
-      <table className="min-w-full bg-white border border-gray-200">
+      <table className="w-3/4 mx-auto bg-white border border-gray-200">
         <thead>
           <tr>
-            <th className="py-2 px-4 border-b">Nombre</th>
-            <th className="py-2 px-4 border-b">Precio</th>
-            <th className="py-2 px-4 border-b">Acciones</th>
+            <th className="py-2 px-4 border-b text-left">Nombre</th>
+            <th className="py-2 px-4 border-b text-left">Precio</th>
+            <th className="py-2 px-4 border-b text-left">Acciones</th>
           </tr>
         </thead>
         <tbody>
@@ -235,7 +249,7 @@ export const Telas = () => {
               <td className="py-2 px-4 border-b">
                 {tela.precio ? tela.precio.toFixed(2) : "N/A"}
               </td>
-              <td className="py-2 px-4 border-b flex space-x-2">
+              <td className="py-2 px-4 border-b space-x-2">
                 <button
                   onClick={() => handleEditClick(tela)}
                   className="text-blue-500 hover:text-blue-700"
