@@ -15,7 +15,7 @@ export const PrePage = () => {
           <Link to="/telas">Ir a Telas</Link>
         </button>
         <button className="bg-gray-500 text-white px-4 py-2 rounded flex">
-          <Link to="/agregados">Ir a Telas</Link>
+          <Link to="/agregados">Ir a Agregados</Link>
         </button>
       </div>
       <button className="bg-blue-500 text-white px-4 py-2 rounded flex">

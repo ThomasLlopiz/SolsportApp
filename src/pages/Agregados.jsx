@@ -4,73 +4,73 @@ import { PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 
-export const Telas = () => {
-  const [newTela, setNewTela] = useState({
+export const Agregados = () => {
+  const [newAgregado, setNewAgregado] = useState({
     nombre: "",
     precio: "",
   });
-  const [telas, setTelas] = useState([]);
-  const [editTela, setEditTela] = useState(null);
+  const [agregados, setAgregados] = useState([]);
+  const [editAgregado, setEditAgregado] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [telaToDelete, setTelaToDelete] = useState(null);
+  const [agregadoToDelete, setAgregadoToDelete] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchTelas();
+    fetchAgregados();
   }, []);
 
-  const fetchTelas = async () => {
+  const fetchAgregados = async () => {
     try {
-      const response = await axios.get("/telas");
-      setTelas(response.data);
+      const response = await axios.get("/agregados");
+      setAgregados(response.data);
     } catch (error) {
-      console.error("Error fetching telas", error);
+      console.error("Error fetching agregados", error);
     }
   };
 
-  const handleUpdateTela = async (e) => {
+  const handleUpdateAgregado = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`/telas/${editTela.id}`, editTela);
-      setEditTela(null);
+      await axios.put(`/agregados/${editAgregado.id}`, editAgregado);
+      setEditAgregado(null);
       setIsEditModalOpen(false);
-      fetchTelas();
+      fetchAgregados();
     } catch (error) {
-      console.error("Error updating tela", error);
+      console.error("Error updating agregado", error);
     }
   };
 
-  const handleCreateTela = async (e) => {
+  const handleCreateAgregado = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("/telas", newTela);
-      setNewTela({ nombre: "", precio: "" });
+      await axios.post("/agregados", newAgregado);
+      setNewAgregado({ nombre: "", precio: "" });
       setIsCreateModalOpen(false);
-      fetchTelas();
+      fetchAgregados();
     } catch (error) {
-      console.error("Error creating tela", error);
+      console.error("Error creating agregado", error);
     }
   };
 
-  const handleDeleteTela = async () => {
+  const handleDeleteAgregado = async () => {
     try {
-      await axios.delete(`/telas/${telaToDelete.id}`);
+      await axios.delete(`/agregados/${agregadoToDelete.id}`);
       setIsDeleteModalOpen(false);
-      fetchTelas();
+      fetchAgregados();
     } catch (error) {
-      console.error("Error deleting tela", error);
+      console.error("Error deleting agregado", error);
     }
   };
 
-  const handleEditClick = (tela) => {
-    setEditTela(tela);
+  const handleEditClick = (agregado) => {
+    setEditAgregado(agregado);
     setIsEditModalOpen(true);
   };
 
-  const handleDeleteClick = (tela) => {
-    setTelaToDelete(tela);
+  const handleDeleteClick = (agregado) => {
+    setAgregadoToDelete(agregado);
     setIsDeleteModalOpen(true);
   };
 
@@ -81,7 +81,7 @@ export const Telas = () => {
   return (
     <div className="p-4">
       <div className="flex justify-between w-3/4 mx-auto">
-        <h1 className="text-2xl font-bold mb-6 text-center">TELAS</h1>
+        <h1 className="text-2xl font-bold mb-6 text-center">AGREGADOS</h1>
 
         <button
           onClick={handleBackClick}
@@ -93,18 +93,18 @@ export const Telas = () => {
       </div>
 
       {/* Modal de edición */}
-      {isEditModalOpen && editTela && (
+      {isEditModalOpen && editAgregado && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
-            <h2 className="text-xl font-semibold mb-4">Editar Tela</h2>
-            <form onSubmit={handleUpdateTela}>
+            <h2 className="text-xl font-semibold mb-4">Editar Agregado</h2>
+            <form onSubmit={handleUpdateAgregado}>
               <div className="mb-4">
                 <label className="block text-gray-700">Nombre</label>
                 <input
                   type="text"
-                  value={editTela.nombre}
+                  value={editAgregado.nombre}
                   onChange={(e) =>
-                    setEditTela({ ...editTela, nombre: e.target.value })
+                    setEditAgregado({ ...editAgregado, nombre: e.target.value })
                   }
                   className="w-full border border-gray-300 p-2 rounded"
                   required
@@ -114,9 +114,9 @@ export const Telas = () => {
                 <label className="block text-gray-700">Precio</label>
                 <input
                   type="number"
-                  value={editTela.precio || ""}
+                  value={editAgregado.precio || ""}
                   onChange={(e) =>
-                    setEditTela({ ...editTela, precio: e.target.value })
+                    setEditAgregado({ ...editAgregado, precio: e.target.value })
                   }
                   className="w-full border border-gray-300 p-2 rounded"
                   min="0"
@@ -148,15 +148,15 @@ export const Telas = () => {
       {isCreateModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
-            <h2 className="text-xl font-semibold mb-4">Crear Tela</h2>
-            <form onSubmit={handleCreateTela}>
+            <h2 className="text-xl font-semibold mb-4">Crear Agregado</h2>
+            <form onSubmit={handleCreateAgregado}>
               <div className="mb-4">
                 <label className="block text-gray-700">Nombre</label>
                 <input
                   type="text"
-                  value={newTela.nombre}
+                  value={newAgregado.nombre}
                   onChange={(e) =>
-                    setNewTela({ ...newTela, nombre: e.target.value })
+                    setNewAgregado({ ...newAgregado, nombre: e.target.value })
                   }
                   className="w-full border border-gray-300 p-2 rounded"
                   required
@@ -166,9 +166,9 @@ export const Telas = () => {
                 <label className="block text-gray-700">Precio</label>
                 <input
                   type="number"
-                  value={newTela.precio || ""}
+                  value={newAgregado.precio || ""}
                   onChange={(e) =>
-                    setNewTela({ ...newTela, precio: e.target.value })
+                    setNewAgregado({ ...newAgregado, precio: e.target.value })
                   }
                   className="w-full border border-gray-300 p-2 rounded"
                   min="0"
@@ -197,16 +197,16 @@ export const Telas = () => {
       )}
 
       {/* Modal de confirmación de eliminación */}
-      {isDeleteModalOpen && telaToDelete && (
+      {isDeleteModalOpen && agregadoToDelete && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-sm">
             <h2 className="text-xl font-semibold mb-4">Confirmación</h2>
             <p className="mb-4">
-              ¿Estás seguro de que deseas eliminar esta tela?
+              ¿Estás seguro de que deseas eliminar este agregado?
             </p>
             <div className="flex justify-end">
               <button
-                onClick={handleDeleteTela}
+                onClick={handleDeleteAgregado}
                 className="bg-red-500 text-white py-2 px-4 rounded mr-2"
               >
                 Eliminar
@@ -229,11 +229,11 @@ export const Telas = () => {
           className="bg-blue-500 text-white py-2 px-4 rounded flex items-center"
         >
           <PlusIcon className="h-5 w-5 inline mr-2" />
-          Agregar Tela
+          Agregar Agregado
         </button>
       </div>
 
-      {/* Tabla de Telas */}
+      {/* Tabla de Agregados */}
       <table className="w-3/4 mx-auto bg-white border border-gray-200">
         <thead>
           <tr>
@@ -243,21 +243,21 @@ export const Telas = () => {
           </tr>
         </thead>
         <tbody>
-          {telas.map((tela) => (
-            <tr key={tela.id}>
-              <td className="py-2 px-4 border-b">{tela.nombre}</td>
+          {agregados.map((agregado) => (
+            <tr key={agregado.id}>
+              <td className="py-2 px-4 border-b">{agregado.nombre}</td>
               <td className="py-2 px-4 border-b">
-                {tela.precio ? tela.precio.toFixed(2) : "N/A"}
+                {agregado.precio ? agregado.precio.toFixed(2) : "N/A"}
               </td>
               <td className="py-2 px-4 border-b space-x-2">
                 <button
-                  onClick={() => handleEditClick(tela)}
+                  onClick={() => handleEditClick(agregado)}
                   className="text-blue-500 hover:text-blue-700"
                 >
                   <PencilIcon className="h-5 w-5" />
                 </button>
                 <button
-                  onClick={() => handleDeleteClick(tela)}
+                  onClick={() => handleDeleteClick(agregado)}
                   className="text-red-500 hover:text-red-700"
                 >
                   <TrashIcon className="h-5 w-5" />

@@ -9,6 +9,7 @@ import { PrePage } from "../pages/PrePage";
 import { Cotizador } from "../pages/Cotizador";
 import { Cotizacion } from "../pages/Cotizacion";
 import { Telas } from "../pages/Telas";
+import { Agregados } from "../pages/Agregados";
 
 export const AppRouter = () => {
   return (
@@ -18,10 +19,11 @@ export const AppRouter = () => {
       <Route path="/pedidos/:id" element={<Pedido />} />
       <Route path="/articulos" element={<Articulos />} />
       <Route path="/articulos/:id" element={<Articulo />} />
-      <Route path="/prepage" element={<PrePage />}/>
-      <Route path="/cotizador" element={<Cotizador />}/>
-      <Route path="/cotizacion" element={<Cotizacion />}/>
-      <Route path="/telas" element={<Telas />}/>
+      <Route path="/prepage" element={<PrePage />} />
+      <Route path="/cotizador" element={<Cotizador />} />
+      <Route path="/cotizacion" element={<Cotizacion />} />
+      <Route path="/telas" element={<Telas />} />
+      <Route path="/agregados" element={<Agregados />} />
     </Routes>
   );
 };
