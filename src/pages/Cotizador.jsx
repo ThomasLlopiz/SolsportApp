@@ -7,6 +7,7 @@ import {
   EyeIcon,
   ArrowRightOnRectangleIcon,
 } from "@heroicons/react/24/outline";
+import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 
 const formatDate = (dateString) => {
   if (!dateString) return "";
@@ -33,6 +34,10 @@ export const Cotizador = () => {
   useEffect(() => {
     fetchPedidos();
   }, []);
+
+  const handleBackClick = () => {
+    navigate(`/prepage`);
+  };
 
   const fetchPedidos = async () => {
     try {
@@ -95,7 +100,17 @@ export const Cotizador = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
-      <h1 className="text-2xl font-bold mb-6 text-center">PEDIDOS</h1>
+      <div className="flex justify-between mb-10">
+        <h1 className="text-2xl font-bold mb-6 text-center">PEDIDOS</h1>
+        <button
+          onClick={handleBackClick}
+          className="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600 transition flex items-center"
+        >
+          <ArrowLeftIcon className="h-5 w-5 mr-2" />
+          Volver
+        </button>
+      </div>
+
       <div className="flex justify-between mb-4">
         <button
           onClick={() => setIsCreateModalOpen(true)}

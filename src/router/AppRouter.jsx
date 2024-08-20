@@ -18,10 +18,10 @@ export const AppRouter = () => {
       <Route path="/pedidos/:id" element={<Pedido />} />
       <Route path="/articulos" element={<Articulos />} />
       <Route path="/articulos/:id" element={<Articulo />} />
-      <Route path="/prepage" element={<PrePage />}></Route>
-      <Route path="/cotizador" element={<Cotizador />}></Route>
-      <Route path="/cotizacion" element={<Cotizacion />}></Route>
-      <Route path="/telas" element={<Telas />}></Route>
+      <Route path="/prepage" element={<PrePage />}/>
+      <Route path="/cotizador" element={<Cotizador />}/>
+      <Route path="/cotizacion" element={<Cotizacion />}/>
+      <Route path="/telas" element={<Telas />}/>
     </Routes>
   );
 };

@@ -3,7 +3,7 @@ import axios from "../api/axios";
 import { PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
 
-const Telas = () => {
+export const Telas = () => {
   const [newTela, setNewTela] = useState({
     nombre: "",
     precio: "",
@@ -20,6 +20,7 @@ const Telas = () => {
     const fetchTelas = async () => {
       try {
         const response = await axios.get("/telas");
+        console.log(response.data); // Verifica los datos recibidos
         setTelas(response.data);
       } catch (error) {
         console.error("Error fetching telas", error);
@@ -99,7 +100,7 @@ const Telas = () => {
                 <label className="block text-gray-700">Precio</label>
                 <input
                   type="number"
-                  value={editTela.precio}
+                  value={editTela.precio || ""}
                   onChange={(e) =>
                     setEditTela({ ...editTela, precio: e.target.value })
                   }
@@ -151,7 +152,7 @@ const Telas = () => {
                 <label className="block text-gray-700">Precio</label>
                 <input
                   type="number"
-                  value={newTela.precio}
+                  value={newTela.precio || ""}
                   onChange={(e) =>
                     setNewTela({ ...newTela, precio: e.target.value })
                   }
@@ -231,7 +232,9 @@ const Telas = () => {
           {telas.map((tela) => (
             <tr key={tela.id}>
               <td className="py-2 px-4 border-b">{tela.nombre}</td>
-              <td className="py-2 px-4 border-b">{tela.precio.toFixed(2)}</td>
+              <td className="py-2 px-4 border-b">
+                {tela.precio ? tela.precio.toFixed(2) : "N/A"}
+              </td>
               <td className="py-2 px-4 border-b flex space-x-2">
                 <button
                   onClick={() => handleEditClick(tela)}
@@ -253,5 +256,3 @@ const Telas = () => {
     </div>
   );
 };
-
-export default Telas;
