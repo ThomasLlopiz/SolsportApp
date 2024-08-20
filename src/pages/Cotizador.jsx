@@ -17,15 +17,13 @@ const formatDate = (dateString) => {
   return `${day}/${month}/${year}`;
 };
 
-export const Pedidos = () => {
+export const Cotizador = () => {
   const [pedidos, setPedidos] = useState([]);
   const [newPedido, setNewPedido] = useState({
     nombre_cliente: "",
     correo: "",
     telefono: "",
     localidad: "",
-    fecha_pago: "",
-    fecha_estimada: "",
   });
   const [editPedido, setEditPedido] = useState(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -92,7 +90,7 @@ export const Pedidos = () => {
   };
 
   const handleViewClick = (pedidoId) => {
-    navigate(`/pedidos/${pedidoId}`);
+    navigate("/cotizacion");
   };
 
   return (
@@ -104,7 +102,7 @@ export const Pedidos = () => {
           className="bg-blue-500 text-white px-4 py-2 rounded flex items-center"
         >
           <PlusIcon className="h-5 w-5 mr-2" />
-          Crear Nuevo Pedido
+          Crear Nueva Cotización
         </button>
         <button
           onClick={handleLogout}
@@ -174,39 +172,12 @@ export const Pedidos = () => {
                   required
                 />
               </div>
-              <div className="mb-4">
-                <label className="block text-gray-700">Fecha de Pago</label>
-                <input
-                  type="date"
-                  value={newPedido.fecha_pago}
-                  onChange={(e) =>
-                    setNewPedido({ ...newPedido, fecha_pago: e.target.value })
-                  }
-                  className="w-full p-2 border border-gray-300 rounded mt-1"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700">Fecha Estimada</label>
-                <input
-                  type="date"
-                  value={newPedido.fecha_estimada}
-                  onChange={(e) =>
-                    setNewPedido({
-                      ...newPedido,
-                      fecha_estimada: e.target.value,
-                    })
-                  }
-                  className="w-full p-2 border border-gray-300 rounded mt-1"
-                  required
-                />
-              </div>
               <div className="flex justify-end mt-4">
                 <button
                   type="submit"
                   className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition mr-2"
                 >
-                  Crear Pedido
+                  Crear Cotización
                 </button>
                 <button
                   type="button"
@@ -280,39 +251,12 @@ export const Pedidos = () => {
                   required
                 />
               </div>
-              <div className="mb-4">
-                <label className="block text-gray-700">Fecha de Pago</label>
-                <input
-                  type="date"
-                  value={editPedido.fecha_pago}
-                  onChange={(e) =>
-                    setEditPedido({ ...editPedido, fecha_pago: e.target.value })
-                  }
-                  className="w-full p-2 border border-gray-300 rounded mt-1"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700">Fecha Estimada</label>
-                <input
-                  type="date"
-                  value={editPedido.fecha_estimada}
-                  onChange={(e) =>
-                    setEditPedido({
-                      ...editPedido,
-                      fecha_estimada: e.target.value,
-                    })
-                  }
-                  className="w-full p-2 border border-gray-300 rounded mt-1"
-                  required
-                />
-              </div>
               <div className="flex justify-end mt-4">
                 <button
                   type="submit"
                   className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition mr-2"
                 >
-                  Actualizar Pedido
+                  Actualizar Cotización
                 </button>
                 <button
                   type="button"
@@ -337,6 +281,8 @@ export const Pedidos = () => {
               <th className="py-3 px-6 text-left">Correo</th>
               <th className="py-3 px-6 text-left">Teléfono</th>
               <th className="py-3 px-6 text-left">Localidad</th>
+              <th className="py-3 px-6 text-left">Fecha de Pago</th>
+              <th className="py-3 px-6 text-left">Fecha Estimada</th>
               <th className="py-3 px-6 text-center">Acciones</th>
             </tr>
           </thead>
@@ -353,6 +299,12 @@ export const Pedidos = () => {
                 <td className="py-3 px-6 text-left">{pedido.correo}</td>
                 <td className="py-3 px-6 text-left">{pedido.telefono}</td>
                 <td className="py-3 px-6 text-left">{pedido.localidad}</td>
+                <td className="py-3 px-6 text-left">
+                  {formatDate(pedido.fecha_pago)}
+                </td>
+                <td className="py-3 px-6 text-left">
+                  {formatDate(pedido.fecha_estimada)}
+                </td>
                 <td className="py-3 px-6 text-center">
                   <div className="flex item-center justify-center space-x-2">
                     <button
@@ -362,7 +314,7 @@ export const Pedidos = () => {
                       <PencilIcon className="h-5 w-5" />
                     </button>
                     <button
-                      onClick={() => handleViewClick(pedido.id)}
+                      onClick={handleViewClick}
                       className="transform hover:text-blue-500 hover:scale-110"
                     >
                       <EyeIcon className="h-6 w-6" />

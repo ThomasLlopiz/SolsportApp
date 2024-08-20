@@ -17,7 +17,7 @@ export const Login = () => {
       });
       if (response.data.success) {
         localStorage.setItem("token", response.data.token);
-        navigate("/pedidos");
+        navigate("/prepage");
       } else {
         setError("Credenciales incorrectas");
       }
