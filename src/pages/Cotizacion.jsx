@@ -1,20 +1,43 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
+import axios from "../api/axios";
 
 export const Cotizacion = () => {
   const navigate = useNavigate();
-  const prendas = ["Buzo", "Remera", "Campera", "Pantalones", "Chombas"];
-  const talles = ["XS", "S", "M", "L", "XL", "XXL", "XXXL"];
-  const todosLosAgregados = ["Capucha", "Cuello", "Puño", "Boton"];
-  const telas = ["Pique", "Jersey ALG"];
-
+  const [prendas] = useState(["Buzo", "Remera", "Campera", "Pantalones", "Chombas"]);
+  const [talles] = useState(["XS", "S", "M", "L", "XL", "XXL", "XXXL"]);
+  const [todosLosAgregados, setTodosLosAgregados] = useState([]);
+  const [telas, setTelas] = useState([]);
   const [selectedPrenda, setSelectedPrenda] = useState("");
   const [selectedTalle, setSelectedTalle] = useState("");
   const [selectedTela, setSelectedTela] = useState("");
   const [selectedAgregados, setSelectedAgregados] = useState([]);
   const [agregadoParaAgregar, setAgregadoParaAgregar] = useState("");
   const [combinaciones, setCombinaciones] = useState([]);
+
+  useEffect(() => {
+    const fetchAgregados = async () => {
+      try {
+        const response = await axios.get("/agregados");
+        setTodosLosAgregados(response.data.map((item) => item.nombre));
+      } catch (error) {
+        console.error("Error fetching agregados", error);
+      }
+    };
+
+    const fetchTelas = async () => {
+      try {
+        const response = await axios.get("/telas");
+        setTelas(response.data.map((item) => item.nombre));
+      } catch (error) {
+        console.error("Error fetching telas", error);
+      }
+    };
+
+    fetchAgregados();
+    fetchTelas();
+  }, []);
 
   const handlePrendaChange = (e) => setSelectedPrenda(e.target.value);
   const handleTalleChange = (e) => setSelectedTalle(e.target.value);
@@ -27,6 +50,7 @@ export const Cotizacion = () => {
   const handleBackClick = () => {
     navigate(`/cotizador`);
   };
+
   const handleAgregarAgregado = () => {
     if (
       agregadoParaAgregar &&
@@ -211,3 +235,4 @@ export const Cotizacion = () => {
     </div>
   );
 };
+ 
