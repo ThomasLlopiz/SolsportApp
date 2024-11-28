@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import axios from "../api/axios";
 import { useNavigate } from "react-router-dom";
 import {
@@ -118,13 +118,6 @@ export const Cotizador = () => {
         >
           <PlusIcon className="h-5 w-5 mr-2" />
           Crear Nueva Cotización
-        </button>
-        <button
-          onClick={handleLogout}
-          className="bg-red-500 text-white px-4 py-2 rounded flex items-center"
-        >
-          <ArrowRightOnRectangleIcon className="h-5 w-5 mr-2" />
-          Cerrar sesión
         </button>
       </div>
 

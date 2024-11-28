@@ -5,7 +5,6 @@ import {
   PencilIcon,
   PlusIcon,
   EyeIcon,
-  ArrowRightOnRectangleIcon,
 } from "@heroicons/react/24/outline";
 
 const formatDate = (dateString) => {
@@ -87,10 +86,6 @@ export const Pedidos = () => {
     setIsEditModalOpen(true);
   };
 
-  const handleLogout = () => {
-    navigate("/");
-  };
-
   const handleViewClick = (pedidoId) => {
     navigate(`/pedidos/${pedidoId}`);
   };
@@ -105,13 +100,6 @@ export const Pedidos = () => {
         >
           <PlusIcon className="h-5 w-5 mr-2" />
           Crear Nuevo Pedido
-        </button>
-        <button
-          onClick={handleLogout}
-          className="bg-red-500 text-white px-4 py-2 rounded flex items-center"
-        >
-          <ArrowRightOnRectangleIcon className="h-5 w-5 mr-2" />
-          Cerrar sesión
         </button>
       </div>
 
