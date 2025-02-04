@@ -22,7 +22,7 @@ export const Cotizacion = () => {
   const [numeroArticulo, setNumeroArticulo] = useState("");
   const [cantidad, setCantidad] = useState(1);
 
-  // Cargar los agregados y telas al inicio
+  // Cargar los agregados, telas y pedidos al inicio
   useEffect(() => {
     const fetchAgregados = async () => {
       try {
@@ -53,6 +53,19 @@ export const Cotizacion = () => {
     fetchAgregados();
     fetchTelas();
   }, [pedidoId]);
+
+  useEffect(() => {
+    // Recuperar combinaciones desde el localStorage al iniciar el componente
+    const storedCombinaciones = JSON.parse(localStorage.getItem("combinaciones"));
+    if (storedCombinaciones) {
+      setCombinaciones(storedCombinaciones);
+    }
+  }, []);
+
+  // Función para guardar las combinaciones en localStorage
+  const saveCombinacionesToLocalStorage = (combinaciones) => {
+    localStorage.setItem("combinaciones", JSON.stringify(combinaciones));
+  };
 
   const handlePrendaChange = (e) => setSelectedPrenda(e.target.value);
   const handleTalleChange = (e) => setSelectedTalle(e.target.value);
@@ -122,7 +135,11 @@ export const Cotizacion = () => {
         pedidos_id: pedidoId,
       };
 
-      createArticulo(articulo);
+      // Actualizar combinaciones y guardarlas en el localStorage
+      const newCombinaciones = [...combinaciones, articulo];
+      setCombinaciones(newCombinaciones);
+      saveCombinacionesToLocalStorage(newCombinaciones);
+
       setNumeroArticulo("");
       setCantidad(1);
       setSelectedPrenda("");
@@ -275,6 +292,7 @@ export const Cotizacion = () => {
         </tbody>
       </table>
 
+
       <div className="mt-8">
         <div className="flex justify-between w-3/4 mx-auto">
           <h2 className="text-lg font-semibold">Prendas Guardadas</h2>
@@ -326,9 +344,9 @@ export const Cotizacion = () => {
           </tbody>
         </table>
       </div>
+
       {/* Mostrar los artículos según el pedido */}
       <Articulos pedidoId={id} />
-
     </div>
   );
 };
