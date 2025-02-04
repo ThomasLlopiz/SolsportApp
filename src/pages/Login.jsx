@@ -19,7 +19,11 @@ export const Login = () => {
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("rol", response.data.rol)
 
-        navigate("/prepage");
+        if (response.data.rol === "admin") {
+          navigate("/prepage"); 
+        } else if (response.data.rol === "user") {
+          navigate("/pedidos");
+        }
       } else {
         setError("Credenciales incorrectas");
       }
