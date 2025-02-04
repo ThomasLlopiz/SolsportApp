@@ -1,5 +1,4 @@
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRightOnRectangleIcon } from "@heroicons/react/24/outline";
 
 export const PrePage = () => {
   const navigate = useNavigate();
@@ -24,13 +23,7 @@ export const PrePage = () => {
         </button>
       </div>
 
-      <button
-        onClick={handleLogout}
-        className="bg-red-500 text-white px-4 py-2 rounded flex items-center"
-      >
-        <ArrowRightOnRectangleIcon className="h-5 w-5 mr-2" />
-        Cerrar sesión
-      </button>
+
     </div>
   );
 };
