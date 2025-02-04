@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "../api/axios";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { Etapas } from "./Etapas";
+import axios from "../api/axios";
 
 export const Articulo = () => {
   const { id } = useParams();
