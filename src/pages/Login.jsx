@@ -17,6 +17,8 @@ export const Login = () => {
       });
       if (response.data.success) {
         localStorage.setItem("token", response.data.token);
+        localStorage.setItem("rol", response.data.rol)
+
         navigate("/prepage");
       } else {
         setError("Credenciales incorrectas");
