@@ -10,6 +10,7 @@ export const Cotizacion = () => {
   const { pedidoId } = useParams();
   const [prendas] = useState(["Buzo", "Remera", "Campera", "Pantalones", "Chombas"]);
   const [talles] = useState(["XS", "S", "M", "L", "XL", "XXL", "XXXL"]);
+  const [pedido, setPedido] = useState(null);
   const [todosLosAgregados, setTodosLosAgregados] = useState([]);
   const [telas, setTelas] = useState([]);
   const [selectedPrenda, setSelectedPrenda] = useState("");
@@ -40,7 +41,15 @@ export const Cotizacion = () => {
         console.error("Error fetching telas", error);
       }
     };
-
+    const fetchPedido = async () => {
+      try {
+        const pedidoResponse = await axios.get(`/pedidos/${id}`);
+        setPedido(pedidoResponse.data);
+      } catch (error) {
+        console.error("Error fetching pedido", error);
+      }
+    };
+    fetchPedido();
     fetchAgregados();
     fetchTelas();
   }, [pedidoId]);
@@ -125,9 +134,14 @@ export const Cotizacion = () => {
   };
 
   const total = combinaciones.reduce((sum, item) => sum + item.precio, 0);
+  if (!pedido) return <div>Loading...</div>;
 
   return (
     <div>
+      <div className="text-center mb-4">
+        <h2 className="text-lg font-semibold">Pedido #{pedido.numero_pedido}</h2>
+      </div>
+
       <table className="w-3/4 mx-auto bg-white">
         <thead className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
           <tr>
@@ -146,6 +160,7 @@ export const Cotizacion = () => {
           <tr>
             <td>
               <input
+                placeholder="Número de Artículo"
                 type="number"
                 value={numeroArticulo}
                 onChange={handleNumeroArticuloChange}
@@ -272,7 +287,7 @@ export const Cotizacion = () => {
           </button>
         </div>
 
-        <table className="w-full mx-auto mt-4 bg-white">
+        <table className="w-3/4 mx-auto mt-4 bg-white">
           <thead className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
             <tr>
               <th className="py-3 px-6 text-left">Número Artículo</th>
