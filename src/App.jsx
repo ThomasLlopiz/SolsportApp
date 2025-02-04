@@ -18,7 +18,7 @@ export const App = () => {
     <>
       {rol === "admin" && <PrePage />}
 
-      <div className="absolute right-0 top-0">
+      <div className="absolute right-6 top-2">
         <button
           onClick={handleLogout}
           className="bg-red-500 text-white px-4 py-2 rounded flex items-center left-0 top-0"
