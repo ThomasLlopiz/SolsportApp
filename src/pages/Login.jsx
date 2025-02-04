@@ -20,7 +20,7 @@ export const Login = () => {
         localStorage.setItem("rol", response.data.rol)
 
         if (response.data.rol === "admin") {
-          navigate("/prepage"); 
+          navigate("/cotizador"); 
         } else if (response.data.rol === "user") {
           navigate("/pedidos");
         }
