@@ -42,7 +42,7 @@ export const Cotizador = () => {
 
   const fetchPedidos = async () => {
     try {
-      const pedidoResponse = await axios.get(`/pedidos/${id}`);
+      const pedidoResponse = await axios.get(`/pedidos`);
       setPedidos(pedidoResponse.data);
     } catch (error) {
       console.error("Error fetching pedidos", error);
@@ -96,7 +96,7 @@ export const Cotizador = () => {
   };
 
   const handleViewClick = (pedidoId) => {
-    navigate("/cotizacion");
+    navigate(`/cotizador/${pedidoId}`);
   };
 
   return (
@@ -323,7 +323,7 @@ export const Cotizador = () => {
                       <PencilIcon className="h-5 w-5" />
                     </button>
                     <button
-                      onClick={handleViewClick}
+                      onClick={() => handleViewClick(pedido.id)}
                       className="transform hover:text-blue-500 hover:scale-110"
                     >
                       <EyeIcon className="h-6 w-6" />

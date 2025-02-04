@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import axios from "../api/axios";
+import { Articulos } from "./Articulos";
 
 export const Cotizacion = () => {
+  const { id } = useParams();
   const navigate = useNavigate();
   const { pedidoId } = useParams();
   const [prendas] = useState(["Buzo", "Remera", "Campera", "Pantalones", "Chombas"]);
@@ -18,31 +20,6 @@ export const Cotizacion = () => {
   const [combinaciones, setCombinaciones] = useState([]);
   const [numeroArticulo, setNumeroArticulo] = useState("");
   const [cantidad, setCantidad] = useState(1);
-  const [articulos, setArticulos] = useState([]);
-
-  // Obtener artículos del pedido
-  const fetchArticulos = async () => {
-    try {
-      const response = await axios.get("/articulos");
-      const filteredArticulos = response.data.filter((articulo) => {
-        console.log(articulo.pedidos_id);
-        return articulo.pedidos_id === pedidoId;
-      });
-      setArticulos(filteredArticulos);
-    } catch (error) {
-      console.error("Error fetching articulos", error);
-    }
-  };
-
-  // Realizar el POST para crear un nuevo artículo
-  const createArticulo = async (articulo) => {
-    try {
-      await axios.post("/articulos", articulo);
-      fetchArticulos();
-    } catch (error) {
-      console.error("Error creating articulo", error);
-    }
-  };
 
   // Cargar los agregados y telas al inicio
   useEffect(() => {
@@ -66,8 +43,6 @@ export const Cotizacion = () => {
 
     fetchAgregados();
     fetchTelas();
-    fetchArticulos();
-    console.log(articulos)
   }, [pedidoId]);
 
   const handlePrendaChange = (e) => setSelectedPrenda(e.target.value);
@@ -337,42 +312,8 @@ export const Cotizacion = () => {
         </table>
       </div>
       {/* Mostrar los artículos según el pedido */}
-      <div className="mt-8">
-        <div className="flex justify-between w-3/4 mx-auto">
-          <h2 className="text-lg font-semibold">Artículos del Pedido</h2>
-        </div>
+      <Articulos pedidoId={id} />
 
-        <table className="w-full mx-auto mt-4 bg-white">
-          <thead className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-            <tr>
-              <th className="py-3 px-6 text-left">Número Artículo</th>
-              <th className="py-3 px-6 text-left">Prenda</th>
-              <th className="py-3 px-6 text-left">Talle</th>
-              <th className="py-3 px-6 text-left">Tela</th>
-              <th className="py-3 px-6 text-left">Cantidad</th>
-              <th className="py-3 px-6 text-left">Agregado(s)</th>
-              <th className="py-3 px-6 text-left">Precio</th>
-            </tr>
-          </thead>
-          <tbody className="text-gray-600 text-sm font-light">
-            {articulos.map((articulo, index) => (
-              <tr key={articulo.id}>
-                <td className="py-2 px-4">{articulo.numero_articulo}</td>
-                <td className="py-2 px-4">{articulo.prenda}</td>
-                <td className="py-2 px-4">{articulo.talle}</td>
-                <td className="py-2 px-4">{articulo.tela}</td>
-                <td className="py-2 px-4">{articulo.cantidad}</td>
-                <td className="py-2 px-4">
-                  {articulo.agregados.join(", ")}
-                </td>
-                <td className="py-2 px-4">
-                  {articulo.precio.toFixed(2)} USD
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
     </div>
   );
 };

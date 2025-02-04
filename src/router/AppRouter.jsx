@@ -15,14 +15,13 @@ export const AppRouter = () => {
   return (
     <Routes>
       <Route path="/" element={<Login />} />
+      <Route path="/prepage" element={<PrePage />} />
       <Route path="/pedidos" element={<Pedidos />} />
       <Route path="/pedidos/:id" element={<Pedido />} />
+      <Route path="/cotizador" element={<Cotizador />} />
+      <Route path="/cotizador/:id" element={<Cotizacion />} />
       <Route path="/articulos" element={<Articulos />} />
       <Route path="/articulos/:id" element={<Articulo />} />
-      <Route path="/prepage" element={<PrePage />} />
-      <Route path="/cotizador" element={<Cotizador />} />
-      <Route path="/cotizacion" element={<Cotizacion />} />
-      <Route path="/cotizacion/:pedidoId" element={<Cotizacion />} />
       <Route path="/telas" element={<Telas />} />
       <Route path="/agregados" element={<Agregados />} />
     </Routes>
