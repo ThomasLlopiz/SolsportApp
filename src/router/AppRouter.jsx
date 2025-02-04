@@ -16,8 +16,8 @@ export const AppRouter = () => {
     <Routes>
       {/* Ruta pública */}
       <Route path="/" element={<Login />} />
-      <Route path="/prepage" element={<PrePage />} />
       {/* Ruta privada para user (solo /pedidos y /pedidos/:id) */}
+      <Route element={<PrivateUserRoute path="/prepage" element={<PrePage />} />} />
       <Route path="/pedidos" element={<PrivateUserRoute element={<Pedidos />} />} />
       <Route path="/pedidos/:id" element={<PrivateUserRoute element={<Pedido />} />} />
       <Route path="/articulos" element={<PrivateUserRoute element={<Articulos />} />} />
