@@ -21,7 +21,7 @@ export const AppRouter = () => {
       <Route path="/pedidos" element={<PrivateUserRoute element={<Pedidos />} />} />
       <Route path="/pedidos/:id" element={<PrivateUserRoute element={<Pedido />} />} />
       <Route path="/articulos" element={<PrivateUserRoute element={<Articulos />} />} />
-      <Route path="/articulos/:id" element={<PrivateUserRoute element={<Articulos />} />} />
+      <Route path="/articulos/:id" element={<PrivateUserRoute element={<Articulo />} />} />
       {/* Rutas privadas para admin (solo admin puede acceder a estas) */}
       <Route path="/cotizador" element={<PrivateAdminRoute element={<Cotizador />} />} />
       <Route path="/cotizador/:id" element={<PrivateAdminRoute element={<Cotizacion />} />} />
