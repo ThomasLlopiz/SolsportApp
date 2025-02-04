@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import axios from "../api/axios";
 import { PencilIcon, PlusIcon, EyeIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
+import axios from "../api/axios";
 
 const formatDate = (dateString) => {
   if (!dateString) return "";
@@ -20,6 +20,15 @@ export const Articulos = ({ pedidoId }) => {
     talle: "",
     comentario: "",
   });
+  const [talles] = useState(["XS", "S", "M", "L", "XL", "XXL", "XXXL"]);
+  const [prendas] = useState([
+    "Buzo",
+    "Remera",
+    "Campera",
+    "Pantalones",
+    "Chombas",
+  ]);
+  const [telas, setTelas] = useState([]);
   const [articulos, setArticulos] = useState([]);
   const [editArticulo, setEditArticulo] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -31,9 +40,19 @@ export const Articulos = ({ pedidoId }) => {
     const fetchData = async () => {
       await fetchArticulos();
       await fetchEtapas();
+      await fetchTelas();
     };
     fetchData();
   }, [pedidoId]);
+
+  const fetchTelas = async () => {
+    try {
+      const response = await axios.get("/telas");
+      setTelas(response.data);
+    } catch (error) {
+      console.error("Error fetching telas", error);
+    }
+  };
 
   const fetchArticulos = async () => {
     try {
@@ -67,15 +86,36 @@ export const Articulos = ({ pedidoId }) => {
     }
   };
 
+  const handleCreateArticulo = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post("/articulos", {
+        ...newArticulo,
+        tela: newArticulo.tela,
+        pedidos_id: pedidoId,
+      });
+      setNewArticulo({
+        numero_articulo: "",
+        nombre: "",
+        cantidad: "",
+        talle: "",
+        comentario: "",
+        tela: "",
+      });
+      setIsCreateModalOpen(false);
+      fetchArticulos();
+    } catch (error) {
+      console.error("Error creating articulo", error);
+    }
+  };
+
+
   const handleUpdateArticulo = async (e) => {
     e.preventDefault();
     try {
       await axios.put(`/articulos/${editArticulo.id}`, {
-        numero_articulo: editArticulo.numero_articulo,
-        nombre: editArticulo.nombre,
-        cantidad: editArticulo.cantidad,
-        talle: editArticulo.talle,
-        comentario: editArticulo.comentario,
+        ...editArticulo,
+        tela: editArticulo.tela,
         pedidos_id: pedidoId,
       });
       setEditArticulo(null);
@@ -83,24 +123,6 @@ export const Articulos = ({ pedidoId }) => {
       fetchArticulos();
     } catch (error) {
       console.error("Error updating articulo", error);
-    }
-  };
-
-  const handleCreateArticulo = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.post("/articulos", { ...newArticulo, pedidos_id: pedidoId });
-      setNewArticulo({
-        numero_articulo: "",
-        nombre: "",
-        cantidad: "",
-        talle: "",
-        comentario: "",
-      });
-      setIsCreateModalOpen(false);
-      fetchArticulos();
-    } catch (error) {
-      console.error("Error creating articulo", error);
     }
   };
 
@@ -121,112 +143,6 @@ export const Articulos = ({ pedidoId }) => {
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-6 text-center">ARTÍCULOS</h1>
-
-      {/* Modal de edición */}
-      {isEditModalOpen && editArticulo && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
-            <h2 className="text-xl font-semibold mb-4">Editar Artículo</h2>
-            <form onSubmit={handleUpdateArticulo}>
-              <div className="mb-4">
-                <label className="block text-gray-700">
-                  Número de Artículo
-                </label>
-                <input
-                  type="number"
-                  value={editArticulo.numero_articulo}
-                  onChange={(e) =>
-                    setEditArticulo({
-                      ...editArticulo,
-                      numero_articulo: e.target.value,
-                    })
-                  }
-                  className="w-full border border-gray-300 p-2 rounded"
-                  min="1"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700">Nombre</label>
-                <input
-                  type="text"
-                  value={editArticulo.nombre}
-                  onChange={(e) =>
-                    setEditArticulo({
-                      ...editArticulo,
-                      nombre: e.target.value,
-                    })
-                  }
-                  className="w-full border border-gray-300 p-2 rounded"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700">Cantidad</label>
-                <input
-                  type="number"
-                  value={editArticulo.cantidad}
-                  onChange={(e) =>
-                    setEditArticulo({
-                      ...editArticulo,
-                      cantidad: e.target.value,
-                    })
-                  }
-                  className="w-full border border-gray-300 p-2 rounded"
-                  min="1"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700">Talle</label>
-                <input
-                  type="text"
-                  value={editArticulo.talle}
-                  onChange={(e) =>
-                    setEditArticulo({
-                      ...editArticulo,
-                      talle: e.target.value,
-                    })
-                  }
-                  className="w-full border border-gray-300 p-2 rounded"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700">Comentario</label>
-                <input
-                  type="text"
-                  value={editArticulo.comentario}
-                  onChange={(e) =>
-                    setEditArticulo({
-                      ...editArticulo,
-                      comentario: e.target.value,
-                    })
-                  }
-                  className="w-full border border-gray-300 p-2 rounded"
-                />
-              </div>
-              <div className="flex justify-end">
-                <button
-                  type="submit"
-                  className="bg-blue-500 text-white py-2 px-4 rounded mr-2"
-                >
-                  Guardar
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsEditModalOpen(false)}
-                  className="bg-gray-500 text-white py-2 px-4 rounded"
-                >
-                  Cancelar
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
       {/* Modal de creación */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
@@ -234,9 +150,7 @@ export const Articulos = ({ pedidoId }) => {
             <h2 className="text-xl font-semibold mb-4">Crear Artículo</h2>
             <form onSubmit={handleCreateArticulo}>
               <div className="mb-4">
-                <label className="block text-gray-700">
-                  Número de Artículo
-                </label>
+                <label className="block text-gray-700">Número de Artículo</label>
                 <input
                   type="number"
                   value={newArticulo.numero_articulo}
@@ -251,10 +165,11 @@ export const Articulos = ({ pedidoId }) => {
                   required
                 />
               </div>
+
+              {/* Select para Nombre (Prenda) */}
               <div className="mb-4">
                 <label className="block text-gray-700">Nombre</label>
-                <input
-                  type="text"
+                <select
                   value={newArticulo.nombre}
                   onChange={(e) =>
                     setNewArticulo({
@@ -264,7 +179,58 @@ export const Articulos = ({ pedidoId }) => {
                   }
                   className="w-full border border-gray-300 p-2 rounded"
                   required
-                />
+                >
+                  <option value="">Selecciona una prenda</option>
+                  {prendas.map((prenda) => (
+                    <option key={prenda} value={prenda}>
+                      {prenda}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Select para Talle */}
+              <div className="mb-4">
+                <label className="block text-gray-700">Talle</label>
+                <select
+                  value={newArticulo.talle}
+                  onChange={(e) =>
+                    setNewArticulo({
+                      ...newArticulo,
+                      talle: e.target.value,
+                    })
+                  }
+                  className="w-full border border-gray-300 p-2 rounded"
+                  required
+                >
+                  <option value="">Selecciona un talle</option>
+                  {talles.map((talle) => (
+                    <option key={talle} value={talle}>
+                      {talle}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700">Tela</label>
+                <select
+                  value={newArticulo.tela}
+                  onChange={(e) =>
+                    setNewArticulo({
+                      ...newArticulo,
+                      tela: e.target.value,
+                    })
+                  }
+                  className="w-full border border-gray-300 p-2 rounded"
+                  required
+                >
+                  <option value="">Selecciona una tela</option>
+                  {telas.map((tela) => (
+                    <option key={tela.id} value={tela.nombre}>
+                      {tela.nombre}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="mb-4">
                 <label className="block text-gray-700">Cantidad</label>
@@ -279,21 +245,6 @@ export const Articulos = ({ pedidoId }) => {
                   }
                   className="w-full border border-gray-300 p-2 rounded"
                   min="1"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700">Talle</label>
-                <input
-                  type="text"
-                  value={newArticulo.talle}
-                  onChange={(e) =>
-                    setNewArticulo({
-                      ...newArticulo,
-                      talle: e.target.value,
-                    })
-                  }
-                  className="w-full border border-gray-300 p-2 rounded"
                   required
                 />
               </div>
@@ -331,6 +282,146 @@ export const Articulos = ({ pedidoId }) => {
         </div>
       )}
 
+      {/* Modal de edición */}
+      {isEditModalOpen && editArticulo && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
+            <h2 className="text-xl font-semibold mb-4">Editar Artículo</h2>
+            <form onSubmit={handleUpdateArticulo}>
+              <div className="mb-4">
+                <label className="block text-gray-700">Número de Artículo</label>
+                <input
+                  type="number"
+                  value={editArticulo.numero_articulo}
+                  onChange={(e) =>
+                    setEditArticulo({
+                      ...editArticulo,
+                      numero_articulo: e.target.value,
+                    })
+                  }
+                  className="w-full border border-gray-300 p-2 rounded"
+                  min="1"
+                  required
+                />
+              </div>
+
+              {/* Select para Nombre (Prenda) */}
+              <div className="mb-4">
+                <label className="block text-gray-700">Nombre</label>
+                <select
+                  value={editArticulo.nombre}
+                  onChange={(e) =>
+                    setEditArticulo({
+                      ...editArticulo,
+                      nombre: e.target.value,
+                    })
+                  }
+                  className="w-full border border-gray-300 p-2 rounded"
+                  required
+                >
+                  <option value="">Selecciona una prenda</option>
+                  {prendas.map((prenda) => (
+                    <option key={prenda} value={prenda}>
+                      {prenda}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Select para Talle */}
+              <div className="mb-4">
+                <label className="block text-gray-700">Talle</label>
+                <select
+                  value={editArticulo.talle}
+                  onChange={(e) =>
+                    setEditArticulo({
+                      ...editArticulo,
+                      talle: e.target.value,
+                    })
+                  }
+                  className="w-full border border-gray-300 p-2 rounded"
+                  required
+                >
+                  <option value="">Selecciona un talle</option>
+                  {talles.map((talle) => (
+                    <option key={talle} value={talle}>
+                      {talle}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700">Tela</label>
+                <select
+                  value={editArticulo.tela}
+                  onChange={(e) =>
+                    setEditArticulo({
+                      ...editArticulo,
+                      tela: e.target.value,
+                    })
+                  }
+                  className="w-full border border-gray-300 p-2 rounded"
+                  required
+                >
+                  <option value="">Selecciona una tela</option>
+                  {telas.map((tela) => (
+                    <option key={tela.id} value={tela.nombre}>
+                      {tela.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-gray-700">Cantidad</label>
+                <input
+                  type="number"
+                  value={editArticulo.cantidad}
+                  onChange={(e) =>
+                    setEditArticulo({
+                      ...editArticulo,
+                      cantidad: e.target.value,
+                    })
+                  }
+                  className="w-full border border-gray-300 p-2 rounded"
+                  min="1"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700">Comentario</label>
+                <input
+                  type="text"
+                  value={editArticulo.comentario}
+                  onChange={(e) =>
+                    setEditArticulo({
+                      ...editArticulo,
+                      comentario: e.target.value,
+                    })
+                  }
+                  className="w-full border border-gray-300 p-2 rounded"
+                />
+              </div>
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  className="bg-blue-500 text-white py-2 px-4 rounded mr-2"
+                >
+                  Guardar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="bg-gray-500 text-white py-2 px-4 rounded"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Botón para abrir el modal de creación */}
       <div className="flex mb-6">
         <button
@@ -350,6 +441,7 @@ export const Articulos = ({ pedidoId }) => {
             <th className="py-2 px-4 border-b">Nombre</th>
             <th className="py-2 px-4 border-b">Cantidad</th>
             <th className="py-2 px-4 border-b">Talle</th>
+            <th className="py-2 px-4 border-b">Tela</th>
             <th className="py-2 px-4 border-b">Fecha Inicio</th>
             <th className="py-2 px-4 border-b">Fecha Fin</th>
             <th className="py-2 px-4 border-b">Última Etapa</th>
@@ -381,6 +473,7 @@ export const Articulos = ({ pedidoId }) => {
                 <td className="py-2 px-4 border-b">{articulo.nombre}</td>
                 <td className="py-2 px-4 border-b">{articulo.cantidad}</td>
                 <td className="py-2 px-4 border-b">{articulo.talle}</td>
+                <td className="py-2 px-4 border-b">{articulo.tela}</td>
                 <td className="py-2 px-4 border-b">{firstDate}</td>
                 <td className="py-2 px-4 border-b">{lastDate}</td>
                 <td className="py-2 px-4 border-b">{lastEtapa}</td>
