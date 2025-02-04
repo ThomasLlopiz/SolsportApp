@@ -1,16 +1,23 @@
 import { AppRouter } from "./router/AppRouter";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowRightOnRectangleIcon } from "@heroicons/react/24/outline";
+import { PrePage } from "./pages/PrePage";
 
 export const App = () => {
   const navigate = useNavigate();
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("rol");
     navigate("/");
   };
+
+  const rol = localStorage.getItem("rol");
+
   return (
     <>
+      {rol === "admin" && <PrePage />}
+
       <div className="absolute right-0 top-0">
         <button
           onClick={handleLogout}
