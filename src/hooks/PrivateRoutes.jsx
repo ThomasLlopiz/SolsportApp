@@ -1,20 +1,25 @@
 import { Navigate } from "react-router-dom";
 
-export const PrivateRoute = ({ element, ...rest }) => {
+export const PrivateAdminRoute = ({ element, ...rest }) => {
     const token = localStorage.getItem("token");
     const rol = localStorage.getItem("rol");
-
-    // Si existe el token
-    if (token) {
-        // Si el rol es "admin", permitimos el acceso a la ruta
-        if (rol === "admin") {
-            return element;
-        }
-
-        // Si el rol no es "admin", redirigimos a la página predeterminada para ese rol
+    if (token && rol === "admin") {
+        return element;
+    }
+    if (token && rol !== "admin") {
         return <Navigate to="/prepage" />;
     }
+    return <Navigate to="/sesion" />;
+};
 
-    // Si no existe el token, redirigimos al login
+export const PrivateUserRoute = ({ element, ...rest }) => {
+    const token = localStorage.getItem("token");
+    const rol = localStorage.getItem("rol");
+    if (token && rol === "user") {
+        return element;
+    }
+    if (token && rol !== "user") {
+        return <Navigate to="/pedidos" />;
+    }
     return <Navigate to="/sesion" />;
 };
