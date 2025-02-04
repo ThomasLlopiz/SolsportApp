@@ -9,17 +9,17 @@ export const PrivateAdminRoute = ({ element, ...rest }) => {
     if (token && rol !== "admin") {
         return <Navigate to="/prepage" />;
     }
-    return <Navigate to="/sesion" />;
+    return <Navigate to="/" />;
 };
 
 export const PrivateUserRoute = ({ element, ...rest }) => {
     const token = localStorage.getItem("token");
     const rol = localStorage.getItem("rol");
-    if (token && rol === "user") {
+    if (token && rol) {
         return element;
     }
-    if (token && rol !== "user") {
-        return <Navigate to="/pedidos" />;
+    if (!token && !rol) {
+        return <Navigate to="/" />;
     }
-    return <Navigate to="/sesion" />;
+    return <Navigate to="/" />;
 };
