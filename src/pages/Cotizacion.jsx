@@ -1,17 +1,12 @@
 import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
-import { useNavigate } from "react-router-dom";
 import axios from "../api/axios";
 
 export const Cotizacion = () => {
   const navigate = useNavigate();
-  const [prendas] = useState([
-    "Buzo",
-    "Remera",
-    "Campera",
-    "Pantalones",
-    "Chombas",
-  ]);
+  const { pedidoId } = useParams();
+  const [prendas] = useState(["Buzo", "Remera", "Campera", "Pantalones", "Chombas"]);
   const [talles] = useState(["XS", "S", "M", "L", "XL", "XXL", "XXXL"]);
   const [todosLosAgregados, setTodosLosAgregados] = useState([]);
   const [telas, setTelas] = useState([]);
@@ -21,7 +16,35 @@ export const Cotizacion = () => {
   const [selectedAgregados, setSelectedAgregados] = useState([]);
   const [agregadoParaAgregar, setAgregadoParaAgregar] = useState("");
   const [combinaciones, setCombinaciones] = useState([]);
+  const [numeroArticulo, setNumeroArticulo] = useState("");
+  const [cantidad, setCantidad] = useState(1);
+  const [articulos, setArticulos] = useState([]);
 
+  // Obtener artículos del pedido
+  const fetchArticulos = async () => {
+    try {
+      const response = await axios.get("/articulos");
+      const filteredArticulos = response.data.filter((articulo) => {
+        console.log(articulo.pedidos_id);
+        return articulo.pedidos_id === pedidoId;
+      });
+      setArticulos(filteredArticulos);
+    } catch (error) {
+      console.error("Error fetching articulos", error);
+    }
+  };
+
+  // Realizar el POST para crear un nuevo artículo
+  const createArticulo = async (articulo) => {
+    try {
+      await axios.post("/articulos", articulo);
+      fetchArticulos();
+    } catch (error) {
+      console.error("Error creating articulo", error);
+    }
+  };
+
+  // Cargar los agregados y telas al inicio
   useEffect(() => {
     const fetchAgregados = async () => {
       try {
@@ -43,12 +66,16 @@ export const Cotizacion = () => {
 
     fetchAgregados();
     fetchTelas();
-  }, []);
+    fetchArticulos();
+    console.log(articulos)
+  }, [pedidoId]);
 
   const handlePrendaChange = (e) => setSelectedPrenda(e.target.value);
   const handleTalleChange = (e) => setSelectedTalle(e.target.value);
   const handleTelaChange = (e) => setSelectedTela(e.target.value);
   const handleAgregadoChange = (e) => setAgregadoParaAgregar(e.target.value);
+  const handleNumeroArticuloChange = (e) => setNumeroArticulo(e.target.value);
+  const handleCantidadChange = (e) => setCantidad(e.target.value);
 
   const handleBackClick = () => {
     navigate(`/cotizador`);
@@ -89,7 +116,7 @@ export const Cotizacion = () => {
       return sum + (agregadoData ? agregadoData.precio : 0);
     }, 0);
 
-    return basePrice * (1 + tallePrice) + agregadoPrices;
+    return (basePrice * (1 + tallePrice) + agregadoPrices) * cantidad;
   };
 
   const handleGuardar = () => {
@@ -97,18 +124,23 @@ export const Cotizacion = () => {
       selectedPrenda &&
       selectedTalle &&
       selectedTela &&
-      selectedAgregados.length > 0
+      selectedAgregados.length > 0 &&
+      numeroArticulo
     ) {
-      setCombinaciones((prev) => [
-        ...prev,
-        {
-          prenda: selectedPrenda,
-          talle: selectedTalle,
-          tela: selectedTela,
-          agregados: selectedAgregados,
-          precio: calculatePrice(),
-        },
-      ]);
+      const articulo = {
+        numero_articulo: numeroArticulo,
+        prenda: selectedPrenda,
+        talle: selectedTalle,
+        tela: selectedTela,
+        agregados: selectedAgregados,
+        cantidad: cantidad,
+        precio: calculatePrice(),
+        pedidos_id: pedidoId,
+      };
+
+      createArticulo(articulo);
+      setNumeroArticulo("");
+      setCantidad(1);
       setSelectedPrenda("");
       setSelectedTalle("");
       setSelectedTela("");
@@ -117,14 +149,18 @@ export const Cotizacion = () => {
     }
   };
 
+  const total = combinaciones.reduce((sum, item) => sum + item.precio, 0);
+
   return (
     <div>
       <table className="w-3/4 mx-auto bg-white">
         <thead className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
           <tr>
+            <th className="py-3 px-6 text-left">Número de Artículo</th>
             <th className="py-3 px-6 text-left">Prenda</th>
             <th className="py-3 px-6 text-left">Talle</th>
             <th className="py-3 px-6 text-left">Tela</th>
+            <th className="py-3 px-6 text-left">Cantidad</th>
             <th className="py-3 px-6 text-left">Agregar</th>
             <th className="py-3 px-6 text-left">Agregado(s) Seleccionado(s)</th>
             <th className="py-3 px-6 text-left">Precio</th>
@@ -133,6 +169,16 @@ export const Cotizacion = () => {
         </thead>
         <tbody className="text-gray-600 text-sm font-light">
           <tr>
+            <td>
+              <input
+                type="number"
+                value={numeroArticulo}
+                onChange={handleNumeroArticuloChange}
+                className="py-2 px-4 border border-gray-300 rounded"
+                min="1"
+                required
+              />
+            </td>
             <td>
               <select
                 value={selectedPrenda}
@@ -174,6 +220,16 @@ export const Cotizacion = () => {
                   </option>
                 ))}
               </select>
+            </td>
+            <td>
+              <input
+                type="number"
+                value={cantidad}
+                onChange={handleCantidadChange}
+                className="py-2 px-4 border border-gray-300 rounded"
+                min="1"
+                required
+              />
             </td>
             <td className="flex flex-col gap-3">
               <select
@@ -241,12 +297,14 @@ export const Cotizacion = () => {
           </button>
         </div>
 
-        <table className="w-3/4 mx-auto mt-4 bg-white">
+        <table className="w-full mx-auto mt-4 bg-white">
           <thead className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
             <tr>
+              <th className="py-3 px-6 text-left">Número Artículo</th>
               <th className="py-3 px-6 text-left">Prenda</th>
               <th className="py-3 px-6 text-left">Talle</th>
               <th className="py-3 px-6 text-left">Tela</th>
+              <th className="py-3 px-6 text-left">Cantidad</th>
               <th className="py-3 px-6 text-left">Agregado(s)</th>
               <th className="py-3 px-6 text-left">Precio</th>
             </tr>
@@ -254,14 +312,61 @@ export const Cotizacion = () => {
           <tbody className="text-gray-600 text-sm font-light">
             {combinaciones.map((combinacion, index) => (
               <tr key={index}>
+                <td className="py-2 px-4">{combinacion.numero_articulo}</td>
                 <td className="py-2 px-4">{combinacion.prenda}</td>
                 <td className="py-2 px-4">{combinacion.talle}</td>
                 <td className="py-2 px-4">{combinacion.tela}</td>
+                <td className="py-2 px-4">{combinacion.cantidad}</td>
                 <td className="py-2 px-4">
                   {combinacion.agregados.join(", ")}
                 </td>
                 <td className="py-2 px-4">
                   {combinacion.precio.toFixed(2)} USD
+                </td>
+              </tr>
+            ))}
+            <tr>
+              <td colSpan="6" className="py-2 px-4 font-semibold text-right">
+                Total
+              </td>
+              <td className="py-2 px-4 font-semibold">
+                {total.toFixed(2)} USD
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      {/* Mostrar los artículos según el pedido */}
+      <div className="mt-8">
+        <div className="flex justify-between w-3/4 mx-auto">
+          <h2 className="text-lg font-semibold">Artículos del Pedido</h2>
+        </div>
+
+        <table className="w-full mx-auto mt-4 bg-white">
+          <thead className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+            <tr>
+              <th className="py-3 px-6 text-left">Número Artículo</th>
+              <th className="py-3 px-6 text-left">Prenda</th>
+              <th className="py-3 px-6 text-left">Talle</th>
+              <th className="py-3 px-6 text-left">Tela</th>
+              <th className="py-3 px-6 text-left">Cantidad</th>
+              <th className="py-3 px-6 text-left">Agregado(s)</th>
+              <th className="py-3 px-6 text-left">Precio</th>
+            </tr>
+          </thead>
+          <tbody className="text-gray-600 text-sm font-light">
+            {articulos.map((articulo, index) => (
+              <tr key={articulo.id}>
+                <td className="py-2 px-4">{articulo.numero_articulo}</td>
+                <td className="py-2 px-4">{articulo.prenda}</td>
+                <td className="py-2 px-4">{articulo.talle}</td>
+                <td className="py-2 px-4">{articulo.tela}</td>
+                <td className="py-2 px-4">{articulo.cantidad}</td>
+                <td className="py-2 px-4">
+                  {articulo.agregados.join(", ")}
+                </td>
+                <td className="py-2 px-4">
+                  {articulo.precio.toFixed(2)} USD
                 </td>
               </tr>
             ))}

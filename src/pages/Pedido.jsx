@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from '../api/axios';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { Articulos } from './Articulos';
+import axios from '../api/axios';
 
 export const Pedido = () => {
     const { id } = useParams();

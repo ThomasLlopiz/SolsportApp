@@ -22,6 +22,7 @@ export const AppRouter = () => {
       <Route path="/prepage" element={<PrePage />} />
       <Route path="/cotizador" element={<Cotizador />} />
       <Route path="/cotizacion" element={<Cotizacion />} />
+      <Route path="/cotizacion/:pedidoId" element={<Cotizacion />} />
       <Route path="/telas" element={<Telas />} />
       <Route path="/agregados" element={<Agregados />} />
     </Routes>

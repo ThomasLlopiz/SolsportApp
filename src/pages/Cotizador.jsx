@@ -8,7 +8,7 @@ import {
   ArrowRightOnRectangleIcon,
 } from "@heroicons/react/24/outline";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
-
+import { useParams } from "react-router-dom";
 const formatDate = (dateString) => {
   if (!dateString) return "";
   const date = new Date(dateString);
@@ -19,6 +19,7 @@ const formatDate = (dateString) => {
 };
 
 export const Cotizador = () => {
+  const { id } = useParams();
   const [pedidos, setPedidos] = useState([]);
   const [newPedido, setNewPedido] = useState({
     nombre_cliente: "",
@@ -41,8 +42,8 @@ export const Cotizador = () => {
 
   const fetchPedidos = async () => {
     try {
-      const response = await axios.get("/pedidos");
-      setPedidos(response.data);
+      const pedidoResponse = await axios.get(`/pedidos/${id}`);
+      setPedidos(pedidoResponse.data);
     } catch (error) {
       console.error("Error fetching pedidos", error);
     }

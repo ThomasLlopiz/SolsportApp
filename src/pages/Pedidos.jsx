@@ -1,20 +1,11 @@
 import { useState, useEffect } from "react";
-import axios from "../api/axios";
 import { useNavigate } from "react-router-dom";
 import {
   PencilIcon,
   PlusIcon,
   EyeIcon,
 } from "@heroicons/react/24/outline";
-
-const formatDate = (dateString) => {
-  if (!dateString) return "";
-  const date = new Date(dateString);
-  const day = String(date.getUTCDate()).padStart(2, "0");
-  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-  const year = date.getUTCFullYear();
-  return `${day}/${month}/${year}`;
-};
+import axios from "../api/axios";
 
 export const Pedidos = () => {
   const [pedidos, setPedidos] = useState([]);
