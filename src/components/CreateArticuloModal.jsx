@@ -10,9 +10,9 @@ export const CreateArticuloModal = ({
     todosLosAgregados,
     agregadoParaAgregar,
     setAgregadoParaAgregar,
-    handleAgregarAgregado,
+    handleAgregarAgregadoCreate,
     selectedAgregados,
-    handleRemoveAgregado,
+    handleRemoveAgregadoCreate,
 }) => {
     return (
         isCreateModalOpen && (
@@ -127,7 +127,7 @@ export const CreateArticuloModal = ({
                             </select>
                             <button
                                 type="button"
-                                onClick={handleAgregarAgregado}
+                                onClick={handleAgregarAgregadoCreate}
                                 className="py-2 px-4 bg-blue-500 text-white rounded"
                             >
                                 Agregar
@@ -142,7 +142,7 @@ export const CreateArticuloModal = ({
                                         {agregado}
                                         <button
                                             type="button"
-                                            onClick={() => handleRemoveAgregado(agregado)}
+                                            onClick={() => handleRemoveAgregadoCreate(agregado)}
                                             className="ml-2 text-red-500"
                                         >
                                             Eliminar
