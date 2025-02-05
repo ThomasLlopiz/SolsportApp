@@ -55,14 +55,12 @@ export const Cotizacion = () => {
   }, [pedidoId]);
 
   useEffect(() => {
-    // Recuperar combinaciones desde el localStorage al iniciar el componente
     const storedCombinaciones = JSON.parse(localStorage.getItem("combinaciones"));
     if (storedCombinaciones) {
       setCombinaciones(storedCombinaciones);
     }
   }, []);
 
-  // Función para guardar las combinaciones en localStorage
   const saveCombinacionesToLocalStorage = (combinaciones) => {
     localStorage.setItem("combinaciones", JSON.stringify(combinaciones));
   };
