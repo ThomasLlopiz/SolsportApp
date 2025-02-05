@@ -51,13 +51,13 @@ export const EditArticuloModal = ({
                         >
                             <option value="">Selecciona una prenda</option>
                             {prendas.map((prenda, index) => {
-                                const key = prenda.id && prenda.nombre ? `${prenda.id}-${prenda.nombre}` : `default-prenda-${index}`;
                                 return (
-                                    <option key={key} value={prenda.id}>
-                                        {prenda.nombre}
+                                    <option key={`prenda-${index}`} value={prenda}>
+                                        {prenda}
                                     </option>
                                 );
                             })}
+
                         </select>
 
                         {/* Select para Talle */}
@@ -117,12 +117,19 @@ export const EditArticuloModal = ({
                                 .filter(
                                     (agregado) => !editArticulo.agregados.includes(agregado.nombre)
                                 )
-                                .map((agregado) => (
+                                .map((agregado, index) => (
                                     <option key={`${agregado.id}-${agregado.nombre}`} value={agregado.nombre}>
                                         {agregado.nombre}
                                     </option>
                                 ))}
                         </select>
+                        <button
+                            type="button"
+                            onClick={handleAgregarAgregado}
+                            className="py-2 px-4 bg-blue-500 text-white rounded mt-2"
+                        >
+                            Agregar
+                        </button>
 
                         {/* Lista de agregados seleccionados */}
                         <div>
