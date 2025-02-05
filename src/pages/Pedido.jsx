@@ -30,7 +30,7 @@ export const Pedido = () => {
 
     return (
         <div className="min-h-screen bg-gray-100 p-6">
-            <div className="rounded-lg p-6">
+            <div className="rounded-lg">
                 <div className="flex justify-between items-center mb-4">
                     <h1 className="text-2xl font-bold text-center bg-gray-300 rounded-md p-1">Pedido #{pedido.numero_pedido}</h1>
                     <button
