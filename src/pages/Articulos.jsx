@@ -99,7 +99,7 @@ export const Articulos = ({ pedidoId }) => {
       console.error("Error fetching agregados", error);
     }
   };
-  //AGREGADOS
+  //AGREGADOS EDIT
   const handleAgregarAgregado = () => {
     if (
       agregadoParaAgregar &&
@@ -110,6 +110,19 @@ export const Articulos = ({ pedidoId }) => {
     }
   };
   const handleRemoveAgregado = (agregado) => {
+    setSelectedAgregados((prev) => prev.filter((item) => item !== agregado));
+  };
+  //AGREGADOS CREATE
+  const handleAgregarAgregadoCreate = () => {
+    if (
+      agregadoParaAgregar &&
+      !selectedAgregados.includes(agregadoParaAgregar)
+    ) {
+      setSelectedAgregados((prev) => [...prev, agregadoParaAgregar]);
+      setAgregadoParaAgregar("");
+    }
+  };
+  const handleRemoveAgregadoCreate = (agregado) => {
     setSelectedAgregados((prev) => prev.filter((item) => item !== agregado));
   };
   //CREATE
@@ -162,6 +175,7 @@ export const Articulos = ({ pedidoId }) => {
       fecha_fin: articulo.fecha_fin ? articulo.fecha_fin.slice(0, 10) : "",
       agregados: articulo.agregados || [],
     });
+    console.log(articulo.agregados);
     setIsEditModalOpen(true);
   };
   //VIEW ARITCULO
@@ -169,7 +183,7 @@ export const Articulos = ({ pedidoId }) => {
     navigate(`/articulos/${id}`);
   };
   return (
-    <div className="p-4">
+    <div className="text-md">
       <CreateArticuloModal
         isCreateModalOpen={isCreateModalOpen}
         setIsCreateModalOpen={setIsCreateModalOpen}
@@ -182,11 +196,10 @@ export const Articulos = ({ pedidoId }) => {
         todosLosAgregados={todosLosAgregados}
         agregadoParaAgregar={agregadoParaAgregar}
         setAgregadoParaAgregar={setAgregadoParaAgregar}
-        handleAgregarAgregado={handleAgregarAgregado}
+        handleAgregarAgregadoCreate={handleAgregarAgregadoCreate}
         selectedAgregados={selectedAgregados}
-        handleRemoveAgregado={handleRemoveAgregado}
+        handleRemoveAgregadoCreate={handleRemoveAgregadoCreate}
       />
-
       <EditArticuloModal
         isEditModalOpen={isEditModalOpen}
         setIsEditModalOpen={setIsEditModalOpen}
@@ -201,7 +214,6 @@ export const Articulos = ({ pedidoId }) => {
         setAgregadoParaAgregar={setAgregadoParaAgregar}
         handleAgregarAgregado={handleAgregarAgregado}
       />
-
       {/* Botón para abrir el modal de creación */}
       <div className="flex mb-6">
         <button
@@ -254,7 +266,7 @@ export const Articulos = ({ pedidoId }) => {
                 <td className="py-2 px-4 border-b">{articulo.cantidad}</td>
                 <td className="py-2 px-4 border-b">{articulo.talle}</td>
                 <td className="py-2 px-4 border-b">{articulo.tela}</td>
-                <td className="py-2 px-4 border-b w-10">{articulo.agregados}</td>
+                <td className="py-2 px-4 border-b w-">{articulo.agregados}</td>
                 <td className="py-2 px-4 border-b">{firstDate}</td>
                 <td className="py-2 px-4 border-b">{lastDate}</td>
                 <td className="py-2 px-4 border-b">{lastEtapa}</td>
