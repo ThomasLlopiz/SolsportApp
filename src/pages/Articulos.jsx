@@ -13,11 +13,13 @@ const formatDate = (dateString) => {
 };
 
 export const Articulos = ({ pedidoId }) => {
+
   const [newArticulo, setNewArticulo] = useState({
     numero_articulo: "",
     nombre: "",
     cantidad: "",
     talle: "",
+    agregados: "",
     comentario: "",
   });
   const [talles] = useState(["XS", "S", "M", "L", "XL", "XXL", "XXXL"]);
@@ -28,23 +30,28 @@ export const Articulos = ({ pedidoId }) => {
     "Pantalones",
     "Chombas",
   ]);
+  const [todosLosAgregados, setTodosLosAgregados] = useState([]);
+  const [selectedAgregados, setSelectedAgregados] = useState([]);
+  const [agregadoParaAgregar, setAgregadoParaAgregar] = useState("");
   const [telas, setTelas] = useState([]);
   const [articulos, setArticulos] = useState([]);
+  const [articulo, setArticulo] = useState([]);
   const [editArticulo, setEditArticulo] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [etapasMap, setEtapasMap] = useState({});
   const navigate = useNavigate();
-
+  
+  //FETCHS
   useEffect(() => {
     const fetchData = async () => {
       await fetchArticulos();
       await fetchEtapas();
       await fetchTelas();
+      await fetchAgregados();
     };
     fetchData();
   }, [pedidoId]);
-
   const fetchTelas = async () => {
     try {
       const response = await axios.get("/telas");
@@ -53,7 +60,6 @@ export const Articulos = ({ pedidoId }) => {
       console.error("Error fetching telas", error);
     }
   };
-
   const fetchArticulos = async () => {
     try {
       const response = await axios.get("/articulos");
@@ -65,7 +71,6 @@ export const Articulos = ({ pedidoId }) => {
       console.error("Error fetching articulos", error);
     }
   };
-
   const fetchEtapas = async () => {
     try {
       const response = await axios.get(`/etapas?pedidos_id=${pedidoId}`);
@@ -85,7 +90,28 @@ export const Articulos = ({ pedidoId }) => {
       console.error("Error fetching etapas", error);
     }
   };
-
+  const fetchAgregados = async () => {
+    try {
+      const response = await axios.get("/agregados");
+      setTodosLosAgregados(response.data);
+    } catch (error) {
+      console.error("Error fetching agregados", error);
+    }
+  };
+  //AGREGADOS
+  const handleAgregarAgregado = () => {
+    if (
+      agregadoParaAgregar &&
+      !selectedAgregados.includes(agregadoParaAgregar)
+    ) {
+      setSelectedAgregados((prev) => [...prev, agregadoParaAgregar]);
+      setAgregadoParaAgregar("");
+    }
+  };
+  const handleRemoveAgregado = (agregado) => {
+    setSelectedAgregados((prev) => prev.filter((item) => item !== agregado));
+  };
+  //CREATE
   const handleCreateArticulo = async (e) => {
     e.preventDefault();
     try {
@@ -93,23 +119,24 @@ export const Articulos = ({ pedidoId }) => {
         ...newArticulo,
         tela: newArticulo.tela,
         pedidos_id: pedidoId,
+        agregados: selectedAgregados,
       });
       setNewArticulo({
         numero_articulo: "",
         nombre: "",
         cantidad: "",
         talle: "",
+        agregados: "",
         comentario: "",
         tela: "",
       });
       setIsCreateModalOpen(false);
       fetchArticulos();
     } catch (error) {
-      console.error("Error creating articulo", error);
+      console.error('Error al crear el artículo:', error.response ? error.response.data : error.message);
     }
   };
-
-
+  //UPDATE
   const handleUpdateArticulo = async (e) => {
     e.preventDefault();
     try {
@@ -117,6 +144,7 @@ export const Articulos = ({ pedidoId }) => {
         ...editArticulo,
         tela: editArticulo.tela,
         pedidos_id: pedidoId,
+        agregados: editArticulo.agregados,
       });
       setEditArticulo(null);
       setIsEditModalOpen(false);
@@ -125,22 +153,20 @@ export const Articulos = ({ pedidoId }) => {
       console.error("Error updating articulo", error);
     }
   };
-
+  //EDIT
   const handleEditClick = (articulo) => {
     setEditArticulo({
       ...articulo,
-      fecha_inicio: articulo.fecha_inicio
-        ? articulo.fecha_inicio.slice(0, 10)
-        : "",
+      fecha_inicio: articulo.fecha_inicio ? articulo.fecha_inicio.slice(0, 10) : "",
       fecha_fin: articulo.fecha_fin ? articulo.fecha_fin.slice(0, 10) : "",
+      agregados: articulo.agregados || [],
     });
     setIsEditModalOpen(true);
   };
-
+  //VIEW ARITCULO
   const handleViewClick = (id) => {
     navigate(`/articulos/${id}`);
   };
-
   return (
     <div className="p-4">
       {/* Modal de creación */}
@@ -149,6 +175,7 @@ export const Articulos = ({ pedidoId }) => {
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
             <h2 className="text-xl font-semibold mb-4">Crear Artículo</h2>
             <form onSubmit={handleCreateArticulo}>
+              {/* NÚMERO DE ARTÍCULO */}
               <div className="mb-4">
                 <label className="block text-gray-700">Número de Artículo</label>
                 <input
@@ -166,9 +193,9 @@ export const Articulos = ({ pedidoId }) => {
                 />
               </div>
 
-              {/* Select para Nombre (Prenda) */}
+              {/* PRENDA */}
               <div className="mb-4">
-                <label className="block text-gray-700">Nombre</label>
+                <label className="block text-gray-700">Prenda</label>
                 <select
                   value={newArticulo.nombre}
                   onChange={(e) =>
@@ -189,7 +216,7 @@ export const Articulos = ({ pedidoId }) => {
                 </select>
               </div>
 
-              {/* Select para Talle */}
+              {/* TALLE */}
               <div className="mb-4">
                 <label className="block text-gray-700">Talle</label>
                 <select
@@ -211,6 +238,7 @@ export const Articulos = ({ pedidoId }) => {
                   ))}
                 </select>
               </div>
+              {/* TELA */}
               <div className="mb-4">
                 <label className="block text-gray-700">Tela</label>
                 <select
@@ -232,6 +260,49 @@ export const Articulos = ({ pedidoId }) => {
                   ))}
                 </select>
               </div>
+              {/* AGREGADOS */}
+              <div className="flex flex-col gap-3">
+                <select
+                  value={agregadoParaAgregar} // Cambié esto para usar `agregadoParaAgregar`
+                  onChange={(e) => setAgregadoParaAgregar(e.target.value)} // Actualizamos el agregado seleccionado
+                  className="py-2 px-4 border border-gray-300 rounded mt-12"
+                >
+                  <option value="">Seleccionar agregado</option>
+                  {todosLosAgregados
+                    .filter(
+                      (agregado) => !selectedAgregados.includes(agregado.nombre) // Filtramos para no mostrar los agregados ya seleccionados
+                    )
+                    .map((agregado, index) => (
+                      <option key={index} value={agregado.nombre} >
+                        {agregado.nombre}
+                      </option>
+                    ))}
+                </select>
+                <button
+                  type="button" // Cambié el tipo de botón a "button" ya que estamos manejando la lógica por fuera
+                  onClick={handleAgregarAgregado} // Llamamos la función para agregar el agregado
+                  className="py-2 px-4 bg-blue-500 text-white rounded"
+                >
+                  Agregar
+                </button>
+              </div>
+              <div>
+                <ul className="list-disc pl-4 font-semibold mt-10 mr-3">
+                  {selectedAgregados.map((agregado, index) => (
+                    <li key={index} className="flex justify-between items-center">
+                      {agregado}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveAgregado(agregado)} // Eliminamos el agregado
+                        className="ml-2 text-red-500"
+                      >
+                        Eliminar
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              {/* CANTIDAD */}
               <div className="mb-4">
                 <label className="block text-gray-700">Cantidad</label>
                 <input
@@ -248,6 +319,7 @@ export const Articulos = ({ pedidoId }) => {
                   required
                 />
               </div>
+              {/* COMENTARIO */}
               <div className="mb-4">
                 <label className="block text-gray-700">Comentario</label>
                 <input
@@ -288,6 +360,7 @@ export const Articulos = ({ pedidoId }) => {
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
             <h2 className="text-xl font-semibold mb-4">Editar Artículo</h2>
             <form onSubmit={handleUpdateArticulo}>
+              {/* Número de Artículo */}
               <div className="mb-4">
                 <label className="block text-gray-700">Número de Artículo</label>
                 <input
@@ -305,9 +378,9 @@ export const Articulos = ({ pedidoId }) => {
                 />
               </div>
 
-              {/* Select para Nombre (Prenda) */}
+              {/* Select para Prenda */}
               <div className="mb-4">
-                <label className="block text-gray-700">Nombre</label>
+                <label className="block text-gray-700">Prenda</label>
                 <select
                   value={editArticulo.nombre}
                   onChange={(e) =>
@@ -350,6 +423,8 @@ export const Articulos = ({ pedidoId }) => {
                   ))}
                 </select>
               </div>
+
+              {/* Select para Tela */}
               <div className="mb-4">
                 <label className="block text-gray-700">Tela</label>
                 <select
@@ -372,6 +447,61 @@ export const Articulos = ({ pedidoId }) => {
                 </select>
               </div>
 
+              {/* Agregados */}
+              <div className="flex flex-col gap-3">
+                <select
+                  value={agregadoParaAgregar}
+                  onChange={(e) => setAgregadoParaAgregar(e.target.value)}
+                  className="py-2 px-4 border border-gray-300 rounded mt-12"
+                >
+                  <option value="">Seleccionar agregado</option>
+                  {todosLosAgregados
+                    .filter(
+                      (agregado) => !editArticulo.agregados.includes(agregado.nombre) // No mostrar los agregados ya seleccionados
+                    )
+                    .map((agregado, index) => (
+                      <option key={index} value={agregado.nombre}>
+                        {agregado.nombre}
+                      </option>
+                    ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={handleAgregarAgregado}
+                  className="py-2 px-4 bg-blue-500 text-white rounded"
+                >
+                  Agregar
+                </button>
+              </div>
+
+              {/* Lista de agregados seleccionados */}
+              <div>
+                <ul className="list-disc pl-4 font-semibold mt-10 mr-3">
+                  {Array.isArray(editArticulo.agregados) && editArticulo.agregados.map((agregado, index) => (
+                    <li key={index} className="flex justify-between items-center">
+                      {agregado}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setEditArticulo({
+                            ...editArticulo,
+                            agregados: editArticulo.agregados.filter(
+                              (item) => item !== agregado
+                            ),
+                          })
+                        }
+                        className="ml-2 text-red-500"
+                      >
+                        Eliminar
+                      </button>
+                    </li>
+                  ))}
+
+
+                </ul>
+              </div>
+
+              {/* Cantidad */}
               <div className="mb-4">
                 <label className="block text-gray-700">Cantidad</label>
                 <input
@@ -388,6 +518,8 @@ export const Articulos = ({ pedidoId }) => {
                   required
                 />
               </div>
+
+              {/* Comentario */}
               <div className="mb-4">
                 <label className="block text-gray-700">Comentario</label>
                 <input
@@ -402,6 +534,7 @@ export const Articulos = ({ pedidoId }) => {
                   className="w-full border border-gray-300 p-2 rounded"
                 />
               </div>
+
               <div className="flex justify-end">
                 <button
                   type="submit"
@@ -422,6 +555,7 @@ export const Articulos = ({ pedidoId }) => {
         </div>
       )}
 
+
       {/* Botón para abrir el modal de creación */}
       <div className="flex mb-6">
         <button
@@ -436,12 +570,13 @@ export const Articulos = ({ pedidoId }) => {
       {/* Tabla de Artículos */}
       <table className="min-w-full bg-white border border-gray-200">
         <thead>
-          <tr>
+          <tr className="text-left">
             <th className="py-2 px-4 border-b">Número de Artículo</th>
-            <th className="py-2 px-4 border-b">Nombre</th>
+            <th className="py-2 px-4 border-b">Prenda</th>
             <th className="py-2 px-4 border-b">Cantidad</th>
             <th className="py-2 px-4 border-b">Talle</th>
             <th className="py-2 px-4 border-b">Tela</th>
+            <th className="py-2 px-4 border-b">Agregados</th>
             <th className="py-2 px-4 border-b">Fecha Inicio</th>
             <th className="py-2 px-4 border-b">Fecha Fin</th>
             <th className="py-2 px-4 border-b">Última Etapa</th>
@@ -474,6 +609,7 @@ export const Articulos = ({ pedidoId }) => {
                 <td className="py-2 px-4 border-b">{articulo.cantidad}</td>
                 <td className="py-2 px-4 border-b">{articulo.talle}</td>
                 <td className="py-2 px-4 border-b">{articulo.tela}</td>
+                <td className="py-2 px-4 border-b w-10">{articulo.agregados}</td>
                 <td className="py-2 px-4 border-b">{firstDate}</td>
                 <td className="py-2 px-4 border-b">{lastDate}</td>
                 <td className="py-2 px-4 border-b">{lastEtapa}</td>
