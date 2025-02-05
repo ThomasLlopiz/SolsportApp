@@ -11,6 +11,7 @@ export const EditArticuloModal = ({
     agregadoParaAgregar,
     setAgregadoParaAgregar,
     handleAgregarAgregado,
+    handleRemoveAgregado,
 }) => {
     return (
         isEditModalOpen && editArticulo && (
@@ -37,107 +38,98 @@ export const EditArticuloModal = ({
                         </div>
 
                         {/* Select para Prenda */}
-                        <div className="mb-4">
-                            <label className="block text-gray-700">Prenda</label>
-                            <select
-                                value={editArticulo.nombre}
-                                onChange={(e) =>
-                                    setEditArticulo({
-                                        ...editArticulo,
-                                        nombre: e.target.value,
-                                    })
-                                }
-                                className="w-full border border-gray-300 p-2 rounded"
-                                required
-                            >
-                                <option value="">Selecciona una prenda</option>
-                                {prendas.map((prenda) => (
-                                    <option key={prenda} value={prenda}>
-                                        {prenda}
+                        <select
+                            value={editArticulo.nombre}
+                            onChange={(e) =>
+                                setEditArticulo({
+                                    ...editArticulo,
+                                    nombre: e.target.value,
+                                })
+                            }
+                            className="w-full border border-gray-300 p-2 rounded"
+                            required
+                        >
+                            <option value="">Selecciona una prenda</option>
+                            {prendas.map((prenda, index) => {
+                                const key = prenda.id && prenda.nombre ? `${prenda.id}-${prenda.nombre}` : `default-prenda-${index}`;
+                                return (
+                                    <option key={key} value={prenda.id}>
+                                        {prenda.nombre}
                                     </option>
-                                ))}
-                            </select>
-                        </div>
+                                );
+                            })}
+                        </select>
 
                         {/* Select para Talle */}
-                        <div className="mb-4">
-                            <label className="block text-gray-700">Talle</label>
-                            <select
-                                value={editArticulo.talle}
-                                onChange={(e) =>
-                                    setEditArticulo({
-                                        ...editArticulo,
-                                        talle: e.target.value,
-                                    })
-                                }
-                                className="w-full border border-gray-300 p-2 rounded"
-                                required
-                            >
-                                <option value="">Selecciona un talle</option>
-                                {talles.map((talle) => (
-                                    <option key={talle} value={talle}>
+                        <select
+                            value={editArticulo.talle}
+                            onChange={(e) =>
+                                setEditArticulo({
+                                    ...editArticulo,
+                                    talle: e.target.value,
+                                })
+                            }
+                            className="w-full border border-gray-300 p-2 rounded"
+                            required
+                        >
+                            <option value="">Selecciona un talle</option>
+                            {talles.map((talle, index) => {
+                                const key = talle ? `talle-${talle}` : `default-talle-${index}`;
+                                return (
+                                    <option key={key} value={talle}>
                                         {talle}
                                     </option>
-                                ))}
-                            </select>
-                        </div>
+                                );
+                            })}
+                        </select>
 
-                        {/* Tela */}
-                        <div className="mb-4">
-                            <label className="block text-gray-700">Tela</label>
-                            <select
-                                value={editArticulo.tela}
-                                onChange={(e) =>
-                                    setEditArticulo({
-                                        ...editArticulo,
-                                        tela: e.target.value,
-                                    })
-                                }
-                                className="w-full border border-gray-300 p-2 rounded"
-                                required
-                            >
-                                <option value="">Selecciona una tela</option>
-                                {telas.map((tela) => (
-                                    <option key={tela.id} value={tela.nombre}>
+                        {/* Select para Tela */}
+                        <select
+                            value={editArticulo.tela}
+                            onChange={(e) =>
+                                setEditArticulo({
+                                    ...editArticulo,
+                                    tela: e.target.value,
+                                })
+                            }
+                            className="w-full border border-gray-300 p-2 rounded"
+                            required
+                        >
+                            <option value="">Selecciona una tela</option>
+                            {telas.map((tela, index) => {
+                                const key = tela.id && tela.nombre ? `${tela.id}-${tela.nombre}` : `default-tela-${index}`;
+                                return (
+                                    <option key={key} value={tela.nombre}>
                                         {tela.nombre}
                                     </option>
-                                ))}
-                            </select>
-                        </div>
+                                );
+                            })}
+                        </select>
 
                         {/* Agregados */}
-                        <div className="flex flex-col gap-3">
-                            <select
-                                value={agregadoParaAgregar}
-                                onChange={(e) => setAgregadoParaAgregar(e.target.value)}
-                                className="py-2 px-4 border border-gray-300 rounded mt-12"
-                            >
-                                <option value="">Seleccionar agregado</option>
-                                {todosLosAgregados
-                                    .filter(
-                                        (agregado) => !editArticulo.agregados.includes(agregado)
-                                    )
-                                    .map((agregado, index) => (
-                                        <option key={index} value={agregado}>
-                                            {agregado}
-                                        </option>
-                                    ))}
-                            </select>
-                            <button
-                                type="button"
-                                onClick={handleAgregarAgregado}
-                                className="py-2 px-4 bg-blue-500 text-white rounded"
-                            >
-                                Agregar
-                            </button>
-                        </div>
+                        <select
+                            value={agregadoParaAgregar}
+                            onChange={(e) => setAgregadoParaAgregar(e.target.value)}
+                            className="py-2 px-4 border border-gray-300 rounded mt-12"
+                        >
+                            <option value="">Seleccionar agregado</option>
+                            {todosLosAgregados
+                                .filter(
+                                    (agregado) => !editArticulo.agregados.includes(agregado.nombre)
+                                )
+                                .map((agregado) => (
+                                    <option key={`${agregado.id}-${agregado.nombre}`} value={agregado.nombre}>
+                                        {agregado.nombre}
+                                    </option>
+                                ))}
+                        </select>
 
                         {/* Lista de agregados seleccionados */}
                         <div>
                             <ul className="list-disc pl-4 font-semibold mt-10 mr-3">
-                                {editArticulo.agregados.map((agregado, index) => (
-                                    <li key={index} className="flex justify-between items-center">
-                                        {agregado}
+                                {Array.isArray(editArticulo.agregados) && editArticulo.agregados.map((agregado) => (
+                                    <li key={`${agregado.id}-${agregado.nombre}`} className="flex justify-between items-center">
+                                        {agregado.nombre}
                                         <button
                                             type="button"
                                             onClick={() => handleRemoveAgregado(agregado)}

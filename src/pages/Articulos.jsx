@@ -127,7 +127,7 @@ export const Articulos = ({ pedidoId }) => {
         nombre: "",
         cantidad: "",
         talle: "",
-        agregados: "",
+        agregados: [],
         comentario: "",
         tela: "",
       });
@@ -212,7 +212,6 @@ export const Articulos = ({ pedidoId }) => {
           Agregar Artículo
         </button>
       </div>
-
       {/* Tabla de Artículos */}
       <table className="min-w-full bg-white border border-gray-200">
         <thead>
