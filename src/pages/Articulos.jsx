@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { PencilIcon, PlusIcon, EyeIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
+import { CreateArticuloModal } from "../components/CreateArticuloModal";
+import { EditArticuloModal } from "../components/EditArticuloModal";
 import axios from "../api/axios";
 
 const formatDate = (dateString) => {
@@ -13,7 +15,6 @@ const formatDate = (dateString) => {
 };
 
 export const Articulos = ({ pedidoId }) => {
-
   const [newArticulo, setNewArticulo] = useState({
     numero_articulo: "",
     nombre: "",
@@ -41,7 +42,7 @@ export const Articulos = ({ pedidoId }) => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [etapasMap, setEtapasMap] = useState({});
   const navigate = useNavigate();
-  
+
   //FETCHS
   useEffect(() => {
     const fetchData = async () => {
@@ -169,392 +170,37 @@ export const Articulos = ({ pedidoId }) => {
   };
   return (
     <div className="p-4">
-      {/* Modal de creación */}
-      {isCreateModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
-            <h2 className="text-xl font-semibold mb-4">Crear Artículo</h2>
-            <form onSubmit={handleCreateArticulo}>
-              {/* NÚMERO DE ARTÍCULO */}
-              <div className="mb-4">
-                <label className="block text-gray-700">Número de Artículo</label>
-                <input
-                  type="number"
-                  value={newArticulo.numero_articulo}
-                  onChange={(e) =>
-                    setNewArticulo({
-                      ...newArticulo,
-                      numero_articulo: e.target.value,
-                    })
-                  }
-                  className="w-full border border-gray-300 p-2 rounded"
-                  min="1"
-                  required
-                />
-              </div>
+      <CreateArticuloModal
+        isCreateModalOpen={isCreateModalOpen}
+        setIsCreateModalOpen={setIsCreateModalOpen}
+        newArticulo={newArticulo}
+        setNewArticulo={setNewArticulo}
+        handleCreateArticulo={handleCreateArticulo}
+        prendas={prendas}
+        talles={talles}
+        telas={telas}
+        todosLosAgregados={todosLosAgregados}
+        agregadoParaAgregar={agregadoParaAgregar}
+        setAgregadoParaAgregar={setAgregadoParaAgregar}
+        handleAgregarAgregado={handleAgregarAgregado}
+        selectedAgregados={selectedAgregados}
+        handleRemoveAgregado={handleRemoveAgregado}
+      />
 
-              {/* PRENDA */}
-              <div className="mb-4">
-                <label className="block text-gray-700">Prenda</label>
-                <select
-                  value={newArticulo.nombre}
-                  onChange={(e) =>
-                    setNewArticulo({
-                      ...newArticulo,
-                      nombre: e.target.value,
-                    })
-                  }
-                  className="w-full border border-gray-300 p-2 rounded"
-                  required
-                >
-                  <option value="">Selecciona una prenda</option>
-                  {prendas.map((prenda) => (
-                    <option key={prenda} value={prenda}>
-                      {prenda}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* TALLE */}
-              <div className="mb-4">
-                <label className="block text-gray-700">Talle</label>
-                <select
-                  value={newArticulo.talle}
-                  onChange={(e) =>
-                    setNewArticulo({
-                      ...newArticulo,
-                      talle: e.target.value,
-                    })
-                  }
-                  className="w-full border border-gray-300 p-2 rounded"
-                  required
-                >
-                  <option value="">Selecciona un talle</option>
-                  {talles.map((talle) => (
-                    <option key={talle} value={talle}>
-                      {talle}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              {/* TELA */}
-              <div className="mb-4">
-                <label className="block text-gray-700">Tela</label>
-                <select
-                  value={newArticulo.tela}
-                  onChange={(e) =>
-                    setNewArticulo({
-                      ...newArticulo,
-                      tela: e.target.value,
-                    })
-                  }
-                  className="w-full border border-gray-300 p-2 rounded"
-                  required
-                >
-                  <option value="">Selecciona una tela</option>
-                  {telas.map((tela) => (
-                    <option key={tela.id} value={tela.nombre}>
-                      {tela.nombre}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              {/* AGREGADOS */}
-              <div className="flex flex-col gap-3">
-                <select
-                  value={agregadoParaAgregar} // Cambié esto para usar `agregadoParaAgregar`
-                  onChange={(e) => setAgregadoParaAgregar(e.target.value)} // Actualizamos el agregado seleccionado
-                  className="py-2 px-4 border border-gray-300 rounded mt-12"
-                >
-                  <option value="">Seleccionar agregado</option>
-                  {todosLosAgregados
-                    .filter(
-                      (agregado) => !selectedAgregados.includes(agregado.nombre) // Filtramos para no mostrar los agregados ya seleccionados
-                    )
-                    .map((agregado, index) => (
-                      <option key={index} value={agregado.nombre} >
-                        {agregado.nombre}
-                      </option>
-                    ))}
-                </select>
-                <button
-                  type="button" // Cambié el tipo de botón a "button" ya que estamos manejando la lógica por fuera
-                  onClick={handleAgregarAgregado} // Llamamos la función para agregar el agregado
-                  className="py-2 px-4 bg-blue-500 text-white rounded"
-                >
-                  Agregar
-                </button>
-              </div>
-              <div>
-                <ul className="list-disc pl-4 font-semibold mt-10 mr-3">
-                  {selectedAgregados.map((agregado, index) => (
-                    <li key={index} className="flex justify-between items-center">
-                      {agregado}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveAgregado(agregado)} // Eliminamos el agregado
-                        className="ml-2 text-red-500"
-                      >
-                        Eliminar
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              {/* CANTIDAD */}
-              <div className="mb-4">
-                <label className="block text-gray-700">Cantidad</label>
-                <input
-                  type="number"
-                  value={newArticulo.cantidad}
-                  onChange={(e) =>
-                    setNewArticulo({
-                      ...newArticulo,
-                      cantidad: e.target.value,
-                    })
-                  }
-                  className="w-full border border-gray-300 p-2 rounded"
-                  min="1"
-                  required
-                />
-              </div>
-              {/* COMENTARIO */}
-              <div className="mb-4">
-                <label className="block text-gray-700">Comentario</label>
-                <input
-                  type="text"
-                  value={newArticulo.comentario}
-                  onChange={(e) =>
-                    setNewArticulo({
-                      ...newArticulo,
-                      comentario: e.target.value,
-                    })
-                  }
-                  className="w-full border border-gray-300 p-2 rounded"
-                />
-              </div>
-              <div className="flex justify-end">
-                <button
-                  type="submit"
-                  className="bg-blue-500 text-white py-2 px-4 rounded mr-2"
-                >
-                  Crear
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsCreateModalOpen(false)}
-                  className="bg-gray-500 text-white py-2 px-4 rounded"
-                >
-                  Cancelar
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Modal de edición */}
-      {isEditModalOpen && editArticulo && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
-            <h2 className="text-xl font-semibold mb-4">Editar Artículo</h2>
-            <form onSubmit={handleUpdateArticulo}>
-              {/* Número de Artículo */}
-              <div className="mb-4">
-                <label className="block text-gray-700">Número de Artículo</label>
-                <input
-                  type="number"
-                  value={editArticulo.numero_articulo}
-                  onChange={(e) =>
-                    setEditArticulo({
-                      ...editArticulo,
-                      numero_articulo: e.target.value,
-                    })
-                  }
-                  className="w-full border border-gray-300 p-2 rounded"
-                  min="1"
-                  required
-                />
-              </div>
-
-              {/* Select para Prenda */}
-              <div className="mb-4">
-                <label className="block text-gray-700">Prenda</label>
-                <select
-                  value={editArticulo.nombre}
-                  onChange={(e) =>
-                    setEditArticulo({
-                      ...editArticulo,
-                      nombre: e.target.value,
-                    })
-                  }
-                  className="w-full border border-gray-300 p-2 rounded"
-                  required
-                >
-                  <option value="">Selecciona una prenda</option>
-                  {prendas.map((prenda) => (
-                    <option key={prenda} value={prenda}>
-                      {prenda}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Select para Talle */}
-              <div className="mb-4">
-                <label className="block text-gray-700">Talle</label>
-                <select
-                  value={editArticulo.talle}
-                  onChange={(e) =>
-                    setEditArticulo({
-                      ...editArticulo,
-                      talle: e.target.value,
-                    })
-                  }
-                  className="w-full border border-gray-300 p-2 rounded"
-                  required
-                >
-                  <option value="">Selecciona un talle</option>
-                  {talles.map((talle) => (
-                    <option key={talle} value={talle}>
-                      {talle}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Select para Tela */}
-              <div className="mb-4">
-                <label className="block text-gray-700">Tela</label>
-                <select
-                  value={editArticulo.tela}
-                  onChange={(e) =>
-                    setEditArticulo({
-                      ...editArticulo,
-                      tela: e.target.value,
-                    })
-                  }
-                  className="w-full border border-gray-300 p-2 rounded"
-                  required
-                >
-                  <option value="">Selecciona una tela</option>
-                  {telas.map((tela) => (
-                    <option key={tela.id} value={tela.nombre}>
-                      {tela.nombre}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Agregados */}
-              <div className="flex flex-col gap-3">
-                <select
-                  value={agregadoParaAgregar}
-                  onChange={(e) => setAgregadoParaAgregar(e.target.value)}
-                  className="py-2 px-4 border border-gray-300 rounded mt-12"
-                >
-                  <option value="">Seleccionar agregado</option>
-                  {todosLosAgregados
-                    .filter(
-                      (agregado) => !editArticulo.agregados.includes(agregado.nombre) // No mostrar los agregados ya seleccionados
-                    )
-                    .map((agregado, index) => (
-                      <option key={index} value={agregado.nombre}>
-                        {agregado.nombre}
-                      </option>
-                    ))}
-                </select>
-                <button
-                  type="button"
-                  onClick={handleAgregarAgregado}
-                  className="py-2 px-4 bg-blue-500 text-white rounded"
-                >
-                  Agregar
-                </button>
-              </div>
-
-              {/* Lista de agregados seleccionados */}
-              <div>
-                <ul className="list-disc pl-4 font-semibold mt-10 mr-3">
-                  {Array.isArray(editArticulo.agregados) && editArticulo.agregados.map((agregado, index) => (
-                    <li key={index} className="flex justify-between items-center">
-                      {agregado}
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setEditArticulo({
-                            ...editArticulo,
-                            agregados: editArticulo.agregados.filter(
-                              (item) => item !== agregado
-                            ),
-                          })
-                        }
-                        className="ml-2 text-red-500"
-                      >
-                        Eliminar
-                      </button>
-                    </li>
-                  ))}
-
-
-                </ul>
-              </div>
-
-              {/* Cantidad */}
-              <div className="mb-4">
-                <label className="block text-gray-700">Cantidad</label>
-                <input
-                  type="number"
-                  value={editArticulo.cantidad}
-                  onChange={(e) =>
-                    setEditArticulo({
-                      ...editArticulo,
-                      cantidad: e.target.value,
-                    })
-                  }
-                  className="w-full border border-gray-300 p-2 rounded"
-                  min="1"
-                  required
-                />
-              </div>
-
-              {/* Comentario */}
-              <div className="mb-4">
-                <label className="block text-gray-700">Comentario</label>
-                <input
-                  type="text"
-                  value={editArticulo.comentario}
-                  onChange={(e) =>
-                    setEditArticulo({
-                      ...editArticulo,
-                      comentario: e.target.value,
-                    })
-                  }
-                  className="w-full border border-gray-300 p-2 rounded"
-                />
-              </div>
-
-              <div className="flex justify-end">
-                <button
-                  type="submit"
-                  className="bg-blue-500 text-white py-2 px-4 rounded mr-2"
-                >
-                  Guardar
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsEditModalOpen(false)}
-                  className="bg-gray-500 text-white py-2 px-4 rounded"
-                >
-                  Cancelar
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
+      <EditArticuloModal
+        isEditModalOpen={isEditModalOpen}
+        setIsEditModalOpen={setIsEditModalOpen}
+        editArticulo={editArticulo}
+        setEditArticulo={setEditArticulo}
+        handleUpdateArticulo={handleUpdateArticulo}
+        prendas={prendas}
+        talles={talles}
+        telas={telas}
+        todosLosAgregados={todosLosAgregados}
+        agregadoParaAgregar={agregadoParaAgregar}
+        setAgregadoParaAgregar={setAgregadoParaAgregar}
+        handleAgregarAgregado={handleAgregarAgregado}
+      />
 
       {/* Botón para abrir el modal de creación */}
       <div className="flex mb-6">
