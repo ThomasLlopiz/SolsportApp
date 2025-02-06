@@ -39,6 +39,7 @@ export const Etapas = ({ articuloId, pedidosId }) => {
     nombre: "",
     fecha_inicio: "",
     fecha_fin: "",
+    comentario: "",  // Agregado para comentario
   });
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -85,6 +86,7 @@ export const Etapas = ({ articuloId, pedidosId }) => {
         nombre: editEtapa.nombre,
         fecha_inicio: editEtapa.fecha_inicio,
         fecha_fin: editEtapa.fecha_fin,
+        comentario: editEtapa.comentario,  // Agregado para enviar el comentario
         articulos_id: articuloId,
         pedidos_id: pedidosId,
       });
@@ -108,6 +110,7 @@ export const Etapas = ({ articuloId, pedidosId }) => {
         nombre: "",
         fecha_inicio: "",
         fecha_fin: "",
+        comentario: "",  // Reseteamos comentario
       });
       setIsCreateModalOpen(false);
       fetchEtapas();
@@ -183,6 +186,17 @@ export const Etapas = ({ articuloId, pedidosId }) => {
                   required
                 />
               </div>
+              {/* Campo Comentario */}
+              <div className="mb-4">
+                <label className="block text-gray-700">Comentario</label>
+                <textarea
+                  value={editEtapa.comentario}
+                  onChange={(e) =>
+                    setEditEtapa({ ...editEtapa, comentario: e.target.value })
+                  }
+                  className="w-full p-2 border border-gray-300 rounded mt-1"
+                />
+              </div>
               <div className="flex justify-end mt-4">
                 <button
                   type="submit"
@@ -253,6 +267,17 @@ export const Etapas = ({ articuloId, pedidosId }) => {
                   required
                 />
               </div>
+              {/* Campo Comentario */}
+              <div className="mb-4">
+                <label className="block text-gray-700">Comentario</label>
+                <textarea
+                  value={newEtapa.comentario}
+                  onChange={(e) =>
+                    setNewEtapa({ ...newEtapa, comentario: e.target.value })
+                  }
+                  className="w-full p-2 border border-gray-300 rounded mt-1"
+                />
+              </div>
               <div className="flex justify-end mt-4">
                 <button
                   type="submit"
@@ -287,6 +312,7 @@ export const Etapas = ({ articuloId, pedidosId }) => {
             <th className="py-2 px-4 border-b text-left">Nombre</th>
             <th className="py-2 px-4 border-b text-left">Fecha de Inicio</th>
             <th className="py-2 px-4 border-b text-left">Fecha de Fin</th>
+            <th className="py-2 px-4 border-b text-left">Comentario</th>
             <th className="py-2 px-4 border-b text-left">Usuario</th>
             <th className="py-2 px-4 border-b text-left">Acciones</th>
           </tr>
@@ -301,6 +327,7 @@ export const Etapas = ({ articuloId, pedidosId }) => {
               <td className="py-2 px-4 border-b">
                 {formatDateForDisplay(etapa.fecha_fin)}
               </td>
+              <td className="py-2 px-4 border-b">{etapa.comentario}</td>
               <td className="py-2 px-4 border-b">{etapa.usuario_nombre}</td>
               <td className="py-2 px-4 border-b">
                 <button onClick={() => handleEditClick(etapa)}>
