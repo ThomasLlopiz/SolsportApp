@@ -104,21 +104,20 @@ export const EditArticuloModal = ({
                         </select>
                         {/* Agregados */}
                         <select
-                            value={agregadoParaAgregar}
+                            value={agregadoParaAgregar || ''} // Usa '' si el valor es undefined
                             onChange={(e) => setAgregadoParaAgregar(e.target.value)}
                             className="py-2 px-4 border border-gray-300 rounded mb-4 w-3/4"
                         >
                             <option value="">Seleccionar agregado</option>
                             {todosLosAgregados
-                                .filter(
-                                    (agregado) => !editArticulo.agregados.includes(agregado.nombre)
-                                )
-                                .map((agregado, index) => (
-                                    <option key={`${agregado.id}-${agregado.nombre}`} value={agregado.nombre}>
+                                .filter((agregado) => !editArticulo.agregados.includes(agregado.nombre))
+                                .map((agregado) => (
+                                    <option key={agregado.id} value={agregado.nombre}>
                                         {agregado.nombre}
                                     </option>
                                 ))}
                         </select>
+
                         <button
                             type="button"
                             onClick={handleAgregarAgregado}
@@ -146,6 +145,7 @@ export const EditArticuloModal = ({
                                     <li className="text-gray-500">No hay agregados.</li>
                                 )}
                             </ul>
+
                         </div>
                         {/* Cantidad */}
                         <div className="mb-4">

@@ -37,7 +37,15 @@ export const Articulos = ({ pedidoId }) => {
   const [telas, setTelas] = useState([]);
   const [articulos, setArticulos] = useState([]);
   const [articulo, setArticulo] = useState([]);
-  const [editArticulo, setEditArticulo] = useState(null);
+  const [editArticulo, setEditArticulo] = useState({
+    numero_articulo: "",
+    nombre: "",
+    cantidad: "",
+    talle: "",
+    agregados: [],
+    comentario: "",
+    tela: "",
+  });
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [etapasMap, setEtapasMap] = useState({});
@@ -105,14 +113,16 @@ export const Articulos = ({ pedidoId }) => {
       const agregado = todosLosAgregados.find(item => item.nombre === agregadoParaAgregar);
       if (agregado && Array.isArray(editArticulo.agregados) && !editArticulo.agregados.some(item => item.id === agregado.id)) {
         setEditArticulo({
-          ...articulo,
-          agregados: Array.isArray(articulo.agregados) ? articulo.agregados : [], // Asegura que sea un array vacío si no lo es
+          ...editArticulo,
+          agregados: [...editArticulo.agregados, agregado],  // Añadir el nuevo agregado
         });
-
-        setAgregadoParaAgregar('');
+        console.log('Agregados después de agregar:', [...editArticulo.agregados, agregado]);
+        setAgregadoParaAgregar(''); // Limpiar el campo de agregado
       }
     }
   };
+
+
   const handleRemoveAgregado = (agregado) => {
     setEditArticulo({
       ...editArticulo,
@@ -165,7 +175,7 @@ export const Articulos = ({ pedidoId }) => {
         ...editArticulo,
         tela: editArticulo.tela,
         pedidos_id: pedidoId,
-        agregados: editArticulo.agregados,
+        agregados: editArticulo.agregados.map((agregado) => agregado.nombre),
       });
       setEditArticulo(null);
       setIsEditModalOpen(false);
@@ -177,19 +187,24 @@ export const Articulos = ({ pedidoId }) => {
   //EDIT
   const handleEditClick = (articulo) => {
     console.log("Agregados al editar:", articulo.agregados);
+
+    // Asegúrate de que 'agregados' siempre sea un array
     const agregadosArray = Array.isArray(articulo.agregados)
       ? articulo.agregados
       : articulo.agregados
-        ? articulo.agregados.split(", ").map((nombre) => ({ nombre }))
+        ? articulo.agregados.split(", ").map((nombre) => ({ nombre })) // Convierte el string de agregados en un array de objetos
         : [];
+
     setEditArticulo({
       ...articulo,
       fecha_inicio: articulo.fecha_inicio ? articulo.fecha_inicio.slice(0, 10) : "",
       fecha_fin: articulo.fecha_fin ? articulo.fecha_fin.slice(0, 10) : "",
-      agregados: agregadosArray,
+      agregados: agregadosArray, // Aquí asignas siempre un array
     });
-    setIsEditModalOpen(true);
+
+    setIsEditModalOpen(true); // Abre el modal de edición
   };
+
   //VIEW ARITCULO
   const handleViewClick = (id) => {
     navigate(`/articulos/${id}`);
