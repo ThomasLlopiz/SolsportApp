@@ -132,7 +132,7 @@ export const EditArticuloModal = ({
                                 {Array.isArray(editArticulo.agregados) && editArticulo.agregados.length > 0 ? (
                                     editArticulo.agregados.map((agregado) => (
                                         <li key={agregado.nombre} className="flex justify-between items-center">
-                                            {agregado.nombre} {/* Mostrar el nombre del agregado */}
+                                            {agregado.nombre}
                                             <button
                                                 type="button"
                                                 onClick={() => handleRemoveAgregado(agregado)}
@@ -146,7 +146,6 @@ export const EditArticuloModal = ({
                                     <li className="text-gray-500">No hay agregados.</li>
                                 )}
                             </ul>
-
                         </div>
                         {/* Cantidad */}
                         <div className="mb-4">
