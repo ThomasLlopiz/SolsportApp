@@ -111,17 +111,21 @@ export const Articulos = ({ pedidoId }) => {
   const handleAgregarAgregado = () => {
     if (agregadoParaAgregar) {
       const agregado = todosLosAgregados.find(item => item.nombre === agregadoParaAgregar);
+
+      // Verifica que el agregado no esté ya en la lista de agregados
       if (agregado && Array.isArray(editArticulo.agregados) && !editArticulo.agregados.some(item => item.id === agregado.id)) {
+        // Añadir el nuevo agregado
         setEditArticulo({
           ...editArticulo,
-          agregados: [...editArticulo.agregados, agregado],  // Añadir el nuevo agregado
+          agregados: [...editArticulo.agregados, agregado],
         });
         console.log('Agregados después de agregar:', [...editArticulo.agregados, agregado]);
-        setAgregadoParaAgregar(''); // Limpiar el campo de agregado
+
+        // Limpiar el campo de agregado (esto es para asegurarte de que se mantenga el valor en el select)
+        setAgregadoParaAgregar('');
       }
     }
   };
-
 
   const handleRemoveAgregado = (agregado) => {
     setEditArticulo({

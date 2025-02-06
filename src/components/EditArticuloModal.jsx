@@ -110,13 +110,14 @@ export const EditArticuloModal = ({
                         >
                             <option value="">Seleccionar agregado</option>
                             {todosLosAgregados
-                                .filter((agregado) => !editArticulo.agregados.includes(agregado.nombre))
+                                .filter((agregado) => !editArticulo.agregados.some(item => item.nombre === agregado.nombre)) // Filtra los agregados ya seleccionados
                                 .map((agregado) => (
                                     <option key={agregado.id} value={agregado.nombre}>
                                         {agregado.nombre}
                                     </option>
                                 ))}
                         </select>
+
 
                         <button
                             type="button"
