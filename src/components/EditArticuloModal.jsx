@@ -36,7 +36,6 @@ export const EditArticuloModal = ({
                                 required
                             />
                         </div>
-
                         {/* Select para Prenda */}
                         <select
                             value={editArticulo.nombre}
@@ -46,7 +45,7 @@ export const EditArticuloModal = ({
                                     nombre: e.target.value,
                                 })
                             }
-                            className="w-full border border-gray-300 p-2 rounded"
+                            className="w-full border border-gray-300 p-2 rounded mb-4"
                             required
                         >
                             <option value="">Selecciona una prenda</option>
@@ -59,7 +58,6 @@ export const EditArticuloModal = ({
                             })}
 
                         </select>
-
                         {/* Select para Talle */}
                         <select
                             value={editArticulo.talle}
@@ -69,7 +67,7 @@ export const EditArticuloModal = ({
                                     talle: e.target.value,
                                 })
                             }
-                            className="w-full border border-gray-300 p-2 rounded"
+                            className="w-full border border-gray-300 p-2 rounded mb-4"
                             required
                         >
                             <option value="">Selecciona un talle</option>
@@ -82,7 +80,6 @@ export const EditArticuloModal = ({
                                 );
                             })}
                         </select>
-
                         {/* Select para Tela */}
                         <select
                             value={editArticulo.tela}
@@ -92,7 +89,7 @@ export const EditArticuloModal = ({
                                     tela: e.target.value,
                                 })
                             }
-                            className="w-full border border-gray-300 p-2 rounded"
+                            className="w-full border border-gray-300 p-2 rounded mb-4"
                             required
                         >
                             <option value="">Selecciona una tela</option>
@@ -105,12 +102,11 @@ export const EditArticuloModal = ({
                                 );
                             })}
                         </select>
-
                         {/* Agregados */}
                         <select
                             value={agregadoParaAgregar}
                             onChange={(e) => setAgregadoParaAgregar(e.target.value)}
-                            className="py-2 px-4 border border-gray-300 rounded mt-12"
+                            className="py-2 px-4 border border-gray-300 rounded mb-4 w-3/4"
                         >
                             <option value="">Seleccionar agregado</option>
                             {todosLosAgregados
@@ -126,29 +122,32 @@ export const EditArticuloModal = ({
                         <button
                             type="button"
                             onClick={handleAgregarAgregado}
-                            className="py-2 px-4 bg-blue-500 text-white rounded mt-2"
+                            className="py-2 px-4 bg-blue-500 text-white rounded mb-4 w-1/4"
                         >
                             Agregar
                         </button>
-
                         {/* Lista de agregados seleccionados */}
                         <div>
-                            <ul className="list-disc pl-4 font-semibold mt-10 mr-3">
-                                {Array.isArray(editArticulo.agregados) && editArticulo.agregados.map((agregado) => (
-                                    <li key={`${agregado.id}-${agregado.nombre}`} className="flex justify-between items-center">
-                                        {agregado.nombre}
-                                        <button
-                                            type="button"
-                                            onClick={() => handleRemoveAgregado(agregado)}
-                                            className="ml-2 text-red-500"
-                                        >
-                                            Eliminar
-                                        </button>
-                                    </li>
-                                ))}
+                            <ul className="list-disc pl-4 font-semibold mb-4 mr-3">
+                                {Array.isArray(editArticulo.agregados) && editArticulo.agregados.length > 0 ? (
+                                    editArticulo.agregados.map((agregado) => (
+                                        <li key={agregado.nombre} className="flex justify-between items-center">
+                                            {agregado.nombre} {/* Mostrar el nombre del agregado */}
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveAgregado(agregado)}
+                                                className="ml-2 text-red-500"
+                                            >
+                                                Eliminar
+                                            </button>
+                                        </li>
+                                    ))
+                                ) : (
+                                    <li className="text-gray-500">No hay agregados.</li>
+                                )}
                             </ul>
-                        </div>
 
+                        </div>
                         {/* Cantidad */}
                         <div className="mb-4">
                             <label className="block text-gray-700">Cantidad</label>
@@ -166,7 +165,6 @@ export const EditArticuloModal = ({
                                 required
                             />
                         </div>
-
                         <div className="flex justify-end">
                             <button
                                 type="submit"

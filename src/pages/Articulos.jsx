@@ -101,22 +101,24 @@ export const Articulos = ({ pedidoId }) => {
   };
   //AGREGADOS EDIT
   const handleAgregarAgregado = () => {
-    if (agregadoParaAgregar && !editArticulo.agregados.some(agregado => agregado.nombre === agregadoParaAgregar)) {
+    if (agregadoParaAgregar) {
       const agregado = todosLosAgregados.find(item => item.nombre === agregadoParaAgregar);
-      setEditArticulo({
-        ...editArticulo,
-        agregados: [...editArticulo.agregados, agregado],
-      });
-      setAgregadoParaAgregar(''); // Resetea el campo después de agregar
+      if (agregado && Array.isArray(editArticulo.agregados) && !editArticulo.agregados.some(item => item.id === agregado.id)) {
+        setEditArticulo({
+          ...articulo,
+          agregados: Array.isArray(articulo.agregados) ? articulo.agregados : [], // Asegura que sea un array vacío si no lo es
+        });
+
+        setAgregadoParaAgregar('');
+      }
     }
   };
   const handleRemoveAgregado = (agregado) => {
     setEditArticulo({
       ...editArticulo,
-      agregados: editArticulo.agregados.filter(item => item.id !== agregado.id),
+      agregados: editArticulo.agregados.filter(item => item.nombre !== agregado.nombre),
     });
   };
-
   //AGREGADOS CREATE
   const handleAgregarAgregadoCreate = () => {
     if (
@@ -174,13 +176,18 @@ export const Articulos = ({ pedidoId }) => {
   };
   //EDIT
   const handleEditClick = (articulo) => {
+    console.log("Agregados al editar:", articulo.agregados);
+    const agregadosArray = Array.isArray(articulo.agregados)
+      ? articulo.agregados
+      : articulo.agregados
+        ? articulo.agregados.split(", ").map((nombre) => ({ nombre }))
+        : [];
     setEditArticulo({
       ...articulo,
       fecha_inicio: articulo.fecha_inicio ? articulo.fecha_inicio.slice(0, 10) : "",
       fecha_fin: articulo.fecha_fin ? articulo.fecha_fin.slice(0, 10) : "",
-      agregados: articulo.agregados || [],
+      agregados: agregadosArray,
     });
-    console.log(articulo.agregados);
     setIsEditModalOpen(true);
   };
   //VIEW ARITCULO
