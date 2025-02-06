@@ -101,17 +101,22 @@ export const Articulos = ({ pedidoId }) => {
   };
   //AGREGADOS EDIT
   const handleAgregarAgregado = () => {
-    if (
-      agregadoParaAgregar &&
-      !selectedAgregados.includes(agregadoParaAgregar)
-    ) {
-      setSelectedAgregados((prev) => [...prev, agregadoParaAgregar]);
-      setAgregadoParaAgregar("");
+    if (agregadoParaAgregar && !editArticulo.agregados.some(agregado => agregado.nombre === agregadoParaAgregar)) {
+      const agregado = todosLosAgregados.find(item => item.nombre === agregadoParaAgregar);
+      setEditArticulo({
+        ...editArticulo,
+        agregados: [...editArticulo.agregados, agregado],
+      });
+      setAgregadoParaAgregar(''); // Resetea el campo después de agregar
     }
   };
   const handleRemoveAgregado = (agregado) => {
-    setSelectedAgregados((prev) => prev.filter((item) => item !== agregado));
+    setEditArticulo({
+      ...editArticulo,
+      agregados: editArticulo.agregados.filter(item => item.id !== agregado.id),
+    });
   };
+
   //AGREGADOS CREATE
   const handleAgregarAgregadoCreate = () => {
     if (
@@ -183,7 +188,7 @@ export const Articulos = ({ pedidoId }) => {
     navigate(`/articulos/${id}`);
   };
   return (
-    <div className="text-md">
+    <div className="text-sm">
       <CreateArticuloModal
         isCreateModalOpen={isCreateModalOpen}
         setIsCreateModalOpen={setIsCreateModalOpen}
@@ -213,6 +218,7 @@ export const Articulos = ({ pedidoId }) => {
         agregadoParaAgregar={agregadoParaAgregar}
         setAgregadoParaAgregar={setAgregadoParaAgregar}
         handleAgregarAgregado={handleAgregarAgregado}
+        handleRemoveAgregado={handleRemoveAgregado}
       />
       {/* Botón para abrir el modal de creación */}
       <div className="flex mb-6">
