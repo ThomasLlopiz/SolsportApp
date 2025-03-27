@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { Etapas } from "./Etapas";
-import axios from "../api/axios";
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 export const Articulo = () => {
   const { id } = useParams();
@@ -13,9 +14,13 @@ export const Articulo = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const articuloResponse = await axios.get(`/articulos/${id}`);
-        setArticulo(articuloResponse.data);
-        setEditedComment(articuloResponse.data.comentario || "");
+        const response = await fetch(`${API_URL}/articulos/${id}`);
+        if (!response.ok) {
+          throw new Error("Error fetching data");
+        }
+        const data = await response.json();
+        setArticulo(data);
+        setEditedComment(data.comentario || "");
       } catch (error) {
         console.error("Error fetching data", error);
       }
@@ -36,10 +41,20 @@ export const Articulo = () => {
 
   const handleSaveClick = async () => {
     try {
-      await axios.put(`/articulos/${id}`, {
-        ...articulo,
-        comentario: editedComment,
+      const response = await fetch(`${API_URL}/articulos/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...articulo,
+          comentario: editedComment,
+        }),
       });
+      if (!response.ok) {
+        throw new Error("Error saving comment");
+      }
+      const updatedArticulo = await response.json();
       setArticulo((prev) => ({ ...prev, comentario: editedComment }));
     } catch (error) {
       console.error("Error saving comment", error);
