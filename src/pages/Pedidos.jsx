@@ -5,11 +5,11 @@ import {
   PlusIcon,
   EyeIcon,
 } from "@heroicons/react/24/outline";
-import axios from "../api/axios";
 
 export const Pedidos = () => {
   const [pedidos, setPedidos] = useState([]);
   const [newPedido, setNewPedido] = useState({
+    numero_pedido: "",
     nombre_cliente: "",
     correo: "",
     telefono: "",
@@ -22,14 +22,18 @@ export const Pedidos = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const navigate = useNavigate();
 
+  // URL base de la API desde el archivo .env
+  const API_URL = import.meta.env.VITE_API_URL;
+
   useEffect(() => {
     fetchPedidos();
   }, []);
 
   const fetchPedidos = async () => {
     try {
-      const response = await axios.get("/pedidos");
-      setPedidos(response.data);
+      const response = await fetch(`${API_URL}/pedidos`);
+      const data = await response.json();
+      setPedidos(data);
     } catch (error) {
       console.error("Error fetching pedidos", error);
     }
@@ -38,17 +42,28 @@ export const Pedidos = () => {
   const handleCreatePedido = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("/pedidos", newPedido);
-      setNewPedido({
-        nombre_cliente: "",
-        correo: "",
-        telefono: "",
-        localidad: "",
-        fecha_pago: "",
-        fecha_estimada: "",
+      const response = await fetch(`${API_URL}/pedidos`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newPedido),
       });
-      setIsCreateModalOpen(false);
-      fetchPedidos();
+      if (response.ok) {
+        setNewPedido({
+          numero_pedido: "",
+          nombre_cliente: "",
+          correo: "",
+          telefono: "",
+          localidad: "",
+          fecha_pago: "",
+          fecha_estimada: "",
+        });
+        setIsCreateModalOpen(false);
+        fetchPedidos();
+      } else {
+        console.error("Error creating pedido");
+      }
     } catch (error) {
       console.error("Error creating pedido", error);
     }
@@ -57,10 +72,20 @@ export const Pedidos = () => {
   const handleUpdatePedido = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`/pedidos/${editPedido.id}`, editPedido);
-      setEditPedido(null);
-      setIsEditModalOpen(false);
-      fetchPedidos();
+      const response = await fetch(`${API_URL}/pedidos/${editPedido.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(editPedido),
+      });
+      if (response.ok) {
+        setEditPedido(null);
+        setIsEditModalOpen(false);
+        fetchPedidos();
+      } else {
+        console.error("Error updating pedido");
+      }
     } catch (error) {
       console.error("Error updating pedido", error);
     }
@@ -101,9 +126,23 @@ export const Pedidos = () => {
             <h2 className="text-xl font-semibold mb-4">Crear Nuevo Pedido</h2>
             <form onSubmit={handleCreatePedido}>
               <div className="mb-4">
-                <label className="block text-gray-700">
-                  Nombre del Cliente
-                </label>
+                <label className="block text-gray-700">Número de Pedido</label>
+                <input
+                  type="text"
+                  value={newPedido.numero_pedido}
+                  onChange={(e) =>
+                    setNewPedido({
+                      ...newPedido,
+                      numero_pedido: e.target.value,
+                    })
+                  }
+                  className="w-full p-2 border border-gray-300 rounded mt-1 bg-gray-100"
+                  required
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-gray-700">Nombre del Cliente</label>
                 <input
                   type="text"
                   value={newPedido.nombre_cliente}
@@ -200,16 +239,30 @@ export const Pedidos = () => {
         </div>
       )}
 
-      {/* Modal de Editar Pedido */}
+      {/* Modal de Edición de Pedido */}
       {isEditModalOpen && editPedido && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
             <h2 className="text-xl font-semibold mb-4">Editar Pedido</h2>
             <form onSubmit={handleUpdatePedido}>
               <div className="mb-4">
-                <label className="block text-gray-700">
-                  Nombre del Cliente
-                </label>
+                <label className="block text-gray-700">Número de Pedido</label>
+                <input
+                  type="text"
+                  value={editPedido.numero_pedido}
+                  onChange={(e) =>
+                    setEditPedido({
+                      ...editPedido,
+                      numero_pedido: e.target.value,
+                    })
+                  }
+                  className="w-full p-2 border border-gray-300 rounded mt-1 bg-gray-100"
+                  required
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-gray-700">Nombre del Cliente</label>
                 <input
                   type="text"
                   value={editPedido.nombre_cliente}
@@ -291,7 +344,7 @@ export const Pedidos = () => {
                   type="submit"
                   className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition mr-2"
                 >
-                  Actualizar Pedido
+                  Guardar Cambios
                 </button>
                 <button
                   type="button"
@@ -326,7 +379,7 @@ export const Pedidos = () => {
                 className="border-b border-gray-200 hover:bg-gray-100"
               >
                 <td className="py-3 px-6 text-left whitespace-nowrap">
-                  {pedido.id}
+                  {pedido.numero_pedido}
                 </td>
                 <td className="py-3 px-6 text-left">{pedido.nombre_cliente}</td>
                 <td className="py-3 px-6 text-left">{pedido.correo}</td>
