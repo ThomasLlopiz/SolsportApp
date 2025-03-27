@@ -7,6 +7,7 @@ export const Login = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const API_URL = import.meta.env.VITE_API_URL;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -23,7 +24,7 @@ export const Login = () => {
       if (data.success) {
         localStorage.setItem("token", data.token);
         localStorage.setItem("rol", data.rol);
-
+        localStorage.setItem("usuario_id", data.usuario_id); 
         if (data.rol === "admin") {
           navigate("/cotizador");
         } else if (data.rol === "user") {
