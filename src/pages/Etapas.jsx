@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import axios from "../api/axios";
 import { PencilIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
 
@@ -22,6 +21,7 @@ const formatDateForDisplay = (dateString) => {
 };
 
 const NOMBRE_OPTIONS = [
+  "Diseño",
   "Corte",
   "Bordado",
   "Subilmado",
@@ -39,25 +39,30 @@ export const Etapas = ({ articuloId, pedidosId }) => {
     nombre: "",
     fecha_inicio: "",
     fecha_fin: "",
-    comentario: "",  // Agregado para comentario
+    comentario: "",
   });
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const navigate = useNavigate();
   const [firstDate, setFirstDate] = useState("");
   const [lastDate, setLastDate] = useState("");
   const [lastEtapa, setLastEtapa] = useState(null);
+  const [usuarios, setUsuarios] = useState([]);
+
+  const API_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     fetchEtapas();
+    fetchUsuarios();
   }, [articuloId]);
 
   const fetchEtapas = async () => {
     try {
-      const response = await axios.get(`/etapas?articulos_id=${articuloId}`);
-      const filteredEtapas = response.data.filter(
+      const response = await fetch(`${API_URL}/etapas?articulos_id=${articuloId}`);
+      const data = await response.json();
+      const filteredEtapas = data.filter(
         (etapa) => etapa.articulos_id == articuloId
       );
+      console.log(filteredEtapas)
       setEtapas(filteredEtapas);
       if (filteredEtapas.length > 0) {
         const sortedEtapas = [...filteredEtapas].sort(
@@ -81,41 +86,75 @@ export const Etapas = ({ articuloId, pedidosId }) => {
 
   const handleUpdateEtapa = async (e) => {
     e.preventDefault();
+    const token = localStorage.getItem('token');
+    const usuarioId = localStorage.getItem('usuario_id');
+    if (!token || !usuarioId) {
+      console.error("No se encontró el token o usuario_id");
+      return;
+    }
+
     try {
-      await axios.put(`/etapas/${editEtapa.id}`, {
-        nombre: editEtapa.nombre,
-        fecha_inicio: editEtapa.fecha_inicio,
-        fecha_fin: editEtapa.fecha_fin,
-        comentario: editEtapa.comentario,  // Agregado para enviar el comentario
-        articulos_id: articuloId,
-        pedidos_id: pedidosId,
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/etapas/${editEtapa.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          ...editEtapa,
+          usuario_id: usuarioId,
+        }),
       });
-      setEditEtapa(null);
-      setIsEditModalOpen(false);
-      fetchEtapas();
-    } catch (error) {
-      console.error("Error updating etapa", error);
+
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log("Etapa actualizada:", data);
+        setIsEditModalOpen(false); // Cerrar el modal al actualizar
+        fetchEtapas(); // Recargar las etapas después de actualizar
+      } else {
+        console.error("Error al actualizar la etapa:", data.message);
+      }
+    } catch (err) {
+      console.error("Error en la solicitud:", err);
     }
   };
 
   const handleCreateEtapa = async (e) => {
     e.preventDefault();
+    const token = localStorage.getItem('token'); // Obtener el token del localStorage
+    const usuarioId = localStorage.getItem('usuario_id'); // Obtener el usuario_id del localStorage
+    if (!token || !usuarioId) {
+      console.error("No se encontró el token o usuario_id");
+      return;
+    }
+
     try {
-      await axios.post("/etapas", {
-        ...newEtapa,
-        articulos_id: articuloId,
-        pedidos_id: pedidosId,
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/etapas`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`, // Incluir el token en los encabezados
+        },
+        body: JSON.stringify({
+          ...newEtapa,
+          articulos_id: articuloId,
+          pedidos_id: pedidosId,
+          usuario_id: usuarioId, // Incluir el usuario_id
+        }),
       });
-      setNewEtapa({
-        nombre: "",
-        fecha_inicio: "",
-        fecha_fin: "",
-        comentario: "",  // Reseteamos comentario
-      });
-      setIsCreateModalOpen(false);
-      fetchEtapas();
-    } catch (error) {
-      console.error("Error creating etapa", error);
+
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log("Etapa creada:", data);
+        setIsCreateModalOpen(false); // Cerrar el modal al crear
+        fetchEtapas(); // Recargar las etapas después de crear
+      } else {
+        console.error("Error al crear la etapa:", data.message);
+      }
+    } catch (err) {
+      console.error("Error en la solicitud:", err);
     }
   };
 
@@ -128,8 +167,19 @@ export const Etapas = ({ articuloId, pedidosId }) => {
     setIsEditModalOpen(true);
   };
 
-  const handleViewClick = (id) => {
-    navigate(`/etapas/${id}`);
+  const fetchUsuarios = async () => {
+    try {
+      const response = await fetch(`${API_URL}/usuarios`);
+      const data = await response.json();
+      setUsuarios(data);
+    } catch (error) {
+      console.error("Error fetching usuarios", error);
+    }
+  };
+
+  const getUsuarioNombre = (usuarioId) => {
+    const usuario = usuarios.find((user) => user.id === usuarioId);
+    return usuario ? usuario.usuario : "Usuario no encontrado";
   };
 
   return (
@@ -186,7 +236,6 @@ export const Etapas = ({ articuloId, pedidosId }) => {
                   required
                 />
               </div>
-              {/* Campo Comentario */}
               <div className="mb-4">
                 <label className="block text-gray-700">Comentario</label>
                 <textarea
@@ -267,7 +316,6 @@ export const Etapas = ({ articuloId, pedidosId }) => {
                   required
                 />
               </div>
-              {/* Campo Comentario */}
               <div className="mb-4">
                 <label className="block text-gray-700">Comentario</label>
                 <textarea
@@ -328,7 +376,7 @@ export const Etapas = ({ articuloId, pedidosId }) => {
                 {formatDateForDisplay(etapa.fecha_fin)}
               </td>
               <td className="py-2 px-4 border-b">{etapa.comentario}</td>
-              <td className="py-2 px-4 border-b">{etapa.usuario_nombre}</td>
+              <td className="py-2 px-4 border-b">{getUsuarioNombre(etapa.usuario_id)}</td> {/* Mostrar nombre del usuario */}
               <td className="py-2 px-4 border-b">
                 <button onClick={() => handleEditClick(etapa)}>
                   <PencilIcon className="h-5 w-5 ml-5" />
