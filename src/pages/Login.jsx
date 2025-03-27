@@ -1,5 +1,4 @@
 import { useState } from "react";
-import axios from "../api/axios";
 import { useNavigate } from "react-router-dom";
 
 export const Login = () => {
@@ -7,21 +6,27 @@ export const Login = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
-
+  const API_URL = import.meta.env.VITE_API_URL;
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post("/usuarios/login", {
-        username,
-        password,
+      const response = await fetch(`${API_URL}/usuarios/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ usuario: username, contraseña: password }),
       });
-      if (response.data.success) {
-        localStorage.setItem("token", response.data.token);
-        localStorage.setItem("rol", response.data.rol)
 
-        if (response.data.rol === "admin") {
-          navigate("/cotizador"); 
-        } else if (response.data.rol === "user") {
+      const data = await response.json();
+
+      if (data.success) {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("rol", data.rol);
+
+        if (data.rol === "admin") {
+          navigate("/cotizador");
+        } else if (data.rol === "user") {
           navigate("/pedidos");
         }
       } else {
