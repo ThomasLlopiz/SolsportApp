@@ -130,10 +130,10 @@ export const EditArticuloModal = ({
                                 {Array.isArray(editArticulo.agregados) && editArticulo.agregados.length > 0 ? (
                                     editArticulo.agregados.map((agregado, index) => (
                                         <li key={index} className="flex justify-between items-center">
-                                            {agregado.nombre} {/* Aquí mostramos solo el nombre del agregado */}
+                                            {typeof agregado === 'string' ? agregado : agregado.nombre}
                                             <button
                                                 type="button"
-                                                onClick={() => handleRemoveAgregado(agregado)} // Eliminas el agregado al hacer clic
+                                                onClick={() => handleRemoveAgregado(agregado)}
                                                 className="ml-2 text-red-500"
                                             >
                                                 Eliminar

@@ -135,7 +135,9 @@ export const Articulos = ({ pedidoId }) => {
   const handleRemoveAgregado = (agregado) => {
     setEditArticulo({
       ...editArticulo,
-      agregados: editArticulo.agregados.filter(item => item.nombre !== agregado.nombre),
+      agregados: editArticulo.agregados.filter(item =>
+        agregado.id ? item.id !== agregado.id : item.nombre !== agregado.nombre
+      ),
     });
   };
 
@@ -168,7 +170,7 @@ export const Articulos = ({ pedidoId }) => {
       tela: newArticulo.tela || "",
       pedidos_id: pedidoId,
       agregados: selectedAgregados.join(", "),
-      comentario: newArticulo.comentario || "",
+      comentario: newArticulo.comentario || "Sin Comentario",
     };
 
     try {
@@ -193,7 +195,7 @@ export const Articulos = ({ pedidoId }) => {
         cantidad: "",
         talle: "",
         agregados: [],
-        comentario: "",
+        comentario: "Sin Comentario",
         tela: "",
       });
       setSelectedAgregados([]);
@@ -233,21 +235,36 @@ export const Articulos = ({ pedidoId }) => {
   const handleEditClick = (articulo) => {
     console.log("Agregados al editar:", articulo.agregados);
 
-    // Asegúrate de que 'agregados' siempre sea un array de objetos
-    const agregadosArray = Array.isArray(articulo.agregados)
-      ? articulo.agregados
-      : articulo.agregados
-        ? articulo.agregados.split(", ").map((nombre) => ({ nombre })) // Convierte el string de agregados en un array de objetos
-        : [];
+    let agregadosArray = [];
+
+    if (Array.isArray(articulo.agregados)) {
+      if (articulo.agregados.length > 0 && typeof articulo.agregados[0] === 'string') {
+        // Convertir array de strings a array de objetos
+        agregadosArray = articulo.agregados.map(nombre => {
+          const agregadoExistente = todosLosAgregados.find(a => a.nombre === nombre);
+          return agregadoExistente || { nombre };
+        });
+      } else {
+        // Ya es un array de objetos
+        agregadosArray = [...articulo.agregados];
+      }
+    } else if (typeof articulo.agregados === 'string') {
+      // Convertir string separada por comas a array de objetos
+      agregadosArray = articulo.agregados.split(", ")
+        .map(nombre => {
+          const agregadoExistente = todosLosAgregados.find(a => a.nombre === nombre);
+          return agregadoExistente || { nombre };
+        });
+    }
 
     setEditArticulo({
       ...articulo,
       fecha_inicio: articulo.fecha_inicio ? articulo.fecha_inicio.slice(0, 10) : "",
       fecha_fin: articulo.fecha_fin ? articulo.fecha_fin.slice(0, 10) : "",
-      agregados: agregadosArray, // Aquí asignas siempre un array de objetos
+      agregados: agregadosArray,
     });
 
-    setIsEditModalOpen(true); // Abre el modal de edición
+    setIsEditModalOpen(true);
   };
 
   //VIEW ARITCULO
