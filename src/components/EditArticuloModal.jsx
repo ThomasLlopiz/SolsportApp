@@ -104,20 +104,19 @@ export const EditArticuloModal = ({
                         </select>
                         {/* Agregados */}
                         <select
-                            value={agregadoParaAgregar || ''} // Usa '' si el valor es undefined
+                            value={agregadoParaAgregar || ''}
                             onChange={(e) => setAgregadoParaAgregar(e.target.value)}
                             className="py-2 px-4 border border-gray-300 rounded mb-4 w-3/4"
                         >
                             <option value="">Seleccionar agregado</option>
                             {todosLosAgregados
-                                .filter((agregado) => !editArticulo.agregados.some(item => item.nombre === agregado.nombre)) // Filtra los agregados ya seleccionados
+                                .filter((agregado) => !editArticulo.agregados.some(item => item.nombre === agregado.nombre))
                                 .map((agregado) => (
                                     <option key={agregado.id} value={agregado.nombre}>
                                         {agregado.nombre}
                                     </option>
                                 ))}
                         </select>
-
 
                         <button
                             type="button"
@@ -126,16 +125,15 @@ export const EditArticuloModal = ({
                         >
                             Agregar
                         </button>
-                        {/* Lista de agregados seleccionados */}
                         <div>
                             <ul className="list-disc pl-4 font-semibold mb-4 mr-3">
                                 {Array.isArray(editArticulo.agregados) && editArticulo.agregados.length > 0 ? (
-                                    editArticulo.agregados.map((agregado) => (
-                                        <li key={agregado.nombre} className="flex justify-between items-center">
-                                            {agregado.nombre}
+                                    editArticulo.agregados.map((agregado, index) => (
+                                        <li key={index} className="flex justify-between items-center">
+                                            {agregado.nombre} {/* Aquí mostramos solo el nombre del agregado */}
                                             <button
                                                 type="button"
-                                                onClick={() => handleRemoveAgregado(agregado)}
+                                                onClick={() => handleRemoveAgregado(agregado)} // Eliminas el agregado al hacer clic
                                                 className="ml-2 text-red-500"
                                             >
                                                 Eliminar
@@ -146,8 +144,8 @@ export const EditArticuloModal = ({
                                     <li className="text-gray-500">No hay agregados.</li>
                                 )}
                             </ul>
-
                         </div>
+
                         {/* Cantidad */}
                         <div className="mb-4">
                             <label className="block text-gray-700">Cantidad</label>

@@ -3,7 +3,6 @@ import { PencilIcon, PlusIcon, EyeIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
 import { CreateArticuloModal } from "../components/CreateArticuloModal";
 import { EditArticuloModal } from "../components/EditArticuloModal";
-import axios from "../api/axios";
 
 const formatDate = (dateString) => {
   if (!dateString) return "";
@@ -20,8 +19,9 @@ export const Articulos = ({ pedidoId }) => {
     nombre: "",
     cantidad: "",
     talle: "",
-    agregados: "",
+    agregados: [],
     comentario: "",
+    tela: "",
   });
   const [talles] = useState(["XS", "S", "M", "L", "XL", "XXL", "XXXL"]);
   const [prendas] = useState([
@@ -36,7 +36,6 @@ export const Articulos = ({ pedidoId }) => {
   const [agregadoParaAgregar, setAgregadoParaAgregar] = useState("");
   const [telas, setTelas] = useState([]);
   const [articulos, setArticulos] = useState([]);
-  const [articulo, setArticulo] = useState([]);
   const [editArticulo, setEditArticulo] = useState({
     numero_articulo: "",
     nombre: "",
@@ -51,6 +50,8 @@ export const Articulos = ({ pedidoId }) => {
   const [etapasMap, setEtapasMap] = useState({});
   const navigate = useNavigate();
 
+  const API_URL = import.meta.env.VITE_API_URL;
+
   //FETCHS
   useEffect(() => {
     const fetchData = async () => {
@@ -61,18 +62,22 @@ export const Articulos = ({ pedidoId }) => {
     };
     fetchData();
   }, [pedidoId]);
+
   const fetchTelas = async () => {
     try {
-      const response = await axios.get("/telas");
-      setTelas(response.data);
+      const response = await fetch(`${API_URL}/telas`);
+      const data = await response.json();
+      setTelas(data);
     } catch (error) {
       console.error("Error fetching telas", error);
     }
   };
+
   const fetchArticulos = async () => {
     try {
-      const response = await axios.get("/articulos");
-      const filteredArticulos = response.data.filter(
+      const response = await fetch(`${API_URL}/articulos`);
+      const data = await response.json();
+      const filteredArticulos = data.filter(
         (articulo) => articulo.pedidos_id == pedidoId
       );
       setArticulos(filteredArticulos);
@@ -80,10 +85,12 @@ export const Articulos = ({ pedidoId }) => {
       console.error("Error fetching articulos", error);
     }
   };
+
   const fetchEtapas = async () => {
     try {
-      const response = await axios.get(`/etapas?pedidos_id=${pedidoId}`);
-      const filteredEtapas = response.data.filter(
+      const response = await fetch(`${API_URL}/etapas?pedidos_id=${pedidoId}`);
+      const data = await response.json();
+      const filteredEtapas = data.filter(
         (etapa) => etapa.pedidos_id == pedidoId
       );
 
@@ -99,29 +106,27 @@ export const Articulos = ({ pedidoId }) => {
       console.error("Error fetching etapas", error);
     }
   };
+
   const fetchAgregados = async () => {
     try {
-      const response = await axios.get("/agregados");
-      setTodosLosAgregados(response.data);
+      const response = await fetch(`${API_URL}/agregados`);
+      const data = await response.json();
+      setTodosLosAgregados(data);
     } catch (error) {
       console.error("Error fetching agregados", error);
     }
   };
-  //AGREGADOS EDIT
+
   const handleAgregarAgregado = () => {
     if (agregadoParaAgregar) {
       const agregado = todosLosAgregados.find(item => item.nombre === agregadoParaAgregar);
 
-      // Verifica que el agregado no esté ya en la lista de agregados
       if (agregado && Array.isArray(editArticulo.agregados) && !editArticulo.agregados.some(item => item.id === agregado.id)) {
-        // Añadir el nuevo agregado
         setEditArticulo({
           ...editArticulo,
           agregados: [...editArticulo.agregados, agregado],
         });
-        console.log('Agregados después de agregar:', [...editArticulo.agregados, agregado]);
 
-        // Limpiar el campo de agregado (esto es para asegurarte de que se mantenga el valor en el select)
         setAgregadoParaAgregar('');
       }
     }
@@ -133,6 +138,7 @@ export const Articulos = ({ pedidoId }) => {
       agregados: editArticulo.agregados.filter(item => item.nombre !== agregado.nombre),
     });
   };
+
   //AGREGADOS CREATE
   const handleAgregarAgregadoCreate = () => {
     if (
@@ -143,19 +149,44 @@ export const Articulos = ({ pedidoId }) => {
       setAgregadoParaAgregar("");
     }
   };
+
   const handleRemoveAgregadoCreate = (agregado) => {
     setSelectedAgregados((prev) => prev.filter((item) => item !== agregado));
   };
+
   //CREATE
   const handleCreateArticulo = async (e) => {
     e.preventDefault();
+
+    if (!newArticulo.numero_articulo || !newArticulo.nombre || !newArticulo.cantidad || !newArticulo.talle) {
+      console.error("Faltan campos requeridos");
+      return;
+    }
+
+    const requestData = {
+      ...newArticulo,
+      tela: newArticulo.tela || "",
+      pedidos_id: pedidoId,
+      agregados: selectedAgregados.join(", "),
+      comentario: newArticulo.comentario || "",
+    };
+
     try {
-      await axios.post("/articulos", {
-        ...newArticulo,
-        tela: newArticulo.tela,
-        pedidos_id: pedidoId,
-        agregados: selectedAgregados,
+      const response = await fetch(`${API_URL}/articulos`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestData),
       });
+
+      const responseData = await response.json();
+
+      if (!response.ok) {
+        console.error("Error del servidor:", responseData);
+        throw new Error(responseData.message || "Error al crear artículo");
+      }
+
       setNewArticulo({
         numero_articulo: "",
         nombre: "",
@@ -165,21 +196,30 @@ export const Articulos = ({ pedidoId }) => {
         comentario: "",
         tela: "",
       });
+      setSelectedAgregados([]);
       setIsCreateModalOpen(false);
       fetchArticulos();
+
     } catch (error) {
-      console.error('Error al crear el artículo:', error.response ? error.response.data : error.message);
+      console.error('Error al crear el artículo:', error.message);
     }
   };
+
   //UPDATE
   const handleUpdateArticulo = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`/articulos/${editArticulo.id}`, {
-        ...editArticulo,
-        tela: editArticulo.tela,
-        pedidos_id: pedidoId,
-        agregados: editArticulo.agregados.map((agregado) => agregado.nombre),
+      await fetch(`${API_URL}/articulos/${editArticulo.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...editArticulo,
+          tela: editArticulo.tela,
+          pedidos_id: pedidoId,
+          agregados: editArticulo.agregados.map((agregado) => agregado.nombre),
+        }),
       });
       setEditArticulo(null);
       setIsEditModalOpen(false);
@@ -188,11 +228,12 @@ export const Articulos = ({ pedidoId }) => {
       console.error("Error updating articulo", error);
     }
   };
+
   //EDIT
   const handleEditClick = (articulo) => {
     console.log("Agregados al editar:", articulo.agregados);
 
-    // Asegúrate de que 'agregados' siempre sea un array
+    // Asegúrate de que 'agregados' siempre sea un array de objetos
     const agregadosArray = Array.isArray(articulo.agregados)
       ? articulo.agregados
       : articulo.agregados
@@ -203,7 +244,7 @@ export const Articulos = ({ pedidoId }) => {
       ...articulo,
       fecha_inicio: articulo.fecha_inicio ? articulo.fecha_inicio.slice(0, 10) : "",
       fecha_fin: articulo.fecha_fin ? articulo.fecha_fin.slice(0, 10) : "",
-      agregados: agregadosArray, // Aquí asignas siempre un array
+      agregados: agregadosArray, // Aquí asignas siempre un array de objetos
     });
 
     setIsEditModalOpen(true); // Abre el modal de edición
@@ -213,6 +254,7 @@ export const Articulos = ({ pedidoId }) => {
   const handleViewClick = (id) => {
     navigate(`/articulos/${id}`);
   };
+
   return (
     <div className="text-sm">
       <CreateArticuloModal
@@ -298,7 +340,7 @@ export const Articulos = ({ pedidoId }) => {
                 <td className="py-2 px-4 border-b">{articulo.cantidad}</td>
                 <td className="py-2 px-4 border-b">{articulo.talle}</td>
                 <td className="py-2 px-4 border-b">{articulo.tela}</td>
-                <td className="py-2 px-4 border-b w-">{articulo.agregados}</td>
+                <td className="py-2 px-4 border-b">{articulo.agregados}</td>
                 <td className="py-2 px-4 border-b">{firstDate}</td>
                 <td className="py-2 px-4 border-b">{lastDate}</td>
                 <td className="py-2 px-4 border-b">{lastEtapa}</td>
