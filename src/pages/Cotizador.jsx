@@ -1,14 +1,13 @@
 import { useState, useEffect } from "react";
-import axios from "../api/axios";
 import { useNavigate } from "react-router-dom";
 import {
   PencilIcon,
   PlusIcon,
   EyeIcon,
-  ArrowRightOnRectangleIcon,
 } from "@heroicons/react/24/outline";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { useParams } from "react-router-dom";
+
 const formatDate = (dateString) => {
   if (!dateString) return "";
   const date = new Date(dateString);
@@ -31,6 +30,7 @@ export const Cotizador = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const navigate = useNavigate();
+  const API_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     fetchPedidos();
@@ -42,8 +42,12 @@ export const Cotizador = () => {
 
   const fetchPedidos = async () => {
     try {
-      const pedidoResponse = await axios.get(`/pedidos`);
-      setPedidos(pedidoResponse.data);
+      const response = await fetch(`${API_URL}/pedidos`);
+      if (!response.ok) {
+        throw new Error("Error fetching pedidos");
+      }
+      const data = await response.json();
+      setPedidos(data);
     } catch (error) {
       console.error("Error fetching pedidos", error);
     }
@@ -52,7 +56,18 @@ export const Cotizador = () => {
   const handleCreatePedido = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("/pedidos", newPedido);
+      const response = await fetch(`${API_URL}/pedidos`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newPedido),
+      });
+
+      if (!response.ok) {
+        throw new Error("Error creating pedido");
+      }
+
       setNewPedido({
         nombre_cliente: "",
         correo: "",
@@ -71,7 +86,18 @@ export const Cotizador = () => {
   const handleUpdatePedido = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`/pedidos/${editPedido.id}`, editPedido);
+      const response = await fetch(`${API_URL}/pedidos/${editPedido.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(editPedido),
+      });
+
+      if (!response.ok) {
+        throw new Error("Error updating pedido");
+      }
+
       setEditPedido(null);
       setIsEditModalOpen(false);
       fetchPedidos();
@@ -89,10 +115,6 @@ export const Cotizador = () => {
         : "",
     });
     setIsEditModalOpen(true);
-  };
-
-  const handleLogout = () => {
-    navigate("/");
   };
 
   const handleViewClick = (pedidoId) => {
