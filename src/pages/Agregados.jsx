@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
-import axios from "../api/axios";
 import { PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+
+// Usamos la URL desde .env
+const API_URL = import.meta.env.VITE_API_URL;
 
 export const Agregados = () => {
   const [newAgregado, setNewAgregado] = useState({
@@ -23,8 +25,9 @@ export const Agregados = () => {
 
   const fetchAgregados = async () => {
     try {
-      const response = await axios.get("/agregados");
-      setAgregados(response.data);
+      const response = await fetch(`${API_URL}/agregados`);
+      const data = await response.json();
+      setAgregados(data);
     } catch (error) {
       console.error("Error fetching agregados", error);
     }
@@ -33,7 +36,13 @@ export const Agregados = () => {
   const handleUpdateAgregado = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`/agregados/${editAgregado.id}`, editAgregado);
+      await fetch(`${API_URL}/agregados/${editAgregado.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(editAgregado),
+      });
       setEditAgregado(null);
       setIsEditModalOpen(false);
       fetchAgregados();
@@ -45,7 +54,13 @@ export const Agregados = () => {
   const handleCreateAgregado = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("/agregados", newAgregado);
+      await fetch(`${API_URL}/agregados`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newAgregado),
+      });
       setNewAgregado({ nombre: "", precio: "" });
       setIsCreateModalOpen(false);
       fetchAgregados();
@@ -56,7 +71,9 @@ export const Agregados = () => {
 
   const handleDeleteAgregado = async () => {
     try {
-      await axios.delete(`/agregados/${agregadoToDelete.id}`);
+      await fetch(`${API_URL}/agregados/${agregadoToDelete.id}`, {
+        method: "DELETE",
+      });
       setIsDeleteModalOpen(false);
       fetchAgregados();
     } catch (error) {
