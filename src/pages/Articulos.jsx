@@ -249,7 +249,6 @@ export const Articulos = ({ pedidoId }) => {
         agregadosArray = [...articulo.agregados];
       }
     } else if (typeof articulo.agregados === 'string') {
-      // Convertir string separada por comas a array de objetos
       agregadosArray = articulo.agregados.split(", ")
         .map(nombre => {
           const agregadoExistente = todosLosAgregados.find(a => a.nombre === nombre);
