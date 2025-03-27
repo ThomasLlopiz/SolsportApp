@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
-import axios from "../api/axios";
-import { Articulos } from "./Articulos";
 
 export const Cotizacion = () => {
   const { id } = useParams();
@@ -21,37 +19,20 @@ export const Cotizacion = () => {
   const [combinaciones, setCombinaciones] = useState([]);
   const [numeroArticulo, setNumeroArticulo] = useState("");
   const [cantidad, setCantidad] = useState(1);
+  const [articulosExistentes, setArticulosExistentes] = useState([]);
+  const API_URL = import.meta.env.VITE_API_URL;
+  const handlePrendaChange = (e) => setSelectedPrenda(e.target.value);
+  const handleTalleChange = (e) => setSelectedTalle(e.target.value);
+  const handleTelaChange = (e) => setSelectedTela(e.target.value);
+  const handleAgregadoChange = (e) => setAgregadoParaAgregar(e.target.value);
+  const handleNumeroArticuloChange = (e) => setNumeroArticulo(e.target.value);
+  const handleCantidadChange = (e) => setCantidad(e.target.value);
 
-  // Cargar los agregados, telas y pedidos al inicio
   useEffect(() => {
-    const fetchAgregados = async () => {
-      try {
-        const response = await axios.get("/agregados");
-        setTodosLosAgregados(response.data);
-      } catch (error) {
-        console.error("Error fetching agregados", error);
-      }
-    };
-
-    const fetchTelas = async () => {
-      try {
-        const response = await axios.get("/telas");
-        setTelas(response.data);
-      } catch (error) {
-        console.error("Error fetching telas", error);
-      }
-    };
-    const fetchPedido = async () => {
-      try {
-        const pedidoResponse = await axios.get(`/pedidos/${id}`);
-        setPedido(pedidoResponse.data);
-      } catch (error) {
-        console.error("Error fetching pedido", error);
-      }
-    };
     fetchPedido();
     fetchAgregados();
     fetchTelas();
+    fetchArticulosDelPedido();
   }, [pedidoId]);
 
   useEffect(() => {
@@ -61,16 +42,49 @@ export const Cotizacion = () => {
     }
   }, []);
 
+  const fetchAgregados = async () => {
+    try {
+      const response = await fetch(`${API_URL}/agregados`);
+      const data = await response.json();
+      setTodosLosAgregados(data);
+    } catch (error) {
+      console.error("Error fetching agregados", error);
+    }
+  };
+
+  const fetchTelas = async () => {
+    try {
+      const response = await fetch(`${API_URL}/telas`);
+      const data = await response.json();
+      setTelas(data);
+    } catch (error) {
+      console.error("Error fetching telas", error);
+    }
+  };
+
+  const fetchPedido = async () => {
+    try {
+      const response = await fetch(`${API_URL}/pedidos/${id}`);
+      const data = await response.json();
+      setPedido(data);
+    } catch (error) {
+      console.error("Error fetching pedido", error);
+    }
+  };
+
+  const fetchArticulosDelPedido = async () => {
+    try {
+      const response = await fetch(`${API_URL}/articulos?pedidos_id=${pedidoId}`);
+      const data = await response.json();
+      setArticulosExistentes(data);
+    } catch (error) {
+      console.error("Error fetching articulos del pedido", error);
+    }
+  };
+
   const saveCombinacionesToLocalStorage = (combinaciones) => {
     localStorage.setItem("combinaciones", JSON.stringify(combinaciones));
   };
-
-  const handlePrendaChange = (e) => setSelectedPrenda(e.target.value);
-  const handleTalleChange = (e) => setSelectedTalle(e.target.value);
-  const handleTelaChange = (e) => setSelectedTela(e.target.value);
-  const handleAgregadoChange = (e) => setAgregadoParaAgregar(e.target.value);
-  const handleNumeroArticuloChange = (e) => setNumeroArticulo(e.target.value);
-  const handleCantidadChange = (e) => setCantidad(e.target.value);
 
   const handleBackClick = () => {
     navigate(`/cotizador`);
@@ -133,7 +147,6 @@ export const Cotizacion = () => {
         pedidos_id: pedidoId,
       };
 
-      // Actualizar combinaciones y guardarlas en el localStorage
       const newCombinaciones = [...combinaciones, articulo];
       setCombinaciones(newCombinaciones);
       saveCombinacionesToLocalStorage(newCombinaciones);
@@ -148,8 +161,9 @@ export const Cotizacion = () => {
     }
   };
 
-  const total = combinaciones.reduce((sum, item) => sum + item.precio, 0);
-  if (!pedido) return <div>Loading...</div>;
+  const total = [...articulosExistentes, ...combinaciones].reduce((sum, item) => {
+    return sum + (item.precio || 0);
+  }, 0);
 
   return (
     <div>
@@ -290,7 +304,6 @@ export const Cotizacion = () => {
         </tbody>
       </table>
 
-
       <div className="mt-8">
         <div className="flex justify-between w-3/4 mx-auto">
           <h2 className="text-lg font-semibold">Prendas Guardadas</h2>
@@ -303,7 +316,7 @@ export const Cotizacion = () => {
           </button>
         </div>
 
-        <table className="w-3/4 mx-auto mt-4 bg-white">
+        <table className="w-11/12 mx-auto mt-4 bg-white">
           <thead className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
             <tr>
               <th className="py-3 px-6 text-left">Número Artículo</th>
@@ -316,8 +329,29 @@ export const Cotizacion = () => {
             </tr>
           </thead>
           <tbody className="text-gray-600 text-sm font-light">
+            {/* Artículos existentes del pedido */}
+            {articulosExistentes.map((articulo, index) => (
+              <tr key={`existente-${index}`}>
+                <td className="py-2 px-4">{articulo.numero_articulo}</td>
+                <td className="py-2 px-4">{articulo.nombre}</td>
+                <td className="py-2 px-4">{articulo.talle}</td>
+                <td className="py-2 px-4">{articulo.tela}</td>
+                <td className="py-2 px-4">{articulo.cantidad}</td>
+                <td className="py-2 px-4">
+                  {Array.isArray(articulo.agregados)
+                    ? articulo.agregados.join(", ")
+                    : articulo.agregados}
+                </td>
+                <td className="py-2 px-4">
+                  {/* Aquí puedes calcular el precio si no lo tienes en la base de datos */}
+                  {articulo.precio ? articulo.precio.toFixed(2) + " USD" : "N/A"}
+                </td>
+              </tr>
+            ))}
+
+            {/* Combinaciones nuevas (locales) */}
             {combinaciones.map((combinacion, index) => (
-              <tr key={index}>
+              <tr key={`nuevo-${index}`}>
                 <td className="py-2 px-4">{combinacion.numero_articulo}</td>
                 <td className="py-2 px-4">{combinacion.prenda}</td>
                 <td className="py-2 px-4">{combinacion.talle}</td>
@@ -331,6 +365,7 @@ export const Cotizacion = () => {
                 </td>
               </tr>
             ))}
+
             <tr>
               <td colSpan="6" className="py-2 px-4 font-semibold text-right">
                 Total
@@ -342,9 +377,6 @@ export const Cotizacion = () => {
           </tbody>
         </table>
       </div>
-
-      {/* Mostrar los artículos según el pedido */}
-      <Articulos pedidoId={id} />
     </div>
   );
 };
