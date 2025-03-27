@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
-import axios from "../api/axios";
 import { PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+
+// Usamos la URL desde .env
+const API_URL = import.meta.env.VITE_API_URL;
 
 export const Telas = () => {
   const [newTela, setNewTela] = useState({
@@ -23,8 +25,9 @@ export const Telas = () => {
 
   const fetchTelas = async () => {
     try {
-      const response = await axios.get("/telas");
-      setTelas(response.data);
+      const response = await fetch(`${API_URL}/telas`);
+      const data = await response.json();
+      setTelas(data);
     } catch (error) {
       console.error("Error fetching telas", error);
     }
@@ -33,7 +36,13 @@ export const Telas = () => {
   const handleUpdateTela = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`/telas/${editTela.id}`, editTela);
+      await fetch(`${API_URL}/telas/${editTela.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(editTela),
+      });
       setEditTela(null);
       setIsEditModalOpen(false);
       fetchTelas();
@@ -45,7 +54,13 @@ export const Telas = () => {
   const handleCreateTela = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("/telas", newTela);
+      await fetch(`${API_URL}/telas`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newTela),
+      });
       setNewTela({ nombre: "", precio: "" });
       setIsCreateModalOpen(false);
       fetchTelas();
@@ -56,7 +71,9 @@ export const Telas = () => {
 
   const handleDeleteTela = async () => {
     try {
-      await axios.delete(`/telas/${telaToDelete.id}`);
+      await fetch(`${API_URL}/telas/${telaToDelete.id}`, {
+        method: "DELETE",
+      });
       setIsDeleteModalOpen(false);
       fetchTelas();
     } catch (error) {
