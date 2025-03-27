@@ -2,25 +2,29 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { Articulos } from './Articulos';
-import axios from '../api/axios';
 
 export const Pedido = () => {
     const { id } = useParams();
     const [pedido, setPedido] = useState(null);
     const navigate = useNavigate();
 
+    const API_URL = import.meta.env.VITE_API_URL;
+
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const pedidoResponse = await axios.get(`/pedidos/${id}`);
-                setPedido(pedidoResponse.data);
+                const response = await fetch(`${API_URL}/pedidos/${id}`);
+                if (!response.ok) {
+                    throw new Error('Error fetching data');
+                }
+                const data = await response.json();
+                setPedido(data);
             } catch (error) {
-                console.error('Error fetching data', error);
+                console.error('Error fetching data:', error);
             }
         };
-
         fetchData();
-    }, [id]);
+    }, [id, API_URL]);
 
     const handleBackClick = () => {
         navigate('/pedidos');
