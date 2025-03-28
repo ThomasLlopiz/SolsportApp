@@ -83,19 +83,22 @@ export const Articulo = () => {
         </div>
 
         <div className="mt-6">
-          <h2 className="text-xl font-bold mb-4">Comentario</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold mb-4">Comentario</h2>
+            <button
+              onClick={handleSaveClick}
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition mt-2"
+            >
+              Guardar
+            </button>
+          </div>
+
           <textarea
             value={editedComment}
             onChange={handleCommentChange}
             rows="4"
             className="w-full p-2 border border-gray-300 rounded"
           />
-          <button
-            onClick={handleSaveClick}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition mt-2"
-          >
-            Guardar
-          </button>
         </div>
 
         <div className="mt-6">
