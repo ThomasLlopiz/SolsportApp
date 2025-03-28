@@ -119,15 +119,21 @@ export const Articulos = ({ pedidoId }) => {
 
   const handleAgregarAgregado = () => {
     if (agregadoParaAgregar) {
-      const agregado = todosLosAgregados.find(item => item.nombre === agregadoParaAgregar);
+      const agregado = todosLosAgregados.find(
+        (item) => item.nombre === agregadoParaAgregar
+      );
 
-      if (agregado && Array.isArray(editArticulo.agregados) && !editArticulo.agregados.some(item => item.id === agregado.id)) {
+      if (
+        agregado &&
+        Array.isArray(editArticulo.agregados) &&
+        !editArticulo.agregados.some((item) => item.id === agregado.id)
+      ) {
         setEditArticulo({
           ...editArticulo,
           agregados: [...editArticulo.agregados, agregado],
         });
 
-        setAgregadoParaAgregar('');
+        setAgregadoParaAgregar("");
       }
     }
   };
@@ -135,76 +141,10 @@ export const Articulos = ({ pedidoId }) => {
   const handleRemoveAgregado = (agregado) => {
     setEditArticulo({
       ...editArticulo,
-      agregados: editArticulo.agregados.filter(item =>
+      agregados: editArticulo.agregados.filter((item) =>
         agregado.id ? item.id !== agregado.id : item.nombre !== agregado.nombre
       ),
     });
-  };
-
-  //AGREGADOS CREATE
-  const handleAgregarAgregadoCreate = () => {
-    if (
-      agregadoParaAgregar &&
-      !selectedAgregados.includes(agregadoParaAgregar)
-    ) {
-      setSelectedAgregados((prev) => [...prev, agregadoParaAgregar]);
-      setAgregadoParaAgregar("");
-    }
-  };
-
-  const handleRemoveAgregadoCreate = (agregado) => {
-    setSelectedAgregados((prev) => prev.filter((item) => item !== agregado));
-  };
-
-  //CREATE
-  const handleCreateArticulo = async (e) => {
-    e.preventDefault();
-
-    if (!newArticulo.numero_articulo || !newArticulo.nombre || !newArticulo.cantidad || !newArticulo.talle) {
-      console.error("Faltan campos requeridos");
-      return;
-    }
-
-    const requestData = {
-      ...newArticulo,
-      tela: newArticulo.tela || "",
-      pedidos_id: pedidoId,
-      agregados: selectedAgregados.join(", "),
-      comentario: newArticulo.comentario || "Sin Comentario",
-    };
-
-    try {
-      const response = await fetch(`${API_URL}/articulos`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestData),
-      });
-
-      const responseData = await response.json();
-
-      if (!response.ok) {
-        console.error("Error del servidor:", responseData);
-        throw new Error(responseData.message || "Error al crear artículo");
-      }
-
-      setNewArticulo({
-        numero_articulo: "",
-        nombre: "",
-        cantidad: "",
-        talle: "",
-        agregados: [],
-        comentario: "Sin Comentario",
-        tela: "",
-      });
-      setSelectedAgregados([]);
-      setIsCreateModalOpen(false);
-      fetchArticulos();
-
-    } catch (error) {
-      console.error('Error al crear el artículo:', error.message);
-    }
   };
 
   //UPDATE
@@ -238,27 +178,35 @@ export const Articulos = ({ pedidoId }) => {
     let agregadosArray = [];
 
     if (Array.isArray(articulo.agregados)) {
-      if (articulo.agregados.length > 0 && typeof articulo.agregados[0] === 'string') {
+      if (
+        articulo.agregados.length > 0 &&
+        typeof articulo.agregados[0] === "string"
+      ) {
         // Convertir array de strings a array de objetos
-        agregadosArray = articulo.agregados.map(nombre => {
-          const agregadoExistente = todosLosAgregados.find(a => a.nombre === nombre);
+        agregadosArray = articulo.agregados.map((nombre) => {
+          const agregadoExistente = todosLosAgregados.find(
+            (a) => a.nombre === nombre
+          );
           return agregadoExistente || { nombre };
         });
       } else {
         // Ya es un array de objetos
         agregadosArray = [...articulo.agregados];
       }
-    } else if (typeof articulo.agregados === 'string') {
-      agregadosArray = articulo.agregados.split(", ")
-        .map(nombre => {
-          const agregadoExistente = todosLosAgregados.find(a => a.nombre === nombre);
-          return agregadoExistente || { nombre };
-        });
+    } else if (typeof articulo.agregados === "string") {
+      agregadosArray = articulo.agregados.split(", ").map((nombre) => {
+        const agregadoExistente = todosLosAgregados.find(
+          (a) => a.nombre === nombre
+        );
+        return agregadoExistente || { nombre };
+      });
     }
 
     setEditArticulo({
       ...articulo,
-      fecha_inicio: articulo.fecha_inicio ? articulo.fecha_inicio.slice(0, 10) : "",
+      fecha_inicio: articulo.fecha_inicio
+        ? articulo.fecha_inicio.slice(0, 10)
+        : "",
       fecha_fin: articulo.fecha_fin ? articulo.fecha_fin.slice(0, 10) : "",
       agregados: agregadosArray,
     });
@@ -273,22 +221,6 @@ export const Articulos = ({ pedidoId }) => {
 
   return (
     <div className="text-sm">
-      <CreateArticuloModal
-        isCreateModalOpen={isCreateModalOpen}
-        setIsCreateModalOpen={setIsCreateModalOpen}
-        newArticulo={newArticulo}
-        setNewArticulo={setNewArticulo}
-        handleCreateArticulo={handleCreateArticulo}
-        prendas={prendas}
-        talles={talles}
-        telas={telas}
-        todosLosAgregados={todosLosAgregados}
-        agregadoParaAgregar={agregadoParaAgregar}
-        setAgregadoParaAgregar={setAgregadoParaAgregar}
-        handleAgregarAgregadoCreate={handleAgregarAgregadoCreate}
-        selectedAgregados={selectedAgregados}
-        handleRemoveAgregadoCreate={handleRemoveAgregadoCreate}
-      />
       <EditArticuloModal
         isEditModalOpen={isEditModalOpen}
         setIsEditModalOpen={setIsEditModalOpen}
@@ -303,19 +235,11 @@ export const Articulos = ({ pedidoId }) => {
         setAgregadoParaAgregar={setAgregadoParaAgregar}
         handleAgregarAgregado={handleAgregarAgregado}
         handleRemoveAgregado={handleRemoveAgregado}
+        pedidosId={pedidoId} // Añade esta línea
       />
-      {/* Botón para abrir el modal de creación */}
-      <div className="flex mb-6">
-        <button
-          onClick={() => setIsCreateModalOpen(true)}
-          className="bg-blue-500 text-white py-2 px-4 rounded"
-        >
-          <PlusIcon className="h-5 w-5 inline mr-2" />
-          Agregar Artículo
-        </button>
-      </div>
+
       {/* Tabla de Artículos */}
-      <table className="min-w-full bg-white border border-gray-200">
+      <table className="min-w-full bg-white border border-gray-200 text-xl">
         <thead>
           <tr className="text-left">
             <th className="py-2 px-4 border-b">Número de Artículo</th>
@@ -356,7 +280,9 @@ export const Articulos = ({ pedidoId }) => {
                 <td className="py-2 px-4 border-b">{articulo.cantidad}</td>
                 <td className="py-2 px-4 border-b">{articulo.talle}</td>
                 <td className="py-2 px-4 border-b">{articulo.tela}</td>
-                <td className="py-2 px-4 border-b">{articulo.agregados}</td>
+                <td className="py-2 px-4 border-b">
+                  {articulo.agregados ? articulo.agregados.join(", ") : ""}
+                </td>
                 <td className="py-2 px-4 border-b">{firstDate}</td>
                 <td className="py-2 px-4 border-b">{lastDate}</td>
                 <td className="py-2 px-4 border-b">{lastEtapa}</td>
