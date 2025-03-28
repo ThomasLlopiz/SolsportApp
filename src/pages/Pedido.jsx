@@ -58,7 +58,7 @@ export const Pedido = () => {
         </div>
 
         <div className="mt-6">
-          <h2 className="text-xl font-bold mb-4">Artículos</h2>
+          <h2 className="text-2xl font-bold mb-4 text-center">Artículos</h2>
           <Articulos pedidoId={id} />
         </div>
       </div>
