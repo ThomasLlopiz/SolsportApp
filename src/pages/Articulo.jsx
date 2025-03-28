@@ -67,10 +67,10 @@ export const Articulo = () => {
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="rounded-lg p-6">
         <div className="flex justify-between items-center mb-4">
-          <div className="flex gap-3">
-            <h1 className="text-2xl font-bold text-center bg-gray-300 rounded-md p-1">
-              Artículo: {articulo.id}
-            </h1>
+          <div className="flex gap-3 font-semibold text-center bg-gray-500 rounded-md p-1 text-white">
+            <h3 className="text-2xl">Artículo: {articulo.numero_articulo}</h3>
+            <h3 className="text-2xl">{articulo.nombre}</h3>
+            <h3 className="text-2xl">{articulo.talle}</h3>
           </div>
 
           <button
@@ -99,8 +99,11 @@ export const Articulo = () => {
         </div>
 
         <div className="mt-6">
-          <h2 className="text-xl font-bold mb-4">Etapas</h2>
-          <Etapas articuloId={id} pedidosId={articulo.pedidos_id} />
+          <Etapas
+            articuloId={id}
+            pedidosId={articulo.pedidos_id}
+            cantidadArticulo={articulo.cantidad}
+          />
         </div>
       </div>
     </div>
