@@ -1,10 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  PencilIcon,
-  PlusIcon,
-  EyeIcon,
-} from "@heroicons/react/24/outline";
+import { PencilIcon, PlusIcon, EyeIcon } from "@heroicons/react/24/outline";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { useParams } from "react-router-dom";
 
@@ -21,6 +17,7 @@ export const Cotizador = () => {
   const { id } = useParams();
   const [pedidos, setPedidos] = useState([]);
   const [newPedido, setNewPedido] = useState({
+    numero_pedido: "",
     nombre_cliente: "",
     correo: "",
     telefono: "",
@@ -47,9 +44,9 @@ export const Cotizador = () => {
         throw new Error("Error fetching pedidos");
       }
       const data = await response.json();
-      const pedidosConEstado = data.map(pedido => ({
+      const pedidosConEstado = data.map((pedido) => ({
         ...pedido,
-        estado: pedido.estado || false
+        estado: pedido.estado || false,
       }));
       setPedidos(pedidosConEstado);
     } catch (error) {
@@ -127,7 +124,7 @@ export const Cotizador = () => {
 
   const handleStateChange = async (pedidoId) => {
     try {
-      const pedidoActual = pedidos.find(p => p.id === pedidoId);
+      const pedidoActual = pedidos.find((p) => p.id === pedidoId);
       const nuevoEstado = !pedidoActual.estado;
 
       const response = await fetch(`${API_URL}/pedidos/${pedidoId}`, {
@@ -142,11 +139,9 @@ export const Cotizador = () => {
         throw new Error("Error updating estado");
       }
 
-      setPedidos(prevPedidos =>
-        prevPedidos.map(pedido =>
-          pedido.id === pedidoId
-            ? { ...pedido, estado: nuevoEstado }
-            : pedido
+      setPedidos((prevPedidos) =>
+        prevPedidos.map((pedido) =>
+          pedido.id === pedidoId ? { ...pedido, estado: nuevoEstado } : pedido
         )
       );
     } catch (error) {
@@ -185,6 +180,21 @@ export const Cotizador = () => {
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
             <h2 className="text-xl font-semibold mb-4">Crear Nuevo Pedido</h2>
             <form onSubmit={handleCreatePedido}>
+              <div className="mb-4">
+                <label className="block text-gray-700">Número de Pedido</label>
+                <input
+                  type="text"
+                  value={newPedido.numero_pedido}
+                  onChange={(e) =>
+                    setNewPedido({
+                      ...newPedido,
+                      numero_pedido: e.target.value,
+                    })
+                  }
+                  className="w-full p-2 border border-gray-300 rounded mt-1"
+                  required
+                />
+              </div>
               <div className="mb-4">
                 <label className="block text-gray-700">
                   Nombre del Cliente
@@ -264,6 +274,21 @@ export const Cotizador = () => {
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
             <h2 className="text-xl font-semibold mb-4">Editar Pedido</h2>
             <form onSubmit={handleUpdatePedido}>
+              <div className="mb-4">
+                <label className="block text-gray-700">Número de Pedido</label>
+                <input
+                  type="text"
+                  value={editPedido.numero_pedido}
+                  onChange={(e) =>
+                    setEditPedido({
+                      ...editPedido,
+                      numero_pedido: e.target.value,
+                    })
+                  }
+                  className="w-full p-2 border border-gray-300 rounded mt-1"
+                  required
+                />
+              </div>
               <div className="mb-4">
                 <label className="block text-gray-700">
                   Nombre del Cliente
@@ -359,9 +384,7 @@ export const Cotizador = () => {
                 key={pedido.id}
                 className="border-b border-gray-200 hover:bg-gray-100"
               >
-                <td className="py-3 px-6 text-left whitespace-nowrap">
-                  {pedido.id}
-                </td>
+                <td className="py-3 px-6 text-left">{pedido.numero_pedido}</td>
                 <td className="py-3 px-6 text-left">{pedido.nombre_cliente}</td>
                 <td className="py-3 px-6 text-left">{pedido.correo}</td>
                 <td className="py-3 px-6 text-left">{pedido.telefono}</td>
