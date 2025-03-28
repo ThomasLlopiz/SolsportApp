@@ -33,12 +33,13 @@ export const Pedidos = () => {
     try {
       const response = await fetch(`${API_URL}/pedidos`);
       const data = await response.json();
-      setPedidos(data);
+      // Filtrar solo los pedidos con estado = 1
+      const pedidosFiltrados = data.filter(pedido => pedido.estado === 1);
+      setPedidos(pedidosFiltrados);
     } catch (error) {
       console.error("Error fetching pedidos", error);
     }
   };
-
   const handleCreatePedido = async (e) => {
     e.preventDefault();
     try {

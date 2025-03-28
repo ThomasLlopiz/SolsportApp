@@ -47,7 +47,11 @@ export const Cotizador = () => {
         throw new Error("Error fetching pedidos");
       }
       const data = await response.json();
-      setPedidos(data);
+      const pedidosConEstado = data.map(pedido => ({
+        ...pedido,
+        estado: pedido.estado || false
+      }));
+      setPedidos(pedidosConEstado);
     } catch (error) {
       console.error("Error fetching pedidos", error);
     }
@@ -119,6 +123,35 @@ export const Cotizador = () => {
 
   const handleViewClick = (pedidoId) => {
     navigate(`/cotizador/${pedidoId}`);
+  };
+
+  const handleStateChange = async (pedidoId) => {
+    try {
+      const pedidoActual = pedidos.find(p => p.id === pedidoId);
+      const nuevoEstado = !pedidoActual.estado;
+
+      const response = await fetch(`${API_URL}/pedidos/${pedidoId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ estado: nuevoEstado }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Error updating estado");
+      }
+
+      setPedidos(prevPedidos =>
+        prevPedidos.map(pedido =>
+          pedido.id === pedidoId
+            ? { ...pedido, estado: nuevoEstado }
+            : pedido
+        )
+      );
+    } catch (error) {
+      console.error("Error updating estado", error);
+    }
   };
 
   return (
@@ -317,6 +350,7 @@ export const Cotizador = () => {
               <th className="py-3 px-6 text-left">Fecha de Pago</th>
               <th className="py-3 px-6 text-left">Fecha Estimada</th>
               <th className="py-3 px-6 text-center">Acciones</th>
+              <th className="py-3 px-6 text-center">Estado</th>
             </tr>
           </thead>
           <tbody className="text-gray-600 text-sm font-light">
@@ -353,6 +387,18 @@ export const Cotizador = () => {
                       <EyeIcon className="h-6 w-6" />
                     </button>
                   </div>
+                </td>
+                <td className="py-3 px-6 text-center">
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={pedido.estado || false}
+                      onChange={() => handleStateChange(pedido.id)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 peer-checked:bg-blue-600"></div>
+                    <div className="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform peer-checked:translate-x-5"></div>
+                  </label>
                 </td>
               </tr>
             ))}
