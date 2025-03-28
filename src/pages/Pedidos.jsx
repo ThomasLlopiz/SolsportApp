@@ -1,10 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  PencilIcon,
-  PlusIcon,
-  EyeIcon,
-} from "@heroicons/react/24/outline";
+import { PencilIcon, PlusIcon, EyeIcon } from "@heroicons/react/24/outline";
 
 export const Pedidos = () => {
   const [pedidos, setPedidos] = useState([]);
@@ -22,7 +18,6 @@ export const Pedidos = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const navigate = useNavigate();
 
-  // URL base de la API desde el archivo .env
   const API_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
@@ -33,13 +28,13 @@ export const Pedidos = () => {
     try {
       const response = await fetch(`${API_URL}/pedidos`);
       const data = await response.json();
-      // Filtrar solo los pedidos con estado = 1
-      const pedidosFiltrados = data.filter(pedido => pedido.estado === 1);
+      const pedidosFiltrados = data.filter((pedido) => pedido.estado === 1);
       setPedidos(pedidosFiltrados);
     } catch (error) {
       console.error("Error fetching pedidos", error);
     }
   };
+
   const handleCreatePedido = async (e) => {
     e.preventDefault();
     try {
@@ -143,7 +138,9 @@ export const Pedidos = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-gray-700">Nombre del Cliente</label>
+                <label className="block text-gray-700">
+                  Nombre del Cliente
+                </label>
                 <input
                   type="text"
                   value={newPedido.nombre_cliente}
@@ -263,7 +260,9 @@ export const Pedidos = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-gray-700">Nombre del Cliente</label>
+                <label className="block text-gray-700">
+                  Nombre del Cliente
+                </label>
                 <input
                   type="text"
                   value={editPedido.nombre_cliente}
