@@ -17,7 +17,7 @@ export const CreateEtapaModal = ({ articuloId, pedidosId, fetchEtapas }) => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newEtapa, setNewEtapa] = useState({
     nombre: "",
-    comentario: "sin comentario",
+    comentario: "",
     cantidad: 0,
     fecha_inicio: "",
     fecha_fin: "",
@@ -147,7 +147,6 @@ export const CreateEtapaModal = ({ articuloId, pedidosId, fetchEtapas }) => {
                   className={`w-full p-2 border ${
                     errors.fecha_inicio ? "border-red-500" : "border-gray-300"
                   } rounded mt-1`}
-                  required
                 />
                 {errors.fecha_inicio && (
                   <span className="text-red-500 text-sm">
@@ -167,7 +166,6 @@ export const CreateEtapaModal = ({ articuloId, pedidosId, fetchEtapas }) => {
                   className={`w-full p-2 border ${
                     errors.fecha_fin ? "border-red-500" : "border-gray-300"
                   } rounded mt-1`}
-                  required
                 />
                 {errors.fecha_fin && (
                   <span className="text-red-500 text-sm">
