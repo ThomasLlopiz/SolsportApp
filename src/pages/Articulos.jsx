@@ -14,15 +14,6 @@ const formatDate = (dateString) => {
 };
 
 export const Articulos = ({ pedidoId }) => {
-  const [newArticulo, setNewArticulo] = useState({
-    numero_articulo: "",
-    nombre: "",
-    cantidad: "",
-    talle: "",
-    agregados: [],
-    comentario: "",
-    tela: "",
-  });
   const [talles] = useState(["XS", "S", "M", "L", "XL", "XXL", "XXXL"]);
   const [prendas] = useState([
     "Buzo",
@@ -32,7 +23,6 @@ export const Articulos = ({ pedidoId }) => {
     "Chombas",
   ]);
   const [todosLosAgregados, setTodosLosAgregados] = useState([]);
-  const [selectedAgregados, setSelectedAgregados] = useState([]);
   const [agregadoParaAgregar, setAgregadoParaAgregar] = useState("");
   const [telas, setTelas] = useState([]);
   const [articulos, setArticulos] = useState([]);
@@ -46,7 +36,6 @@ export const Articulos = ({ pedidoId }) => {
     tela: "",
   });
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [etapasMap, setEtapasMap] = useState({});
   const navigate = useNavigate();
 
@@ -235,7 +224,7 @@ export const Articulos = ({ pedidoId }) => {
         setAgregadoParaAgregar={setAgregadoParaAgregar}
         handleAgregarAgregado={handleAgregarAgregado}
         handleRemoveAgregado={handleRemoveAgregado}
-        pedidosId={pedidoId} // Añade esta línea
+        pedidosId={pedidoId}
       />
 
       {/* Tabla de Artículos */}
