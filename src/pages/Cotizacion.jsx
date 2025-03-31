@@ -17,6 +17,7 @@ export const Cotizacion = () => {
   const [pedido, setPedido] = useState(null);
   const [todosLosAgregados, setTodosLosAgregados] = useState([]);
   const [telas, setTelas] = useState([]);
+  const [costosProduccion, setCostosProduccion] = useState([]);
   const [selectedPrenda, setSelectedPrenda] = useState("");
   const [selectedTalle, setSelectedTalle] = useState("");
   const [selectedTela, setSelectedTela] = useState("");
@@ -27,6 +28,7 @@ export const Cotizacion = () => {
   const [articulos, setArticulos] = useState([]);
   const [editingArticulo, setEditingArticulo] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [costosCantidades, setCostosCantidades] = useState({});
 
   const API_URL = import.meta.env.VITE_API_URL;
 
@@ -37,12 +39,31 @@ export const Cotizacion = () => {
   const handleNumeroArticuloChange = (e) => setNumeroArticulo(e.target.value);
   const handleCantidadChange = (e) => setCantidad(e.target.value);
 
+  const handleCostoCantidadChange = (costoId, value) => {
+    setCostosCantidades({
+      ...costosCantidades,
+      [costoId]: value ? parseInt(value) : 0,
+    });
+  };
+
   useEffect(() => {
     fetchPedido();
     fetchAgregados();
     fetchTelas();
     fetchArticulosDelPedido();
+    fetchCostosProduccion();
   }, [pedidoId]);
+
+  useEffect(() => {
+    // Inicializar las cantidades de costos en 0 cuando se cargan los costos
+    if (costosProduccion.length > 0) {
+      const initialCostos = {};
+      costosProduccion.forEach((costo) => {
+        initialCostos[costo.id] = costosCantidades[costo.id] || 0;
+      });
+      setCostosCantidades(initialCostos);
+    }
+  }, [costosProduccion]);
 
   const fetchAgregados = async () => {
     try {
@@ -51,6 +72,16 @@ export const Cotizacion = () => {
       setTodosLosAgregados(data);
     } catch (error) {
       console.error("Error fetching agregados", error);
+    }
+  };
+
+  const fetchCostosProduccion = async () => {
+    try {
+      const response = await fetch(`${API_URL}/costos_produccion`);
+      const data = await response.json();
+      setCostosProduccion(data);
+    } catch (error) {
+      console.error("Error fetching costos de producción", error);
     }
   };
 
@@ -125,7 +156,13 @@ export const Cotizacion = () => {
       return sum + (agregadoData ? agregadoData.precio : 0);
     }, 0);
 
-    return (basePrice * (1 + tallePrice) + agregadoPrices) * cant;
+    // Calcular costos de producción
+    const costosTotal = costosProduccion.reduce((sum, costo) => {
+      const cantidad = costosCantidades[costo.id] || 0;
+      return sum + costo.precio * cantidad;
+    }, 0);
+
+    return (basePrice * (1 + tallePrice) + agregadoPrices + costosTotal) * cant;
   };
 
   const handleGuardar = async () => {
@@ -142,12 +179,23 @@ export const Cotizacion = () => {
       cantidad
     );
 
+    // Preparar los costos con sus cantidades para guardar
+    const costosConCantidades = costosProduccion
+      .filter((costo) => costosCantidades[costo.id] > 0)
+      .map((costo) => ({
+        costo_id: costo.id,
+        nombre: costo.nombre,
+        cantidad: costosCantidades[costo.id],
+        precio_unitario: costo.precio,
+      }));
+
     const articuloData = {
       numero_articulo: numeroArticulo,
       nombre: selectedPrenda,
       talle: selectedTalle,
       tela: selectedTela,
       agregados: selectedAgregados,
+      costos_produccion: costosConCantidades,
       cantidad: cantidad,
       precio: precio,
       pedidos_id: pedidoId,
@@ -188,6 +236,12 @@ export const Cotizacion = () => {
     setAgregadoParaAgregar("");
     setIsEditing(false);
     setEditingArticulo(null);
+
+    const resetCostos = {};
+    costosProduccion.forEach((costo) => {
+      resetCostos[costo.id] = 0;
+    });
+    setCostosCantidades(resetCostos);
   };
 
   const handleStartEdit = (articulo) => {
@@ -199,6 +253,14 @@ export const Cotizacion = () => {
     setCantidad(articulo.cantidad);
     setIsEditing(true);
     setEditingArticulo(articulo);
+
+    if (articulo.costos_produccion && articulo.costos_produccion.length > 0) {
+      const costosEdit = {};
+      articulo.costos_produccion.forEach((costo) => {
+        costosEdit[costo.costo_id] = costo.cantidad;
+      });
+      setCostosCantidades(costosEdit);
+    }
   };
 
   const handleUpdateArticulo = async () => {
@@ -212,6 +274,15 @@ export const Cotizacion = () => {
       cantidad
     );
 
+    const costosConCantidades = costosProduccion
+      .filter((costo) => costosCantidades[costo.id] > 0)
+      .map((costo) => ({
+        costo_id: costo.id,
+        nombre: costo.nombre,
+        cantidad: costosCantidades[costo.id],
+        precio_unitario: costo.precio,
+      }));
+
     const articuloActualizado = {
       ...editingArticulo,
       numero_articulo: numeroArticulo,
@@ -219,6 +290,7 @@ export const Cotizacion = () => {
       talle: selectedTalle,
       tela: selectedTela,
       agregados: selectedAgregados,
+      costos_produccion: costosConCantidades,
       cantidad: cantidad,
       precio: precio,
     };
@@ -288,17 +360,32 @@ export const Cotizacion = () => {
 
   return (
     <div className="p-6">
-      <div className="text-center mb-6">
-        <h2 className="text-2xl font-semibold">
-          Pedido #{pedido.numero_pedido}
-        </h2>
-        <p className="text-gray-600">Cliente: {pedido.nombre_cliente}</p>
+      <div className=" mb-6 flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl text-left font-semibold">
+            Pedido #{pedido.numero_pedido}
+          </h2>
+          <p className="text-gray-600 text-xl">
+            Cliente: {pedido.nombre_cliente}
+          </p>
+        </div>
+
+        <div className="mt-4">
+          <button
+            onClick={handleBackClick}
+            className="flex items-center bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+          >
+            <ArrowLeftIcon className="h-5 w-5 mr-2" />
+            Volver a la lista de pedidos
+          </button>
+        </div>
       </div>
 
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
         <h3 className="text-lg font-semibold mb-4">Agregar Artículo</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
+            {/* Numero articulo */}
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Número de Artículo
             </label>
@@ -311,7 +398,7 @@ export const Cotizacion = () => {
               required
             />
           </div>
-
+          {/* Prenda */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Prenda
@@ -330,7 +417,7 @@ export const Cotizacion = () => {
               ))}
             </select>
           </div>
-
+          {/* Talle */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Talle
@@ -349,7 +436,7 @@ export const Cotizacion = () => {
               ))}
             </select>
           </div>
-
+          {/* Tela */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Tela
@@ -368,7 +455,7 @@ export const Cotizacion = () => {
               ))}
             </select>
           </div>
-
+          {/* Cantidad */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Cantidad
@@ -382,7 +469,7 @@ export const Cotizacion = () => {
               required
             />
           </div>
-
+          {/* Agregados */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Agregados
@@ -413,7 +500,7 @@ export const Cotizacion = () => {
               </button>
             </div>
           </div>
-
+          {/* Agregados seleccionados */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Agregados seleccionados
@@ -443,10 +530,65 @@ export const Cotizacion = () => {
             </div>
           </div>
 
+          {/* Sección de Costos de Producción */}
+          <div className="col-span-full">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Costos de Producción
+            </label>
+            <div className="border border-gray-300 rounded p-2">
+              {costosProduccion.length > 0 ? (
+                <table className="w-full">
+                  <thead>
+                    <tr className="text-left">
+                      <th className="py-1 px-2">Costo</th>
+                      <th className="py-1 px-2">Precio Unitario</th>
+                      <th className="py-1 px-2">Cantidad</th>
+                      <th className="py-1 px-2">Subtotal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {costosProduccion.map((costo) => (
+                      <tr key={costo.id} className="border-t border-gray-200">
+                        <td className="py-1 px-2">{costo.nombre}</td>
+                        <td className="py-1 px-2">
+                          {costo.precio.toFixed(2)} $
+                        </td>
+                        <td className="py-1 px-2">
+                          <input
+                            type="number"
+                            min="0"
+                            value={costosCantidades[costo.id]}
+                            onChange={(e) =>
+                              handleCostoCantidadChange(
+                                costo.id,
+                                e.target.value
+                              )
+                            }
+                            className="w-20 p-1 border border-gray-300 rounded"
+                          />
+                        </td>
+                        <td className="py-1 px-2">
+                          {(
+                            costo.precio * (costosCantidades[costo.id] || 0)
+                          ).toFixed(2)}{" "}
+                          $
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <p className="text-gray-400">
+                  No hay costos de producción disponibles
+                </p>
+              )}
+            </div>
+          </div>
+
           <div className="flex items-end gap-4">
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-700">
-                Precio unitario:
+                Costo Unitario:
               </p>
               <p className="text-lg font-semibold">
                 {calculatePrice(
@@ -524,8 +666,9 @@ export const Cotizacion = () => {
                 <th className="py-2 px-4 text-left">Tela</th>
                 <th className="py-2 px-4 text-left">Cantidad</th>
                 <th className="py-2 px-4 text-left">Agregados</th>
-                <th className="py-2 px-4 text-left">Precio Unit.</th>
-                <th className="py-2 px-4 text-left">Precio Total</th>
+                <th className="py-2 px-4 text-left">Costos Producción</th>
+                <th className="py-2 px-4 text-left">Costo Unitario</th>
+                <th className="py-2 px-4 text-left">Costo Total</th>
                 <th className="py-2 px-4 text-center">Acciones</th>
               </tr>
             </thead>
@@ -545,6 +688,21 @@ export const Cotizacion = () => {
                       {Array.isArray(articulo.agregados)
                         ? articulo.agregados.join(", ")
                         : articulo.agregados}
+                    </td>
+                    <td className="py-2 px-4">
+                      {articulo.costos_produccion &&
+                      articulo.costos_produccion.length > 0 ? (
+                        <ul>
+                          {articulo.costos_produccion.map((costo, i) => (
+                            <li key={i}>
+                              {costo.nombre} ({costo.cantidad} x{" "}
+                              {costo.precio_unitario.toFixed(2)})
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        "Ninguno"
+                      )}
                     </td>
                     <td className="py-2 px-4">
                       {(
@@ -573,7 +731,7 @@ export const Cotizacion = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="9" className="py-4 text-center text-gray-500">
+                  <td colSpan="10" className="py-4 text-center text-gray-500">
                     No hay artículos en este pedido
                   </td>
                 </tr>
@@ -581,16 +739,6 @@ export const Cotizacion = () => {
             </tbody>
           </table>
         </div>
-      </div>
-
-      <div className="mt-4">
-        <button
-          onClick={handleBackClick}
-          className="flex items-center bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-        >
-          <ArrowLeftIcon className="h-5 w-5 mr-2" />
-          Volver a la lista de pedidos
-        </button>
       </div>
     </div>
   );
