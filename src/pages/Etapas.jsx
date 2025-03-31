@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { PencilIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { PencilIcon } from "@heroicons/react/24/outline";
+import { CreateEtapaModal } from "../components/CreateEtapaModal";
 
 const formatDateForInput = (dateString) => {
   if (!dateString) return "";
@@ -42,6 +43,8 @@ export const Etapas = ({ articuloId, pedidosId, cantidadArticulo }) => {
   const [lastDate, setLastDate] = useState("");
   const [lastEtapa, setLastEtapa] = useState(null);
   const API_URL = import.meta.env.VITE_API_URL;
+  const token = localStorage.getItem("token");
+  const usuarioId = localStorage.getItem("usuario_id");
 
   useEffect(() => {
     fetchEtapas();
@@ -90,9 +93,6 @@ export const Etapas = ({ articuloId, pedidosId, cantidadArticulo }) => {
 
   const handleUpdateEtapa = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem("token");
-    const usuarioId = localStorage.getItem("usuario_id");
-
     if (!token || !usuarioId) {
       console.error("No se encontró el token o usuario_id");
       return;
@@ -121,9 +121,6 @@ export const Etapas = ({ articuloId, pedidosId, cantidadArticulo }) => {
   };
 
   const performUpdate = async () => {
-    const token = localStorage.getItem("token");
-    const usuarioId = localStorage.getItem("usuario_id");
-
     try {
       const response = await fetch(`${API_URL}/etapas/${editEtapa.id}`, {
         method: "PUT",
@@ -140,7 +137,6 @@ export const Etapas = ({ articuloId, pedidosId, cantidadArticulo }) => {
       });
 
       const data = await response.json();
-
       if (response.ok) {
         setIsEditModalOpen(false);
         fetchEtapas();
