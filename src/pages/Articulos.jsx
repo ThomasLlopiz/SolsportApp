@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { PencilIcon, PlusIcon, EyeIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
-import { CreateArticuloModal } from "../components/CreateArticuloModal";
 import { EditArticuloModal } from "../components/EditArticuloModal";
 
 const formatDate = (dateString) => {
@@ -207,7 +206,7 @@ export const Articulos = ({ pedidoId }) => {
   const handleViewClick = (id) => {
     navigate(`/articulos/${id}`);
   };
-
+  console.log(pedidoId)
   return (
     <div className="text-sm">
       <EditArticuloModal
@@ -224,7 +223,7 @@ export const Articulos = ({ pedidoId }) => {
         setAgregadoParaAgregar={setAgregadoParaAgregar}
         handleAgregarAgregado={handleAgregarAgregado}
         handleRemoveAgregado={handleRemoveAgregado}
-        pedidosId={pedidoId}
+        pedidoId={pedidoId}
       />
 
       {/* Tabla de Artículos */}
