@@ -1,3 +1,5 @@
+import { CreateEtapaModal } from "./CreateEtapaModal";
+
 export const EditArticuloModal = ({
     isEditModalOpen,
     setIsEditModalOpen,
@@ -12,12 +14,15 @@ export const EditArticuloModal = ({
     setAgregadoParaAgregar,
     handleAgregarAgregado,
     handleRemoveAgregado,
+    pedidoId,
 }) => {
+    console.log(pedidoId)
     return (
         isEditModalOpen && editArticulo && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                 <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
                     <h2 className="text-xl font-semibold mb-4">Editar Artículo</h2>
+                    <CreateEtapaModal pedidoId={pedidoId} articuloId={editArticulo.id}/>
                     <form onSubmit={handleUpdateArticulo}>
                         {/* Número de Artículo */}
                         <div className="mb-4">
