@@ -5,8 +5,14 @@ import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 export const Cotizacion = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { id: pedidoId } = useParams(); // Use just one param
-  const [prendas] = useState(["Buzo", "Remera", "Campera", "Pantalones", "Chombas"]);
+  const { id: pedidoId } = useParams();
+  const [prendas] = useState([
+    "Buzo",
+    "Remera",
+    "Campera",
+    "Pantalones",
+    "Chombas",
+  ]);
   const [talles] = useState(["XS", "S", "M", "L", "XL", "XXL", "XXXL"]);
   const [pedido, setPedido] = useState(null);
   const [todosLosAgregados, setTodosLosAgregados] = useState([]);
@@ -18,13 +24,12 @@ export const Cotizacion = () => {
   const [agregadoParaAgregar, setAgregadoParaAgregar] = useState("");
   const [numeroArticulo, setNumeroArticulo] = useState("");
   const [cantidad, setCantidad] = useState(1);
-  const [articulos, setArticulos] = useState([]); // Todos los artículos (existentes + nuevos)
+  const [articulos, setArticulos] = useState([]);
   const [editingArticulo, setEditingArticulo] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
 
   const API_URL = import.meta.env.VITE_API_URL;
 
-  // Handlers para los inputs
   const handlePrendaChange = (e) => setSelectedPrenda(e.target.value);
   const handleTalleChange = (e) => setSelectedTalle(e.target.value);
   const handleTelaChange = (e) => setSelectedTela(e.target.value);
@@ -71,7 +76,9 @@ export const Cotizacion = () => {
 
   const fetchArticulosDelPedido = async () => {
     try {
-      const response = await fetch(`${API_URL}/articulos?pedidos_id=${pedidoId}`);
+      const response = await fetch(
+        `${API_URL}/articulos?pedidos_id=${pedidoId}`
+      );
       const data = await response.json();
       setArticulos(data);
     } catch (error) {
@@ -84,7 +91,10 @@ export const Cotizacion = () => {
   };
 
   const handleAgregarAgregado = () => {
-    if (agregadoParaAgregar && !selectedAgregados.includes(agregadoParaAgregar)) {
+    if (
+      agregadoParaAgregar &&
+      !selectedAgregados.includes(agregadoParaAgregar)
+    ) {
       setSelectedAgregados((prev) => [...prev, agregadoParaAgregar]);
       setAgregadoParaAgregar("");
     }
@@ -143,13 +153,12 @@ export const Cotizacion = () => {
       pedidos_id: pedidoId,
     };
 
-
     try {
       const response = await fetch(`${API_URL}/articulos`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Accept": "application/json",
+          Accept: "application/json",
         },
         body: JSON.stringify(articuloData),
       });
@@ -215,22 +224,27 @@ export const Cotizacion = () => {
     };
 
     try {
-      const response = await fetch(`${API_URL}/articulos/${editingArticulo.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(articuloActualizado),
-      });
+      const response = await fetch(
+        `${API_URL}/articulos/${editingArticulo.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(articuloActualizado),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Error al actualizar el artículo");
       }
 
       const articuloActualizadoResp = await response.json();
-      setArticulos(articulos.map(a =>
-        a.id === articuloActualizado.id ? articuloActualizadoResp : a
-      ));
+      setArticulos(
+        articulos.map((a) =>
+          a.id === articuloActualizado.id ? articuloActualizadoResp : a
+        )
+      );
       resetForm();
     } catch (error) {
       console.error("Error al actualizar el artículo:", error);
@@ -252,7 +266,7 @@ export const Cotizacion = () => {
         throw new Error("Error al eliminar el artículo");
       }
 
-      setArticulos(articulos.filter(a => a.id !== articuloId));
+      setArticulos(articulos.filter((a) => a.id !== articuloId));
     } catch (error) {
       console.error("Error al eliminar el artículo:", error);
       alert("Error al eliminar el artículo");
@@ -275,7 +289,9 @@ export const Cotizacion = () => {
   return (
     <div className="p-6">
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-semibold">Pedido #{pedido.numero_pedido}</h2>
+        <h2 className="text-2xl font-semibold">
+          Pedido #{pedido.numero_pedido}
+        </h2>
         <p className="text-gray-600">Cliente: {pedido.nombre_cliente}</p>
       </div>
 
@@ -283,7 +299,9 @@ export const Cotizacion = () => {
         <h3 className="text-lg font-semibold mb-4">Agregar Artículo</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Número de Artículo</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Número de Artículo
+            </label>
             <input
               type="number"
               value={numeroArticulo}
@@ -295,7 +313,9 @@ export const Cotizacion = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Prenda</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Prenda
+            </label>
             <select
               value={selectedPrenda}
               onChange={handlePrendaChange}
@@ -304,13 +324,17 @@ export const Cotizacion = () => {
             >
               <option value="">Seleccionar prenda</option>
               {prendas.map((prenda, index) => (
-                <option key={index} value={prenda}>{prenda}</option>
+                <option key={index} value={prenda}>
+                  {prenda}
+                </option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Talle</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Talle
+            </label>
             <select
               value={selectedTalle}
               onChange={handleTalleChange}
@@ -319,13 +343,17 @@ export const Cotizacion = () => {
             >
               <option value="">Seleccionar talle</option>
               {talles.map((talle, index) => (
-                <option key={index} value={talle}>{talle}</option>
+                <option key={index} value={talle}>
+                  {talle}
+                </option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Tela</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Tela
+            </label>
             <select
               value={selectedTela}
               onChange={handleTelaChange}
@@ -334,13 +362,17 @@ export const Cotizacion = () => {
             >
               <option value="">Seleccionar tela</option>
               {telas.map((tela, index) => (
-                <option key={index} value={tela.nombre}>{tela.nombre}</option>
+                <option key={index} value={tela.nombre}>
+                  {tela.nombre}
+                </option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Cantidad</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Cantidad
+            </label>
             <input
               type="number"
               value={cantidad}
@@ -352,7 +384,9 @@ export const Cotizacion = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Agregados</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Agregados
+            </label>
             <div className="flex">
               <select
                 value={agregadoParaAgregar}
@@ -361,9 +395,13 @@ export const Cotizacion = () => {
               >
                 <option value="">Seleccionar agregado</option>
                 {todosLosAgregados
-                  .filter(agregado => !selectedAgregados.includes(agregado.nombre))
+                  .filter(
+                    (agregado) => !selectedAgregados.includes(agregado.nombre)
+                  )
                   .map((agregado, index) => (
-                    <option key={index} value={agregado.nombre}>{agregado.nombre}</option>
+                    <option key={index} value={agregado.nombre}>
+                      {agregado.nombre}
+                    </option>
                   ))}
               </select>
               <button
@@ -377,12 +415,17 @@ export const Cotizacion = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Agregados seleccionados</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Agregados seleccionados
+            </label>
             <div className="border border-gray-300 rounded p-2 min-h-12">
               {selectedAgregados.length > 0 ? (
                 <ul className="space-y-1">
                   {selectedAgregados.map((agregado, index) => (
-                    <li key={index} className="flex justify-between items-center">
+                    <li
+                      key={index}
+                      className="flex justify-between items-center"
+                    >
                       <span>{agregado}</span>
                       <button
                         type="button"
@@ -402,7 +445,9 @@ export const Cotizacion = () => {
 
           <div className="flex items-end gap-4">
             <div className="flex-1">
-              <p className="text-sm font-medium text-gray-700">Precio unitario:</p>
+              <p className="text-sm font-medium text-gray-700">
+                Precio unitario:
+              </p>
               <p className="text-lg font-semibold">
                 {calculatePrice(
                   selectedPrenda,
@@ -410,7 +455,8 @@ export const Cotizacion = () => {
                   selectedTela,
                   selectedAgregados,
                   1
-                ).toFixed(2)} $
+                ).toFixed(2)}{" "}
+                $
               </p>
             </div>
 
@@ -423,7 +469,8 @@ export const Cotizacion = () => {
                   selectedTela,
                   selectedAgregados,
                   cantidad
-                ).toFixed(2)} $
+                ).toFixed(2)}{" "}
+                $
               </p>
             </div>
           </div>
@@ -463,7 +510,7 @@ export const Cotizacion = () => {
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold">Artículos del Pedido</h3>
           <div className="text-xl font-bold">
-            Total: {typeof total === 'number' ? total.toFixed(2) : '0.00'} $
+            Total: {typeof total === "number" ? total.toFixed(2) : "0.00"} $
           </div>
         </div>
 
@@ -485,17 +532,25 @@ export const Cotizacion = () => {
             <tbody>
               {articulos.length > 0 ? (
                 articulos.map((articulo) => (
-                  <tr key={articulo.id} className="border-t border-gray-200 hover:bg-gray-50">
+                  <tr
+                    key={articulo.id}
+                    className="border-t border-gray-200 hover:bg-gray-50"
+                  >
                     <td className="py-2 px-4">{articulo.numero_articulo}</td>
                     <td className="py-2 px-4">{articulo.prenda}</td>
                     <td className="py-2 px-4">{articulo.talle}</td>
                     <td className="py-2 px-4">{articulo.tela}</td>
                     <td className="py-2 px-4">{articulo.cantidad}</td>
                     <td className="py-2 px-4">
-                      {Array.isArray(articulo.agregados) ? articulo.agregados.join(", ") : articulo.agregados}
+                      {Array.isArray(articulo.agregados)
+                        ? articulo.agregados.join(", ")
+                        : articulo.agregados}
                     </td>
                     <td className="py-2 px-4">
-                      {(parseFloat(articulo.precio) / articulo.cantidad).toFixed(2)} $
+                      {(
+                        parseFloat(articulo.precio) / articulo.cantidad
+                      ).toFixed(2)}{" "}
+                      $
                     </td>
                     <td className="py-2 px-4">
                       {parseFloat(articulo.precio).toFixed(2)} $

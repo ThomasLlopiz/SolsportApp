@@ -135,7 +135,6 @@ export const Articulos = ({ pedidoId }) => {
     });
   };
 
-  //UPDATE
   const handleUpdateArticulo = async (e) => {
     e.preventDefault();
     try {
@@ -159,7 +158,6 @@ export const Articulos = ({ pedidoId }) => {
     }
   };
 
-  //EDIT
   const handleEditClick = (articulo) => {
     console.log("Agregados al editar:", articulo.agregados);
 
@@ -170,7 +168,6 @@ export const Articulos = ({ pedidoId }) => {
         articulo.agregados.length > 0 &&
         typeof articulo.agregados[0] === "string"
       ) {
-        // Convertir array de strings a array de objetos
         agregadosArray = articulo.agregados.map((nombre) => {
           const agregadoExistente = todosLosAgregados.find(
             (a) => a.nombre === nombre
@@ -178,7 +175,6 @@ export const Articulos = ({ pedidoId }) => {
           return agregadoExistente || { nombre };
         });
       } else {
-        // Ya es un array de objetos
         agregadosArray = [...articulo.agregados];
       }
     } else if (typeof articulo.agregados === "string") {
@@ -206,7 +202,7 @@ export const Articulos = ({ pedidoId }) => {
   const handleViewClick = (id) => {
     navigate(`/articulos/${id}`);
   };
-  console.log(pedidoId)
+  console.log(pedidoId);
   return (
     <div className="text-sm">
       <EditArticuloModal

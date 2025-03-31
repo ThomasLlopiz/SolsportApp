@@ -3,7 +3,6 @@ import { PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 
-// Usamos la URL desde .env
 const API_URL = import.meta.env.VITE_API_URL;
 
 export const Telas = () => {
