@@ -157,6 +157,7 @@ export const Articulos = ({ pedidoId }) => {
 
       if (file) {
         formData.append("file", file);
+        console.log("Archivo enviado:", file.name);
       }
 
       const response = await fetch(`${API_URL}/articulos/${editArticulo.id}`, {
@@ -166,12 +167,14 @@ export const Articulos = ({ pedidoId }) => {
         },
         body: formData,
       });
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(`Error: ${JSON.stringify(errorData)}`);
       }
 
       const updatedArticulo = await response.json();
+      console.log("Respuesta del servidor:", updatedArticulo); // Depuración de la respuesta
 
       setArticulos((prevArticulos) =>
         prevArticulos.map((art) =>
@@ -186,7 +189,6 @@ export const Articulos = ({ pedidoId }) => {
       console.error("Error updating articulo:", error.message);
     }
   };
-
   const handleEditClick = (articulo) => {
     let agregadosArray = [];
 
