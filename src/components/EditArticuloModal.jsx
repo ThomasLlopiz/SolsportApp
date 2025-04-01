@@ -1,10 +1,11 @@
 import { CreateEtapaModal } from "./CreateEtapaModal";
-
+import { useState } from "react";
 export const EditArticuloModal = ({
   isEditModalOpen,
   setIsEditModalOpen,
   editArticulo,
   setEditArticulo,
+  handleUpdateArticulo,
   prendas,
   talles,
   telas,
@@ -14,48 +15,7 @@ export const EditArticuloModal = ({
   handleAgregarAgregado,
   handleRemoveAgregado,
   pedidoId,
-  fetchArticulos,
 }) => {
-  const API_URL = import.meta.env.VITE_API_URL;
-
-  const handleFileChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setEditArticulo({
-        ...editArticulo,
-        ruta: file,
-      });
-    }
-  };
-
-  const handleUpdateArticulo = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await fetch(`${API_URL}/articulos/${editArticulo.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...editArticulo,
-          tela: editArticulo.tela,
-          pedidos_id: pedidoId,
-          agregados: editArticulo.agregados.map((agregado) => agregado.nombre),
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Error al actualizar el artículo");
-      }
-
-      setEditArticulo(null);
-      setIsEditModalOpen(false);
-      fetchArticulos();
-    } catch (error) {
-      console.error("Error updating articulo", error);
-    }
-  };
-
   return (
     isEditModalOpen &&
     editArticulo && (
@@ -80,26 +40,6 @@ export const EditArticuloModal = ({
                 min="1"
                 required
               />
-            </div>
-            {/* Input para seleccionar archivo */}
-            <div className="mb-4">
-              <label htmlFor="ruta" className="block text-gray-700">
-                Ficha Técnica (PDF)
-              </label>
-              <input
-                type="file"
-                accept=".pdf"
-                onChange={handleFileChange}
-                className="w-full border border-gray-300 p-2 rounded"
-              />
-              {editArticulo.ruta && (
-                <p className="text-sm text-gray-500 mt-1">
-                  Archivo actual:{" "}
-                  {typeof editArticulo.ruta === "string"
-                    ? editArticulo.ruta.split("/").pop()
-                    : editArticulo.ruta.name}
-                </p>
-              )}
             </div>
             {/* Select para Prenda */}
             <select

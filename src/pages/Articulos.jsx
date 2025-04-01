@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { PencilIcon, EyeIcon } from "@heroicons/react/24/outline";
+import { PencilIcon, PlusIcon, EyeIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
 import { EditArticuloModal } from "../components/EditArticuloModal";
 
@@ -40,6 +40,7 @@ export const Articulos = ({ pedidoId }) => {
 
   const API_URL = import.meta.env.VITE_API_URL;
 
+  //FETCHS
   useEffect(() => {
     const fetchData = async () => {
       await fetchArticulos();
@@ -205,6 +206,7 @@ export const Articulos = ({ pedidoId }) => {
         setIsEditModalOpen={setIsEditModalOpen}
         editArticulo={editArticulo}
         setEditArticulo={setEditArticulo}
+        handleUpdateArticulo={handleUpdateArticulo}
         prendas={prendas}
         talles={talles}
         telas={telas}
@@ -213,7 +215,6 @@ export const Articulos = ({ pedidoId }) => {
         setAgregadoParaAgregar={setAgregadoParaAgregar}
         handleAgregarAgregado={handleAgregarAgregado}
         handleRemoveAgregado={handleRemoveAgregado}
-        fetchArticulos={fetchArticulos}
         pedidoId={pedidoId}
       />
 
