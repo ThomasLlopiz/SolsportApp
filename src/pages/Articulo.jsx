@@ -71,6 +71,14 @@ export const Articulo = () => {
             <h3 className="text-2xl">Artículo: {articulo.numero_articulo}</h3>
             <h3 className="text-2xl">{articulo.nombre}</h3>
             <h3 className="text-2xl">{articulo.talle}</h3>
+            <a
+              href={`file:C:/Users/DEPIT-1/Desktop/EXTRAS/${articulo.ruta}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500"
+            >
+              Abrir en PDF
+            </a>
           </div>
 
           <button

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { PencilIcon, PlusIcon, EyeIcon } from "@heroicons/react/24/outline";
+import { PencilIcon, EyeIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
 import { EditArticuloModal } from "../components/EditArticuloModal";
 
@@ -40,7 +40,6 @@ export const Articulos = ({ pedidoId }) => {
 
   const API_URL = import.meta.env.VITE_API_URL;
 
-  //FETCHS
   useEffect(() => {
     const fetchData = async () => {
       await fetchArticulos();
@@ -159,8 +158,6 @@ export const Articulos = ({ pedidoId }) => {
   };
 
   const handleEditClick = (articulo) => {
-    console.log("Agregados al editar:", articulo.agregados);
-
     let agregadosArray = [];
 
     if (Array.isArray(articulo.agregados)) {
@@ -198,11 +195,9 @@ export const Articulos = ({ pedidoId }) => {
     setIsEditModalOpen(true);
   };
 
-  //VIEW ARITCULO
   const handleViewClick = (id) => {
     navigate(`/articulos/${id}`);
   };
-  console.log(pedidoId);
   return (
     <div className="text-sm">
       <EditArticuloModal
@@ -210,7 +205,6 @@ export const Articulos = ({ pedidoId }) => {
         setIsEditModalOpen={setIsEditModalOpen}
         editArticulo={editArticulo}
         setEditArticulo={setEditArticulo}
-        handleUpdateArticulo={handleUpdateArticulo}
         prendas={prendas}
         talles={talles}
         telas={telas}
@@ -219,6 +213,7 @@ export const Articulos = ({ pedidoId }) => {
         setAgregadoParaAgregar={setAgregadoParaAgregar}
         handleAgregarAgregado={handleAgregarAgregado}
         handleRemoveAgregado={handleRemoveAgregado}
+        fetchArticulos={fetchArticulos}
         pedidoId={pedidoId}
       />
 
@@ -231,6 +226,8 @@ export const Articulos = ({ pedidoId }) => {
             <th className="py-2 px-4 border-b">Cantidad</th>
             <th className="py-2 px-4 border-b">Talle</th>
             <th className="py-2 px-4 border-b">Tela</th>
+            <th className="py-2 px-4 border-b">Excel</th>
+
             <th className="py-2 px-4 border-b">Agregados</th>
             <th className="py-2 px-4 border-b">Fecha Inicio</th>
             <th className="py-2 px-4 border-b">Fecha Fin</th>
@@ -264,6 +261,7 @@ export const Articulos = ({ pedidoId }) => {
                 <td className="py-2 px-4 border-b">{articulo.cantidad}</td>
                 <td className="py-2 px-4 border-b">{articulo.talle}</td>
                 <td className="py-2 px-4 border-b">{articulo.tela}</td>
+                <td className="py-2 px-4 border-b">{articulo.ruta}</td>
                 <td className="py-2 px-4 border-b">
                   {articulo.agregados ? articulo.agregados.join(", ") : ""}
                 </td>
