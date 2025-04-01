@@ -16,6 +16,11 @@ export const EditArticuloModal = ({
   handleRemoveAgregado,
   pedidoId,
 }) => {
+  const [file, setFile] = useState(null);
+
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
+  };
   return (
     isEditModalOpen &&
     editArticulo && (
@@ -23,7 +28,7 @@ export const EditArticuloModal = ({
         <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
           <h2 className="text-xl font-semibold mb-4">Editar Artículo</h2>
           <CreateEtapaModal pedidoId={pedidoId} articuloId={editArticulo.id} />
-          <form onSubmit={handleUpdateArticulo}>
+          <form onSubmit={(e) => handleUpdateArticulo(e, file)}>
             {/* Número de Artículo */}
             <div className="mb-4">
               <label className="block text-gray-700">Número de Artículo</label>
@@ -40,6 +45,27 @@ export const EditArticuloModal = ({
                 min="1"
                 required
               />
+            </div>
+            {/* Nuevo campo para subir archivo */}
+            <div className="mb-4">
+              <label className="block text-gray-700">Archivo</label>
+              <input
+                type="file"
+                onChange={handleFileChange}
+                className="w-full border border-gray-300 p-2 rounded"
+              />
+              {editArticulo.ruta && (
+                <a
+                  href={`${import.meta.env.VITE_API_URL}/storage/${
+                    editArticulo.ruta
+                  }`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 text-sm mt-1 inline-block"
+                >
+                  Ver archivo actual
+                </a>
+              )}
             </div>
             {/* Select para Prenda */}
             <select
