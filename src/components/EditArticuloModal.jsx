@@ -30,10 +30,6 @@ export const EditArticuloModal = ({
 
   const handleUpdateArticulo = async (e) => {
     e.preventDefault();
-
-    // Verifica si el número de artículo se está actualizando correctamente
-    console.log("Artículos antes de enviar:", editArticulo);
-
     try {
       const response = await fetch(`${API_URL}/articulos/${editArticulo.id}`, {
         method: "PUT",
@@ -54,7 +50,7 @@ export const EditArticuloModal = ({
 
       setEditArticulo(null);
       setIsEditModalOpen(false);
-      fetchArticulos(); // Refresca la lista de artículos
+      fetchArticulos();
     } catch (error) {
       console.error("Error updating articulo", error);
     }
