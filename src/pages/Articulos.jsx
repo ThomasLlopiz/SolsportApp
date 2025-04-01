@@ -39,6 +39,7 @@ export const Articulos = ({ pedidoId }) => {
   const navigate = useNavigate();
 
   const API_URL = import.meta.env.VITE_API_URL;
+  const API_URL_PDF = import.meta.env.VITE_API_URL_PDF;
 
   //FETCHS
   useEffect(() => {
@@ -135,26 +136,54 @@ export const Articulos = ({ pedidoId }) => {
     });
   };
 
-  const handleUpdateArticulo = async (e) => {
+  const handleUpdateArticulo = async (e, file) => {
     e.preventDefault();
     try {
-      await fetch(`${API_URL}/articulos/${editArticulo.id}`, {
-        method: "PUT",
+      const formData = new FormData();
+
+      formData.append("numero_articulo", editArticulo.numero_articulo);
+      formData.append("nombre", editArticulo.nombre);
+      formData.append("cantidad", editArticulo.cantidad);
+      formData.append("talle", editArticulo.talle);
+      formData.append("tela", editArticulo.tela);
+      formData.append("pedidos_id", pedidoId);
+
+      if (editArticulo.agregados && editArticulo.agregados.length > 0) {
+        const agregadosString = editArticulo.agregados
+          .map((agregado) => agregado.nombre)
+          .join(", ");
+        formData.append("agregados", agregadosString);
+      }
+
+      if (file) {
+        formData.append("file", file);
+      }
+
+      const response = await fetch(`${API_URL}/articulos/${editArticulo.id}`, {
+        method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: JSON.stringify({
-          ...editArticulo,
-          tela: editArticulo.tela,
-          pedidos_id: pedidoId,
-          agregados: editArticulo.agregados.map((agregado) => agregado.nombre),
-        }),
+        body: formData,
       });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`Error: ${JSON.stringify(errorData)}`);
+      }
+
+      const updatedArticulo = await response.json();
+
+      setArticulos((prevArticulos) =>
+        prevArticulos.map((art) =>
+          art.id === updatedArticulo.id ? updatedArticulo : art
+        )
+      );
+
       setEditArticulo(null);
       setIsEditModalOpen(false);
-      fetchArticulos();
+      await fetchArticulos();
     } catch (error) {
-      console.error("Error updating articulo", error);
+      console.error("Error updating articulo:", error.message);
     }
   };
 
@@ -199,6 +228,7 @@ export const Articulos = ({ pedidoId }) => {
   const handleViewClick = (id) => {
     navigate(`/articulos/${id}`);
   };
+
   return (
     <div className="text-sm">
       <EditArticuloModal
@@ -222,13 +252,12 @@ export const Articulos = ({ pedidoId }) => {
       <table className="min-w-full bg-white border border-gray-200 text-xl">
         <thead>
           <tr className="text-left">
+            <th className="py-2 px-4 border-b">Excel</th>
             <th className="py-2 px-4 border-b">Número de Artículo</th>
             <th className="py-2 px-4 border-b">Prenda</th>
             <th className="py-2 px-4 border-b">Cantidad</th>
             <th className="py-2 px-4 border-b">Talle</th>
             <th className="py-2 px-4 border-b">Tela</th>
-            <th className="py-2 px-4 border-b">Excel</th>
-
             <th className="py-2 px-4 border-b">Agregados</th>
             <th className="py-2 px-4 border-b">Fecha Inicio</th>
             <th className="py-2 px-4 border-b">Fecha Fin</th>
@@ -256,13 +285,26 @@ export const Articulos = ({ pedidoId }) => {
             return (
               <tr key={articulo.id}>
                 <td className="py-2 px-4 border-b">
+                  {articulo.ruta ? (
+                    <a
+                      href={`${API_URL_PDF}/storage/${articulo.ruta}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-500"
+                    >
+                      Ver archivo
+                    </a>
+                  ) : (
+                    "Sin archivo"
+                  )}
+                </td>
+                <td className="py-2 px-4 border-b">
                   {articulo.numero_articulo}
                 </td>
                 <td className="py-2 px-4 border-b">{articulo.nombre}</td>
                 <td className="py-2 px-4 border-b">{articulo.cantidad}</td>
                 <td className="py-2 px-4 border-b">{articulo.talle}</td>
                 <td className="py-2 px-4 border-b">{articulo.tela}</td>
-                <td className="py-2 px-4 border-b">{articulo.ruta}</td>
                 <td className="py-2 px-4 border-b">
                   {articulo.agregados ? articulo.agregados.join(", ") : ""}
                 </td>
