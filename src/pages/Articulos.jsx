@@ -4,8 +4,9 @@ import { useNavigate } from "react-router-dom";
 import { EditArticuloModal } from "../components/EditArticuloModal";
 
 const formatDate = (dateString) => {
-  if (!dateString) return "";
+  if (!dateString) return "Sin fecha";
   const date = new Date(dateString);
+  if (isNaN(date)) return "Fecha inválida";
   const day = String(date.getUTCDate()).padStart(2, "0");
   const month = String(date.getUTCMonth() + 1).padStart(2, "0");
   const year = date.getUTCFullYear();
@@ -41,7 +42,6 @@ export const Articulos = ({ pedidoId }) => {
   const API_URL = import.meta.env.VITE_API_URL;
   const API_URL_PDF = import.meta.env.VITE_API_URL_PDF;
 
-  //FETCHS
   useEffect(() => {
     const fetchData = async () => {
       await fetchArticulos();
@@ -157,7 +157,6 @@ export const Articulos = ({ pedidoId }) => {
 
       if (file) {
         formData.append("file", file);
-        console.log("Archivo enviado:", file.name);
       }
 
       const response = await fetch(`${API_URL}/articulos/${editArticulo.id}`, {
@@ -174,7 +173,6 @@ export const Articulos = ({ pedidoId }) => {
       }
 
       const updatedArticulo = await response.json();
-      console.log("Respuesta del servidor:", updatedArticulo); // Depuración de la respuesta
 
       setArticulos((prevArticulos) =>
         prevArticulos.map((art) =>
@@ -189,6 +187,7 @@ export const Articulos = ({ pedidoId }) => {
       console.error("Error updating articulo:", error.message);
     }
   };
+
   const handleEditClick = (articulo) => {
     let agregadosArray = [];
 
@@ -250,7 +249,6 @@ export const Articulos = ({ pedidoId }) => {
         pedidoId={pedidoId}
       />
 
-      {/* Tabla de Artículos */}
       <table className="min-w-full bg-white border border-gray-200 text-xl">
         <thead>
           <tr className="text-left">
@@ -271,18 +269,33 @@ export const Articulos = ({ pedidoId }) => {
         <tbody>
           {articulos.map((articulo) => {
             const etapas = etapasMap[articulo.id] || [];
-            etapas.sort(
-              (a, b) => new Date(a.fecha_inicio) - new Date(b.fecha_inicio)
-            );
-            const firstDate = etapas.length
-              ? formatDate(etapas[0].fecha_inicio)
-              : "";
-            const lastDate = etapas.length
-              ? formatDate(etapas[etapas.length - 1].fecha_fin)
-              : "";
-            const lastEtapa = etapas.length
-              ? etapas[etapas.length - 1].nombre
-              : "";
+
+            const etapasPorInicio = [...etapas].sort((a, b) => {
+              if (!a.fecha_inicio && !b.fecha_inicio) return 0;
+              if (!a.fecha_inicio) return 1;
+              if (!b.fecha_inicio) return -1;
+              return new Date(a.fecha_inicio) - new Date(b.fecha_inicio);
+            });
+
+            const etapasPorFin = [...etapas].sort((a, b) => {
+              if (!a.fecha_fin && !b.fecha_fin) return 0;
+              if (!a.fecha_fin) return 1;
+              if (!b.fecha_fin) return -1;
+              return new Date(a.fecha_fin) - new Date(b.fecha_fin);
+            });
+
+            const firstEtapa =
+              etapasPorInicio.find((etapa) => etapa.fecha_inicio) || {};
+            const lastEtapa =
+              etapasPorFin.findLast((etapa) => etapa.fecha_fin) || {};
+
+            const firstDate = firstEtapa.fecha_inicio
+              ? formatDate(firstEtapa.fecha_inicio)
+              : "Sin inicio";
+            const lastDate = lastEtapa.fecha_fin
+              ? formatDate(lastEtapa.fecha_fin)
+              : "Sin fin";
+            const lastEtapaNombre = lastEtapa.nombre || "Sin etapa";
 
             return (
               <tr key={articulo.id}>
@@ -312,7 +325,7 @@ export const Articulos = ({ pedidoId }) => {
                 </td>
                 <td className="py-2 px-4 border-b">{firstDate}</td>
                 <td className="py-2 px-4 border-b">{lastDate}</td>
-                <td className="py-2 px-4 border-b">{lastEtapa}</td>
+                <td className="py-2 px-4 border-b">{lastEtapaNombre}</td>
                 <td className="py-2 px-4 border-b">
                   {articulo.usuario_nombre}
                 </td>
