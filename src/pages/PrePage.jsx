@@ -5,7 +5,6 @@ import { ChevronDownIcon } from "@heroicons/react/24/outline";
 export const PrePage = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  // Función para alternar la visibilidad del dropdown
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
