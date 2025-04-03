@@ -40,10 +40,11 @@ export const Cotizacion = () => {
   const handleCantidadChange = (e) => setCantidad(e.target.value);
 
   const handleCostoCantidadChange = (costoId, value) => {
-    setCostosCantidades({
-      ...costosCantidades,
-      [costoId]: value ? parseInt(value) : 0,
-    });
+    const nuevaCantidad = value ? parseInt(value) : 0;
+    setCostosCantidades((prev) => ({
+      ...prev,
+      [costoId]: nuevaCantidad,
+    }));
   };
 
   useEffect(() => {
@@ -55,7 +56,6 @@ export const Cotizacion = () => {
   }, [pedidoId]);
 
   useEffect(() => {
-    // Inicializar las cantidades de costos en 0 cuando se cargan los costos
     if (costosProduccion.length > 0) {
       const initialCostos = {};
       costosProduccion.forEach((costo) => {
@@ -64,7 +64,28 @@ export const Cotizacion = () => {
       setCostosCantidades(initialCostos);
     }
   }, [costosProduccion]);
+  useEffect(() => {
+    const fetchCostosConCantidades = async () => {
+      if (editingArticulo && editingArticulo.id) {
+        try {
+          const response = await fetch(
+            `${API_URL}/costos_articulo_produccion?articulo_id=${editingArticulo.id}`
+          );
+          const data = await response.json();
 
+          const cantidades = {};
+          data.forEach((item) => {
+            cantidades[item.costo_id] = item.cantidad;
+          });
+          setCostosCantidades(cantidades);
+        } catch (error) {
+          console.error("Error al cargar costos existentes:", error);
+        }
+      }
+    };
+
+    fetchCostosConCantidades();
+  }, [editingArticulo]);
   const fetchAgregados = async () => {
     try {
       const response = await fetch(`${API_URL}/agregados`);
@@ -156,7 +177,6 @@ export const Cotizacion = () => {
       return sum + (agregadoData ? agregadoData.precio : 0);
     }, 0);
 
-    // Calcular costos de producción
     const costosTotal = costosProduccion.reduce((sum, costo) => {
       const cantidad = costosCantidades[costo.id] || 0;
       return sum + costo.precio * cantidad;
@@ -179,30 +199,20 @@ export const Cotizacion = () => {
       cantidad
     );
 
-    // Preparar los costos con sus cantidades para guardar
-    const costosConCantidades = costosProduccion
-      .filter((costo) => costosCantidades[costo.id] > 0)
-      .map((costo) => ({
-        costo_id: costo.id,
-        nombre: costo.nombre,
-        cantidad: costosCantidades[costo.id],
-        precio_unitario: costo.precio,
-      }));
-
     const articuloData = {
       numero_articulo: numeroArticulo,
       nombre: selectedPrenda,
       talle: selectedTalle,
       tela: selectedTela,
       agregados: selectedAgregados,
-      costos_produccion: costosConCantidades,
       cantidad: cantidad,
       precio: precio,
       pedidos_id: pedidoId,
+      ruta: "",
     };
 
     try {
-      const response = await fetch(`${API_URL}/articulos`, {
+      const articuloResponse = await fetch(`${API_URL}/articulos`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -211,18 +221,77 @@ export const Cotizacion = () => {
         body: JSON.stringify(articuloData),
       });
 
-      const responseText = await response.text();
-
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status} - ${responseText}`);
+      if (!articuloResponse.ok) {
+        const errorData = await articuloResponse.json();
+        console.error("Error al crear artículo:", errorData);
+        throw new Error(errorData.message || "Error al crear el artículo");
       }
 
-      const nuevoArticulo = JSON.parse(responseText);
+      const nuevoArticulo = await articuloResponse.json();
+      console.log("Artículo creado:", nuevoArticulo);
+
+      const costosConCantidades = costosProduccion
+        .filter((costo) => (costosCantidades[costo.id] || 0) > 0)
+        .map((costo) => ({
+          articulo_id: nuevoArticulo.id,
+          costo_id: costo.id,
+          cantidad: costosCantidades[costo.id] || 0,
+        }));
+
+      console.log("Costos a guardar:", costosConCantidades);
+
+      if (costosConCantidades.length > 0) {
+        const responses = await Promise.all(
+          costosConCantidades.map((costoData) =>
+            fetch(`${API_URL}/costos_articulo_produccion`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+              body: JSON.stringify(costoData),
+            })
+              .then(async (response) => {
+                if (!response.ok) {
+                  const errorData = await response.json();
+                  console.error(
+                    "Error en costo:",
+                    costoData,
+                    "Respuesta:",
+                    errorData
+                  );
+                  throw new Error(
+                    `Error en costo ${costoData.costo_id}: ${
+                      errorData.message || "Error desconocido"
+                    }`
+                  );
+                }
+                return response.json();
+              })
+              .catch((error) => {
+                console.error("Error detallado al guardar costo:", error);
+                throw error;
+              })
+          )
+        );
+
+        console.log("Todos los costos guardados:", responses);
+      }
+
       setArticulos([...articulos, nuevoArticulo]);
       resetForm();
+      fetchArticulosDelPedido();
+
+      alert("Artículo y costos guardados correctamente");
     } catch (error) {
-      console.error("Error al guardar el artículo:", error);
-      alert("Error al guardar el artículo: " + error.message);
+      console.error("Error completo al guardar:", error);
+      alert(`Error al guardar: ${error.message}`);
+
+      if (error.response) {
+        error.response.json().then((data) => {
+          console.error("Detalles adicionales del error:", data);
+        });
+      }
     }
   };
 
@@ -244,9 +313,9 @@ export const Cotizacion = () => {
     setCostosCantidades(resetCostos);
   };
 
-  const handleStartEdit = (articulo) => {
+  const handleStartEdit = async (articulo) => {
     setNumeroArticulo(articulo.numero_articulo);
-    setSelectedPrenda(articulo.prenda);
+    setSelectedPrenda(articulo.nombre);
     setSelectedTalle(articulo.talle);
     setSelectedTela(articulo.tela);
     setSelectedAgregados([...articulo.agregados]);
@@ -254,12 +323,20 @@ export const Cotizacion = () => {
     setIsEditing(true);
     setEditingArticulo(articulo);
 
-    if (articulo.costos_produccion && articulo.costos_produccion.length > 0) {
-      const costosEdit = {};
-      articulo.costos_produccion.forEach((costo) => {
-        costosEdit[costo.costo_id] = costo.cantidad;
+    try {
+      const response = await fetch(
+        `${API_URL}/costos_articulo_produccion?articulo_id=${articulo.id}`
+      );
+      const costosExistentes = await response.json();
+
+      const nuevosCostos = {};
+      costosExistentes.forEach((costo) => {
+        nuevosCostos[costo.costo_id] = costo.cantidad;
       });
-      setCostosCantidades(costosEdit);
+
+      setCostosCantidades(nuevosCostos);
+    } catch (error) {
+      console.error("Error al cargar costos existentes:", error);
     }
   };
 
@@ -274,25 +351,15 @@ export const Cotizacion = () => {
       cantidad
     );
 
-    const costosConCantidades = costosProduccion
-      .filter((costo) => costosCantidades[costo.id] > 0)
-      .map((costo) => ({
-        costo_id: costo.id,
-        nombre: costo.nombre,
-        cantidad: costosCantidades[costo.id],
-        precio_unitario: costo.precio,
-      }));
-
     const articuloActualizado = {
-      ...editingArticulo,
       numero_articulo: numeroArticulo,
-      prenda: selectedPrenda,
+      nombre: selectedPrenda,
       talle: selectedTalle,
       tela: selectedTela,
       agregados: selectedAgregados,
-      costos_produccion: costosConCantidades,
       cantidad: cantidad,
       precio: precio,
+      pedidos_id: pedidoId,
     };
 
     try {
@@ -300,9 +367,7 @@ export const Cotizacion = () => {
         `${API_URL}/articulos/${editingArticulo.id}`,
         {
           method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(articuloActualizado),
         }
       );
@@ -312,18 +377,60 @@ export const Cotizacion = () => {
       }
 
       const articuloActualizadoResp = await response.json();
+
+      const existingCostsResponse = await fetch(
+        `${API_URL}/costos_articulo_produccion?articulo_id=${editingArticulo.id}`
+      );
+      const existingCosts = await existingCostsResponse.json();
+
+      const costosConCantidades = costosProduccion
+        .filter((costo) => costosCantidades[costo.id] >= 0)
+
+        .map((costo) => ({
+          articulo_id: editingArticulo.id,
+          costo_id: costo.id,
+          cantidad: costosCantidades[costo.id] || 0,
+        }));
+
+      await Promise.all(
+        costosConCantidades.map(async (costoData) => {
+          const existingCost = existingCosts.find(
+            (c) =>
+              c.costo_id === costoData.costo_id &&
+              c.articulo_id === costoData.articulo_id
+          );
+
+          if (existingCost) {
+            return fetch(
+              `${API_URL}/costos_articulo_produccion/${existingCost.id}`,
+              {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(costoData),
+              }
+            );
+          } else if (costoData.cantidad > 0) {
+            return fetch(`${API_URL}/costos_articulo_produccion`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(costoData),
+            });
+          }
+        })
+      );
+
       setArticulos(
         articulos.map((a) =>
-          a.id === articuloActualizado.id ? articuloActualizadoResp : a
+          a.id === articuloActualizadoResp.id ? articuloActualizadoResp : a
         )
       );
       resetForm();
+      fetchArticulosDelPedido();
     } catch (error) {
-      console.error("Error al actualizar el artículo:", error);
-      alert("Error al actualizar el artículo");
+      console.error("Error al actualizar:", error);
+      alert("Error al actualizar: " + error.message);
     }
   };
-
   const handleRemoveArticulo = async (articuloId) => {
     if (!window.confirm("¿Está seguro de que desea eliminar este artículo?")) {
       return;
@@ -529,7 +636,6 @@ export const Cotizacion = () => {
               )}
             </div>
           </div>
-
           {/* Sección de Costos de Producción */}
           <div className="col-span-full">
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -547,34 +653,35 @@ export const Cotizacion = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {costosProduccion.map((costo) => (
-                      <tr key={costo.id} className="border-t border-gray-200">
-                        <td className="py-1 px-2">{costo.nombre}</td>
-                        <td className="py-1 px-2">
-                          {costo.precio.toFixed(2)} $
-                        </td>
-                        <td className="py-1 px-2">
-                          <input
-                            type="number"
-                            min="0"
-                            value={costosCantidades[costo.id]}
-                            onChange={(e) =>
-                              handleCostoCantidadChange(
-                                costo.id,
-                                e.target.value
-                              )
-                            }
-                            className="w-20 p-1 border border-gray-300 rounded"
-                          />
-                        </td>
-                        <td className="py-1 px-2">
-                          {(
-                            costo.precio * (costosCantidades[costo.id] || 0)
-                          ).toFixed(2)}{" "}
-                          $
-                        </td>
-                      </tr>
-                    ))}
+                    {costosProduccion.map((costo) => {
+                      const cantidadExistente = costosCantidades[costo.id] || 0;
+
+                      return (
+                        <tr key={costo.id} className="border-t border-gray-200">
+                          <td className="py-1 px-2">{costo.nombre}</td>
+                          <td className="py-1 px-2">
+                            {costo.precio.toFixed(2)} $
+                          </td>
+                          <td className="py-1 px-2">
+                            <input
+                              type="number"
+                              min="0"
+                              value={cantidadExistente}
+                              onChange={(e) =>
+                                handleCostoCantidadChange(
+                                  costo.id,
+                                  e.target.value
+                                )
+                              }
+                              className="w-20 p-1 border border-gray-300 rounded"
+                            />
+                          </td>
+                          <td className="py-1 px-2">
+                            {(costo.precio * cantidadExistente).toFixed(2)} $
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               ) : (
@@ -584,7 +691,7 @@ export const Cotizacion = () => {
               )}
             </div>
           </div>
-
+          {/* COSTOS DE PRODUCCION */}
           <div className="flex items-end gap-4">
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-700">
