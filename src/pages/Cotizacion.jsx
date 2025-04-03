@@ -163,13 +163,12 @@ export const Cotizacion = () => {
     setSelectedAgregados((prev) => prev.filter((item) => item !== agregado));
   };
 
-  const calculatePrice = (prenda, talle, tela, agregados, cant) => {
+  const calculatePrice = (prenda, talle, tela, agregados) => {
     if (!tela)
       return {
         costoUnitario: 0,
-        costoTot: 0,
-        gan: 0,
-        precioTot: 0,
+        costoTotal: 0,
+        precioUnitario: 0,
       };
 
     const telaObj = telas.find((t) => t.nombre === tela);
@@ -197,35 +196,13 @@ export const Cotizacion = () => {
 
     const costoUnitario =
       basePrice * (1 + tallePrice) + agregadoPrices + costosTotal;
-    const costoTot = costoUnitario * cant;
-    const gan = (costoTot * ganancia) / 100;
-    const precioTot = costoTot + gan;
+    const costoTotal = costoUnitario * cantidad;
+    const precioUnitario = costoUnitario * (1 + ganancia / 100);
 
     return {
-      costoUnitario: Number(
-        (basePrice * (1 + tallePrice) + agregadoPrices + costosTotal).toFixed(2)
-      ),
-      costoTot: Number(
-        (
-          (basePrice * (1 + tallePrice) + agregadoPrices + costosTotal) *
-          cant
-        ).toFixed(2)
-      ),
-      gan: Number(
-        (
-          ((basePrice * (1 + tallePrice) + agregadoPrices + costosTotal) *
-            cant *
-            ganancia) /
-          100
-        ).toFixed(2)
-      ),
-      precioTot: Number(
-        (
-          (basePrice * (1 + tallePrice) + agregadoPrices + costosTotal) *
-          cant *
-          (1 + ganancia / 100)
-        ).toFixed(2)
-      ),
+      costoUnitario: Number(costoUnitario.toFixed(2)),
+      costoTotal: Number(costoTotal.toFixed(2)),
+      precioUnitario: Number(precioUnitario.toFixed(2)),
     };
   };
 
@@ -244,13 +221,11 @@ export const Cotizacion = () => {
         selectedPrenda,
         selectedTalle,
         selectedTela,
-        selectedAgregados,
-        cantidad
+        selectedAgregados
       ) || {
         costoUnitario: 0,
-        costoTot: 0,
-        gan: 0,
-        precioTot: 0,
+        costoTotal: 0,
+        precioUnitario: 0,
       };
 
       const articuloData = {
@@ -260,8 +235,8 @@ export const Cotizacion = () => {
         tela: selectedTela,
         agregados: selectedAgregados,
         cantidad: Number(cantidad),
-        costo: Number(calculos.costoTot),
-        precio: Number(calculos.precioTot),
+        costo: Number(calculos.costoUnitario),
+        precio: Number(calculos.precioUnitario),
         ganancia: Number(ganancia),
         pedidos_id: pedidoId,
         ruta: "",
@@ -316,25 +291,22 @@ export const Cotizacion = () => {
             return await response.json();
           } catch (error) {
             console.error("Error en costo específico:", error);
-            throw error; // Propaga el error para manejarlo globalmente
+            throw error;
           }
         })
       );
 
       console.log("Costos guardados:", resultadosCostos);
 
-      // 7. Actualización del estado y UI
       setArticulos((prev) => [...prev, nuevoArticulo]);
       resetForm();
       fetchArticulosDelPedido();
 
-      // 8. Feedback al usuario
       alert(`Artículo guardado correctamente con ${ganancia}% de ganancia`);
     } catch (error) {
       console.error("Error completo en handleGuardar:", error);
       alert(`Error: ${error.message}`);
 
-      // Opcional: Mostrar más detalles técnicos en consola
       if (error.response) {
         error.response.json().then((data) => {
           console.error("Detalles del error:", data);
@@ -395,21 +367,17 @@ export const Cotizacion = () => {
     if (!editingArticulo) return;
 
     try {
-      // 1. Calcular nuevos valores
       const calculos = calculatePrice(
         selectedPrenda,
         selectedTalle,
         selectedTela,
-        selectedAgregados,
-        cantidad
+        selectedAgregados
       ) || {
         costoUnitario: 0,
-        costoTot: 0,
-        gan: 0,
-        precioTot: 0,
+        costoTotal: 0,
+        precioUnitario: 0,
       };
 
-      // 2. Preparar datos actualizados
       const articuloActualizado = {
         numero_articulo: numeroArticulo,
         nombre: selectedPrenda,
@@ -417,13 +385,12 @@ export const Cotizacion = () => {
         tela: selectedTela,
         agregados: selectedAgregados,
         cantidad: Number(cantidad),
-        costo: Number(calculos.costoTot.toFixed(2)),
-        precio: Number(calculos.precioTot.toFixed(2)),
+        costo: Number(calculos.costoUnitario.toFixed(2)),
+        precio: Number(calculos.precioUnitario.toFixed(2)),
         ganancia: Number(ganancia),
         pedidos_id: pedidoId,
       };
 
-      // 3. Actualizar artículo principal
       const response = await fetch(
         `${API_URL}/articulos/${editingArticulo.id}`,
         {
@@ -443,13 +410,11 @@ export const Cotizacion = () => {
 
       const articuloActualizadoResp = await response.json();
 
-      // 4. Obtener costos existentes
       const existingCostsResponse = await fetch(
         `${API_URL}/costos_articulo_produccion?articulo_id=${editingArticulo.id}`
       );
       const existingCosts = await existingCostsResponse.json();
 
-      // 5. Preparar costos actualizados
       const costosConCantidades = costosProduccion
         .filter((costo) => (costosCantidades[costo.id] || 0) >= 0)
         .map((costo) => ({
@@ -458,7 +423,6 @@ export const Cotizacion = () => {
           cantidad: Number(costosCantidades[costo.id] || 0),
         }));
 
-      // 6. Sincronizar costos (actualizar existentes, crear nuevos, eliminar si cantidad es 0)
       await Promise.all(
         costosConCantidades.map(async (costoData) => {
           const existingCost = existingCosts.find(
@@ -466,7 +430,6 @@ export const Cotizacion = () => {
           );
 
           if (existingCost) {
-            // Actualizar costo existente
             if (costoData.cantidad > 0) {
               return fetch(
                 `${API_URL}/costos_articulo_produccion/${existingCost.id}`,
@@ -477,14 +440,12 @@ export const Cotizacion = () => {
                 }
               );
             } else {
-              // Eliminar si la cantidad es 0
               return fetch(
                 `${API_URL}/costos_articulo_produccion/${existingCost.id}`,
                 { method: "DELETE" }
               );
             }
           } else if (costoData.cantidad > 0) {
-            // Crear nuevo costo
             return fetch(`${API_URL}/costos_articulo_produccion`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -494,7 +455,6 @@ export const Cotizacion = () => {
         })
       );
 
-      // 7. Actualizar estado
       setArticulos(
         articulos.map((a) =>
           a.id === articuloActualizadoResp.id ? articuloActualizadoResp : a
@@ -532,7 +492,7 @@ export const Cotizacion = () => {
   };
 
   const total = articulos.reduce((sum, item) => {
-    return sum + (item.precio || 0);
+    return sum + (item.precio * item.cantidad || 0);
   }, 0);
 
   if (!pedido) {
@@ -542,10 +502,12 @@ export const Cotizacion = () => {
       </div>
     );
   }
+
   const formatCurrency = (value) => {
     const num = Number(value) || 0;
     return num.toFixed(2);
   };
+
   return (
     <div className="p-6">
       <div className=" mb-6 flex justify-between items-center">
@@ -573,7 +535,6 @@ export const Cotizacion = () => {
         <h3 className="text-lg font-semibold mb-4">Agregar Artículo</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
-            {/* Numero articulo */}
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Número de Artículo
             </label>
@@ -586,7 +547,6 @@ export const Cotizacion = () => {
               required
             />
           </div>
-          {/* Prenda */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Prenda
@@ -605,7 +565,6 @@ export const Cotizacion = () => {
               ))}
             </select>
           </div>
-          {/* Talle */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Talle
@@ -624,7 +583,6 @@ export const Cotizacion = () => {
               ))}
             </select>
           </div>
-          {/* Tela */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Tela
@@ -643,7 +601,6 @@ export const Cotizacion = () => {
               ))}
             </select>
           </div>
-          {/* Ganancia (%) */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Ganancia (%)
@@ -658,7 +615,6 @@ export const Cotizacion = () => {
               step="0.1"
             />
           </div>
-          {/* Cantidad */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Cantidad
@@ -672,7 +628,6 @@ export const Cotizacion = () => {
               required
             />
           </div>
-          {/* Agregados */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Agregados
@@ -703,7 +658,6 @@ export const Cotizacion = () => {
               </button>
             </div>
           </div>
-          {/* Agregados seleccionados */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Agregados seleccionados
@@ -732,7 +686,6 @@ export const Cotizacion = () => {
               )}
             </div>
           </div>
-          {/* Sección de Costos de Producción */}
           <div className="col-span-full">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Costos de Producción
@@ -787,7 +740,6 @@ export const Cotizacion = () => {
               )}
             </div>
           </div>
-          {/* COSTOS DE PRODUCCION */}
           <div className="flex items-end gap-4">
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-700">
@@ -798,9 +750,8 @@ export const Cotizacion = () => {
                   selectedPrenda,
                   selectedTalle,
                   selectedTela,
-                  selectedAgregados,
-                  1
-                ).costoUnitario.toFixed(2)}{" "}
+                  selectedAgregados
+                ).costoUnitario.toFixed(2)}
                 $
               </p>
             </div>
@@ -812,25 +763,8 @@ export const Cotizacion = () => {
                   selectedPrenda,
                   selectedTalle,
                   selectedTela,
-                  selectedAgregados,
-                  cantidad
-                ).costoTot.toFixed(2)}{" "}
-                $
-              </p>
-            </div>
-
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-700">
-                Ganancia ({ganancia}%):
-              </p>
-              <p className="text-lg font-semibold">
-                {calculatePrice(
-                  selectedPrenda,
-                  selectedTalle,
-                  selectedTela,
-                  selectedAgregados,
-                  cantidad
-                ).gan.toFixed(2)}{" "}
+                  selectedAgregados
+                ).costoTotal.toFixed(2)}
                 $
               </p>
             </div>
@@ -838,13 +772,14 @@ export const Cotizacion = () => {
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-700">Precio total:</p>
               <p className="text-lg font-semibold">
-                {calculatePrice(
-                  selectedPrenda,
-                  selectedTalle,
-                  selectedTela,
-                  selectedAgregados,
-                  cantidad
-                ).precioTot.toFixed(2)}{" "}
+                {(
+                  calculatePrice(
+                    selectedPrenda,
+                    selectedTalle,
+                    selectedTela,
+                    selectedAgregados
+                  ).precioUnitario * cantidad
+                ).toFixed(2)}
                 $
               </p>
             </div>
@@ -924,19 +859,23 @@ export const Cotizacion = () => {
                         : articulo.agregados}
                     </td>
                     <td className="py-2 px-4">
-                      {articulo.costo
-                        ? (articulo.costo / articulo.cantidad).toFixed(2)
-                        : "0.00"}{" "}
+                      {articulo.precio ? formatCurrency(articulo.precio) : "0.00"}{" "}
                       $
                     </td>
                     <td className="py-2 px-4">
-                      {articulo.costo ? articulo.costo.toFixed(2) : "0.00"} $
+                      {articulo.precio
+                        ? formatCurrency(articulo.precio * articulo.cantidad)
+                        : "0.00"}{" "}
+                      $
                     </td>
                     <td className="py-2 px-4">
                       {articulo.ganancia ? `${articulo.ganancia}%` : "0%"}
                     </td>
                     <td className="py-2 px-4">
-                      {formatCurrency(articulo.precio)} $
+                      {articulo.precio
+                        ? formatCurrency(((articulo.precio*cantidad) * articulo.ganancia / 100)+(articulo.precio*articulo.cantidad))
+                        : "0.00"}{" "}
+                      $
                     </td>
                     <td className="py-2 px-4 text-center">
                       <button
