@@ -29,7 +29,7 @@ export const Cotizacion = () => {
   const [editingArticulo, setEditingArticulo] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [costosCantidades, setCostosCantidades] = useState({});
-
+  const [ganancia, setGanancia] = useState(0);
   const API_URL = import.meta.env.VITE_API_URL;
 
   const handlePrendaChange = (e) => setSelectedPrenda(e.target.value);
@@ -38,14 +38,6 @@ export const Cotizacion = () => {
   const handleAgregadoChange = (e) => setAgregadoParaAgregar(e.target.value);
   const handleNumeroArticuloChange = (e) => setNumeroArticulo(e.target.value);
   const handleCantidadChange = (e) => setCantidad(e.target.value);
-
-  const handleCostoCantidadChange = (costoId, value) => {
-    const nuevaCantidad = value ? parseInt(value) : 0;
-    setCostosCantidades((prev) => ({
-      ...prev,
-      [costoId]: nuevaCantidad,
-    }));
-  };
 
   useEffect(() => {
     fetchPedido();
@@ -64,6 +56,7 @@ export const Cotizacion = () => {
       setCostosCantidades(initialCostos);
     }
   }, [costosProduccion]);
+
   useEffect(() => {
     const fetchCostosConCantidades = async () => {
       if (editingArticulo && editingArticulo.id) {
@@ -86,6 +79,7 @@ export const Cotizacion = () => {
 
     fetchCostosConCantidades();
   }, [editingArticulo]);
+
   const fetchAgregados = async () => {
     try {
       const response = await fetch(`${API_URL}/agregados`);
@@ -142,6 +136,19 @@ export const Cotizacion = () => {
     navigate(`/cotizador`);
   };
 
+  const handleCostoCantidadChange = (costoId, value) => {
+    const nuevaCantidad = value ? parseInt(value) : 0;
+    setCostosCantidades((prev) => ({
+      ...prev,
+      [costoId]: nuevaCantidad,
+    }));
+  };
+
+  const handleGananciaChange = (e) => {
+    const value = parseFloat(e.target.value);
+    setGanancia(Math.min(value, 100));
+  };
+
   const handleAgregarAgregado = () => {
     if (
       agregadoParaAgregar &&
@@ -157,7 +164,13 @@ export const Cotizacion = () => {
   };
 
   const calculatePrice = (prenda, talle, tela, agregados, cant) => {
-    if (!tela) return 0;
+    if (!tela)
+      return {
+        costoUnitario: 0,
+        costoTot: 0,
+        gan: 0,
+        precioTot: 0,
+      };
 
     const telaObj = telas.find((t) => t.nombre === tela);
     const basePrice = telaObj ? telaObj.precio : 0;
@@ -182,36 +195,78 @@ export const Cotizacion = () => {
       return sum + costo.precio * cantidad;
     }, 0);
 
-    return (basePrice * (1 + tallePrice) + agregadoPrices + costosTotal) * cant;
+    const costoUnitario =
+      basePrice * (1 + tallePrice) + agregadoPrices + costosTotal;
+    const costoTot = costoUnitario * cant;
+    const gan = (costoTot * ganancia) / 100;
+    const precioTot = costoTot + gan;
+
+    return {
+      costoUnitario: Number(
+        (basePrice * (1 + tallePrice) + agregadoPrices + costosTotal).toFixed(2)
+      ),
+      costoTot: Number(
+        (
+          (basePrice * (1 + tallePrice) + agregadoPrices + costosTotal) *
+          cant
+        ).toFixed(2)
+      ),
+      gan: Number(
+        (
+          ((basePrice * (1 + tallePrice) + agregadoPrices + costosTotal) *
+            cant *
+            ganancia) /
+          100
+        ).toFixed(2)
+      ),
+      precioTot: Number(
+        (
+          (basePrice * (1 + tallePrice) + agregadoPrices + costosTotal) *
+          cant *
+          (1 + ganancia / 100)
+        ).toFixed(2)
+      ),
+    };
   };
 
   const handleGuardar = async () => {
-    if (!selectedPrenda || !selectedTalle || !selectedTela || !numeroArticulo) {
-      alert("Por favor complete todos los campos obligatorios");
-      return;
-    }
-
-    const precio = calculatePrice(
-      selectedPrenda,
-      selectedTalle,
-      selectedTela,
-      selectedAgregados,
-      cantidad
-    );
-
-    const articuloData = {
-      numero_articulo: numeroArticulo,
-      nombre: selectedPrenda,
-      talle: selectedTalle,
-      tela: selectedTela,
-      agregados: selectedAgregados,
-      cantidad: cantidad,
-      precio: precio,
-      pedidos_id: pedidoId,
-      ruta: "",
-    };
-
     try {
+      if (
+        !selectedPrenda ||
+        !selectedTalle ||
+        !selectedTela ||
+        !numeroArticulo
+      ) {
+        throw new Error("Por favor complete todos los campos obligatorios");
+      }
+
+      const calculos = calculatePrice(
+        selectedPrenda,
+        selectedTalle,
+        selectedTela,
+        selectedAgregados,
+        cantidad
+      ) || {
+        costoUnitario: 0,
+        costoTot: 0,
+        gan: 0,
+        precioTot: 0,
+      };
+
+      const articuloData = {
+        numero_articulo: numeroArticulo,
+        nombre: selectedPrenda,
+        talle: selectedTalle,
+        tela: selectedTela,
+        agregados: selectedAgregados,
+        cantidad: Number(cantidad),
+        costo: Number(calculos.costoTot),
+        precio: Number(calculos.precioTot),
+        ganancia: Number(ganancia),
+        pedidos_id: pedidoId,
+        ruta: "",
+      };
+
       const articuloResponse = await fetch(`${API_URL}/articulos`, {
         method: "POST",
         headers: {
@@ -223,73 +278,66 @@ export const Cotizacion = () => {
 
       if (!articuloResponse.ok) {
         const errorData = await articuloResponse.json();
-        console.error("Error al crear artículo:", errorData);
-        throw new Error(errorData.message || "Error al crear el artículo");
+        throw new Error(errorData.message || "Error al guardar artículo");
       }
 
       const nuevoArticulo = await articuloResponse.json();
-      console.log("Artículo creado:", nuevoArticulo);
 
-      const costosConCantidades = costosProduccion
+      const costosAGuardar = costosProduccion
         .filter((costo) => (costosCantidades[costo.id] || 0) > 0)
         .map((costo) => ({
           articulo_id: nuevoArticulo.id,
           costo_id: costo.id,
-          cantidad: costosCantidades[costo.id] || 0,
+          cantidad: Number(costosCantidades[costo.id] || 0),
         }));
 
-      console.log("Costos a guardar:", costosConCantidades);
+      const resultadosCostos = await Promise.all(
+        costosAGuardar.map(async (costo) => {
+          try {
+            const response = await fetch(
+              `${API_URL}/costos_articulo_produccion`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Accept: "application/json",
+                },
+                body: JSON.stringify(costo),
+              }
+            );
 
-      if (costosConCantidades.length > 0) {
-        const responses = await Promise.all(
-          costosConCantidades.map((costoData) =>
-            fetch(`${API_URL}/costos_articulo_produccion`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-              },
-              body: JSON.stringify(costoData),
-            })
-              .then(async (response) => {
-                if (!response.ok) {
-                  const errorData = await response.json();
-                  console.error(
-                    "Error en costo:",
-                    costoData,
-                    "Respuesta:",
-                    errorData
-                  );
-                  throw new Error(
-                    `Error en costo ${costoData.costo_id}: ${
-                      errorData.message || "Error desconocido"
-                    }`
-                  );
-                }
-                return response.json();
-              })
-              .catch((error) => {
-                console.error("Error detallado al guardar costo:", error);
-                throw error;
-              })
-          )
-        );
+            if (!response.ok) {
+              const error = await response.json();
+              console.error("Error al guardar costo:", costo, "Error:", error);
+              throw new Error(
+                `Error al guardar costo ${costo.costo_id}: ${error.message}`
+              );
+            }
+            return await response.json();
+          } catch (error) {
+            console.error("Error en costo específico:", error);
+            throw error; // Propaga el error para manejarlo globalmente
+          }
+        })
+      );
 
-        console.log("Todos los costos guardados:", responses);
-      }
+      console.log("Costos guardados:", resultadosCostos);
 
-      setArticulos([...articulos, nuevoArticulo]);
+      // 7. Actualización del estado y UI
+      setArticulos((prev) => [...prev, nuevoArticulo]);
       resetForm();
       fetchArticulosDelPedido();
 
-      alert("Artículo y costos guardados correctamente");
+      // 8. Feedback al usuario
+      alert(`Artículo guardado correctamente con ${ganancia}% de ganancia`);
     } catch (error) {
-      console.error("Error completo al guardar:", error);
-      alert(`Error al guardar: ${error.message}`);
+      console.error("Error completo en handleGuardar:", error);
+      alert(`Error: ${error.message}`);
 
+      // Opcional: Mostrar más detalles técnicos en consola
       if (error.response) {
         error.response.json().then((data) => {
-          console.error("Detalles adicionales del error:", data);
+          console.error("Detalles del error:", data);
         });
       }
     }
@@ -305,7 +353,7 @@ export const Cotizacion = () => {
     setAgregadoParaAgregar("");
     setIsEditing(false);
     setEditingArticulo(null);
-
+    setGanancia(0);
     const resetCostos = {};
     costosProduccion.forEach((costo) => {
       resetCostos[costo.id] = 0;
@@ -318,8 +366,11 @@ export const Cotizacion = () => {
     setSelectedPrenda(articulo.nombre);
     setSelectedTalle(articulo.talle);
     setSelectedTela(articulo.tela);
-    setSelectedAgregados([...articulo.agregados]);
+    setSelectedAgregados(
+      Array.isArray(articulo.agregados) ? [...articulo.agregados] : []
+    );
     setCantidad(articulo.cantidad);
+    setGanancia(articulo.ganancia || 0);
     setIsEditing(true);
     setEditingArticulo(articulo);
 
@@ -343,73 +394,97 @@ export const Cotizacion = () => {
   const handleUpdateArticulo = async () => {
     if (!editingArticulo) return;
 
-    const precio = calculatePrice(
-      selectedPrenda,
-      selectedTalle,
-      selectedTela,
-      selectedAgregados,
-      cantidad
-    );
-
-    const articuloActualizado = {
-      numero_articulo: numeroArticulo,
-      nombre: selectedPrenda,
-      talle: selectedTalle,
-      tela: selectedTela,
-      agregados: selectedAgregados,
-      cantidad: cantidad,
-      precio: precio,
-      pedidos_id: pedidoId,
-    };
-
     try {
+      // 1. Calcular nuevos valores
+      const calculos = calculatePrice(
+        selectedPrenda,
+        selectedTalle,
+        selectedTela,
+        selectedAgregados,
+        cantidad
+      ) || {
+        costoUnitario: 0,
+        costoTot: 0,
+        gan: 0,
+        precioTot: 0,
+      };
+
+      // 2. Preparar datos actualizados
+      const articuloActualizado = {
+        numero_articulo: numeroArticulo,
+        nombre: selectedPrenda,
+        talle: selectedTalle,
+        tela: selectedTela,
+        agregados: selectedAgregados,
+        cantidad: Number(cantidad),
+        costo: Number(calculos.costoTot.toFixed(2)),
+        precio: Number(calculos.precioTot.toFixed(2)),
+        ganancia: Number(ganancia),
+        pedidos_id: pedidoId,
+      };
+
+      // 3. Actualizar artículo principal
       const response = await fetch(
         `${API_URL}/articulos/${editingArticulo.id}`,
         {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
           body: JSON.stringify(articuloActualizado),
         }
       );
 
       if (!response.ok) {
-        throw new Error("Error al actualizar el artículo");
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Error al actualizar artículo");
       }
 
       const articuloActualizadoResp = await response.json();
 
+      // 4. Obtener costos existentes
       const existingCostsResponse = await fetch(
         `${API_URL}/costos_articulo_produccion?articulo_id=${editingArticulo.id}`
       );
       const existingCosts = await existingCostsResponse.json();
 
+      // 5. Preparar costos actualizados
       const costosConCantidades = costosProduccion
-        .filter((costo) => costosCantidades[costo.id] >= 0)
-
+        .filter((costo) => (costosCantidades[costo.id] || 0) >= 0)
         .map((costo) => ({
           articulo_id: editingArticulo.id,
           costo_id: costo.id,
-          cantidad: costosCantidades[costo.id] || 0,
+          cantidad: Number(costosCantidades[costo.id] || 0),
         }));
 
+      // 6. Sincronizar costos (actualizar existentes, crear nuevos, eliminar si cantidad es 0)
       await Promise.all(
         costosConCantidades.map(async (costoData) => {
           const existingCost = existingCosts.find(
-            (c) =>
-              c.costo_id === costoData.costo_id &&
-              c.articulo_id === costoData.articulo_id
+            (c) => c.costo_id === costoData.costo_id
           );
 
           if (existingCost) {
-            return fetch(
-              `${API_URL}/costos_articulo_produccion/${existingCost.id}`,
-              {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(costoData),
-              }
-            );
+            // Actualizar costo existente
+            if (costoData.cantidad > 0) {
+              return fetch(
+                `${API_URL}/costos_articulo_produccion/${existingCost.id}`,
+                {
+                  method: "PUT",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(costoData),
+                }
+              );
+            } else {
+              // Eliminar si la cantidad es 0
+              return fetch(
+                `${API_URL}/costos_articulo_produccion/${existingCost.id}`,
+                { method: "DELETE" }
+              );
+            }
           } else if (costoData.cantidad > 0) {
+            // Crear nuevo costo
             return fetch(`${API_URL}/costos_articulo_produccion`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -419,6 +494,7 @@ export const Cotizacion = () => {
         })
       );
 
+      // 7. Actualizar estado
       setArticulos(
         articulos.map((a) =>
           a.id === articuloActualizadoResp.id ? articuloActualizadoResp : a
@@ -426,11 +502,14 @@ export const Cotizacion = () => {
       );
       resetForm();
       fetchArticulosDelPedido();
+
+      alert("Artículo actualizado correctamente");
     } catch (error) {
       console.error("Error al actualizar:", error);
-      alert("Error al actualizar: " + error.message);
+      alert(`Error al actualizar: ${error.message}`);
     }
   };
+
   const handleRemoveArticulo = async (articuloId) => {
     if (!window.confirm("¿Está seguro de que desea eliminar este artículo?")) {
       return;
@@ -453,8 +532,7 @@ export const Cotizacion = () => {
   };
 
   const total = articulos.reduce((sum, item) => {
-    const precio = parseFloat(item.precio) || 0;
-    return sum + precio;
+    return sum + (item.precio || 0);
   }, 0);
 
   if (!pedido) {
@@ -464,7 +542,10 @@ export const Cotizacion = () => {
       </div>
     );
   }
-
+  const formatCurrency = (value) => {
+    const num = Number(value) || 0;
+    return num.toFixed(2);
+  };
   return (
     <div className="p-6">
       <div className=" mb-6 flex justify-between items-center">
@@ -561,6 +642,21 @@ export const Cotizacion = () => {
                 </option>
               ))}
             </select>
+          </div>
+          {/* Ganancia (%) */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Ganancia (%)
+            </label>
+            <input
+              type="number"
+              value={ganancia}
+              onChange={handleGananciaChange}
+              className="w-full p-2 border border-gray-300 rounded"
+              min=""
+              max="100"
+              step="0.1"
+            />
           </div>
           {/* Cantidad */}
           <div>
@@ -704,7 +800,37 @@ export const Cotizacion = () => {
                   selectedTela,
                   selectedAgregados,
                   1
-                ).toFixed(2)}{" "}
+                ).costoUnitario.toFixed(2)}{" "}
+                $
+              </p>
+            </div>
+
+            <div className="flex-1">
+              <p className="text-sm font-medium text-gray-700">Costo total:</p>
+              <p className="text-lg font-semibold">
+                {calculatePrice(
+                  selectedPrenda,
+                  selectedTalle,
+                  selectedTela,
+                  selectedAgregados,
+                  cantidad
+                ).costoTot.toFixed(2)}{" "}
+                $
+              </p>
+            </div>
+
+            <div className="flex-1">
+              <p className="text-sm font-medium text-gray-700">
+                Ganancia ({ganancia}%):
+              </p>
+              <p className="text-lg font-semibold">
+                {calculatePrice(
+                  selectedPrenda,
+                  selectedTalle,
+                  selectedTela,
+                  selectedAgregados,
+                  cantidad
+                ).gan.toFixed(2)}{" "}
                 $
               </p>
             </div>
@@ -718,7 +844,7 @@ export const Cotizacion = () => {
                   selectedTela,
                   selectedAgregados,
                   cantidad
-                ).toFixed(2)}{" "}
+                ).precioTot.toFixed(2)}{" "}
                 $
               </p>
             </div>
@@ -773,9 +899,10 @@ export const Cotizacion = () => {
                 <th className="py-2 px-4 text-left">Tela</th>
                 <th className="py-2 px-4 text-left">Cantidad</th>
                 <th className="py-2 px-4 text-left">Agregados</th>
-                <th className="py-2 px-4 text-left">Costos Producción</th>
                 <th className="py-2 px-4 text-left">Costo Unitario</th>
                 <th className="py-2 px-4 text-left">Costo Total</th>
+                <th className="py-2 px-4 text-left">Ganancia</th>
+                <th className="py-2 px-4 text-left">Precio Total</th>
                 <th className="py-2 px-4 text-center">Acciones</th>
               </tr>
             </thead>
@@ -787,7 +914,7 @@ export const Cotizacion = () => {
                     className="border-t border-gray-200 hover:bg-gray-50"
                   >
                     <td className="py-2 px-4">{articulo.numero_articulo}</td>
-                    <td className="py-2 px-4">{articulo.prenda}</td>
+                    <td className="py-2 px-4">{articulo.nombre}</td>
                     <td className="py-2 px-4">{articulo.talle}</td>
                     <td className="py-2 px-4">{articulo.tela}</td>
                     <td className="py-2 px-4">{articulo.cantidad}</td>
@@ -797,28 +924,19 @@ export const Cotizacion = () => {
                         : articulo.agregados}
                     </td>
                     <td className="py-2 px-4">
-                      {articulo.costos_produccion &&
-                      articulo.costos_produccion.length > 0 ? (
-                        <ul>
-                          {articulo.costos_produccion.map((costo, i) => (
-                            <li key={i}>
-                              {costo.nombre} ({costo.cantidad} x{" "}
-                              {costo.precio_unitario.toFixed(2)})
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        "Ninguno"
-                      )}
-                    </td>
-                    <td className="py-2 px-4">
-                      {(
-                        parseFloat(articulo.precio) / articulo.cantidad
-                      ).toFixed(2)}{" "}
+                      {articulo.costo
+                        ? (articulo.costo / articulo.cantidad).toFixed(2)
+                        : "0.00"}{" "}
                       $
                     </td>
                     <td className="py-2 px-4">
-                      {parseFloat(articulo.precio).toFixed(2)} $
+                      {articulo.costo ? articulo.costo.toFixed(2) : "0.00"} $
+                    </td>
+                    <td className="py-2 px-4">
+                      {articulo.ganancia ? `${articulo.ganancia}%` : "0%"}
+                    </td>
+                    <td className="py-2 px-4">
+                      {formatCurrency(articulo.precio)} $
                     </td>
                     <td className="py-2 px-4 text-center">
                       <button
@@ -838,7 +956,7 @@ export const Cotizacion = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="10" className="py-4 text-center text-gray-500">
+                  <td colSpan="11" className="py-4 text-center text-gray-500">
                     No hay artículos en este pedido
                   </td>
                 </tr>
