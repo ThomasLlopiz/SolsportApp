@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
-
+import ArticuloForm from "../components/ArticuloForm";
+import CostosProduccion from "../components/CostosProduccion";
+import ArticulosTable from "../components/ArticulosTable";
+import jsPDF from "jspdf"; // Importar jsPDF
 export const Cotizacion = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -32,12 +35,12 @@ export const Cotizacion = () => {
   const [ganancia, setGanancia] = useState(0);
   const API_URL = import.meta.env.VITE_API_URL;
 
-  const handlePrendaChange = (e) => setSelectedPrenda(e.target.value);
-  const handleTalleChange = (e) => setSelectedTalle(e.target.value);
-  const handleTelaChange = (e) => setSelectedTela(e.target.value);
-  const handleAgregadoChange = (e) => setAgregadoParaAgregar(e.target.value);
-  const handleNumeroArticuloChange = (e) => setNumeroArticulo(e.target.value);
-  const handleCantidadChange = (e) => setCantidad(e.target.value);
+  // const handlePrendaChange = (e) => setSelectedPrenda(e.target.value);
+  // const handleTalleChange = (e) => setSelectedTalle(e.target.value);
+  // const handleTelaChange = (e) => setSelectedTela(e.target.value);
+  // const handleAgregadoChange = (e) => setAgregadoParaAgregar(e.target.value);
+  // const handleNumeroArticuloChange = (e) => setNumeroArticulo(e.target.value);
+  // const handleCantidadChange = (e) => setCantidad(e.target.value);
 
   useEffect(() => {
     fetchPedido();
@@ -296,16 +299,11 @@ export const Cotizacion = () => {
         })
       );
 
-      console.log("Costos guardados:", resultadosCostos);
-
       setArticulos((prev) => [...prev, nuevoArticulo]);
       resetForm();
       fetchArticulosDelPedido();
-
-      alert(`Artículo guardado correctamente con ${ganancia}% de ganancia`);
     } catch (error) {
       console.error("Error completo en handleGuardar:", error);
-      alert(`Error: ${error.message}`);
 
       if (error.response) {
         error.response.json().then((data) => {
@@ -462,11 +460,8 @@ export const Cotizacion = () => {
       );
       resetForm();
       fetchArticulosDelPedido();
-
-      alert("Artículo actualizado correctamente");
     } catch (error) {
       console.error("Error al actualizar:", error);
-      alert(`Error al actualizar: ${error.message}`);
     }
   };
 
@@ -487,7 +482,6 @@ export const Cotizacion = () => {
       setArticulos(articulos.filter((a) => a.id !== articuloId));
     } catch (error) {
       console.error("Error al eliminar el artículo:", error);
-      alert("Error al eliminar el artículo");
     }
   };
 
@@ -508,9 +502,70 @@ export const Cotizacion = () => {
     return num.toFixed(2);
   };
 
+  const generatePDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text(`Cotización Pedido #${pedido.numero_pedido}`, 10, 10);
+    doc.setFontSize(12);
+    doc.text(`Cliente: ${pedido.nombre_cliente}`, 10, 20);
+
+    const headers = [
+      "Prenda",
+      "Talle",
+      "Tela",
+      "Cantidad",
+      "Agregados",
+      "Precio",
+    ];
+    let y = 30;
+    doc.setFontSize(10);
+    headers.forEach((header, index) => {
+      doc.text(header, 10 + index * 30, y);
+    });
+
+    doc.line(10, y + 2, 190, y + 2);
+    y += 10;
+
+    articulos.forEach((articulo) => {
+      const precioTotal = (
+        (articulo.precio * articulo.cantidad * articulo.ganancia) / 100 +
+        articulo.precio * articulo.cantidad
+      ).toFixed(2);
+      const row = [
+        articulo.nombre,
+        articulo.talle,
+        articulo.tela,
+        articulo.cantidad.toString(),
+        Array.isArray(articulo.agregados)
+          ? articulo.agregados.join(", ")
+          : articulo.agregados || "",
+        `$${precioTotal}`,
+      ];
+      row.forEach((cell, index) => {
+        doc.text(cell, 10 + index * 30, y);
+      });
+      y += 10;
+
+      if (y > 280) {
+        doc.addPage();
+        y = 10;
+      }
+    });
+
+    const total = articulos
+      .reduce((sum, item) => {
+        return sum + item.precio * item.cantidad * (1 + item.ganancia / 100);
+      }, 0)
+      .toFixed(2);
+    y += 10;
+    doc.setFontSize(12);
+    doc.text(`Total: $${total}`, 10, y);
+
+    doc.save(`cotizacion_pedido_${pedido.numero_pedido}.pdf`);
+  };
   return (
     <div className="p-6">
-      <div className=" mb-6 flex justify-between items-center">
+      <div className="mb-6 flex justify-between items-center">
         <div>
           <h2 className="text-2xl text-left font-semibold">
             Pedido #{pedido.numero_pedido}
@@ -519,7 +574,6 @@ export const Cotizacion = () => {
             Cliente: {pedido.nombre_cliente}
           </p>
         </div>
-
         <div className="mt-4">
           <button
             onClick={handleBackClick}
@@ -528,263 +582,53 @@ export const Cotizacion = () => {
             <ArrowLeftIcon className="h-5 w-5 mr-2" />
             Volver a la lista de pedidos
           </button>
+          <button
+            onClick={generatePDF}
+            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+          >
+            Descargar PDF
+          </button>
         </div>
       </div>
 
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
         <h3 className="text-lg font-semibold mb-4">Agregar Artículo</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Número de Artículo
-            </label>
-            <input
-              type="number"
-              value={numeroArticulo}
-              onChange={handleNumeroArticuloChange}
-              className="w-full p-2 border border-gray-300 rounded"
-              min="1"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Prenda
-            </label>
-            <select
-              value={selectedPrenda}
-              onChange={handlePrendaChange}
-              className="w-full p-2 border border-gray-300 rounded"
-              required
-            >
-              <option value="">Seleccionar prenda</option>
-              {prendas.map((prenda, index) => (
-                <option key={index} value={prenda}>
-                  {prenda}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Talle
-            </label>
-            <select
-              value={selectedTalle}
-              onChange={handleTalleChange}
-              className="w-full p-2 border border-gray-300 rounded"
-              required
-            >
-              <option value="">Seleccionar talle</option>
-              {talles.map((talle, index) => (
-                <option key={index} value={talle}>
-                  {talle}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Tela
-            </label>
-            <select
-              value={selectedTela}
-              onChange={handleTelaChange}
-              className="w-full p-2 border border-gray-300 rounded"
-              required
-            >
-              <option value="">Seleccionar tela</option>
-              {telas.map((tela, index) => (
-                <option key={index} value={tela.nombre}>
-                  {tela.nombre}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Ganancia (%)
-            </label>
-            <input
-              type="number"
-              value={ganancia}
-              onChange={handleGananciaChange}
-              className="w-full p-2 border border-gray-300 rounded"
-              min=""
-              max="100"
-              step="0.1"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Cantidad
-            </label>
-            <input
-              type="number"
-              value={cantidad}
-              onChange={handleCantidadChange}
-              className="w-full p-2 border border-gray-300 rounded"
-              min="1"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Agregados
-            </label>
-            <div className="flex">
-              <select
-                value={agregadoParaAgregar}
-                onChange={handleAgregadoChange}
-                className="flex-1 p-2 border border-gray-300 rounded"
-              >
-                <option value="">Seleccionar agregado</option>
-                {todosLosAgregados
-                  .filter(
-                    (agregado) => !selectedAgregados.includes(agregado.nombre)
-                  )
-                  .map((agregado, index) => (
-                    <option key={index} value={agregado.nombre}>
-                      {agregado.nombre}
-                    </option>
-                  ))}
-              </select>
-              <button
-                type="button"
-                onClick={handleAgregarAgregado}
-                className="ml-2 bg-blue-500 text-white p-2 rounded"
-              >
-                +
-              </button>
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Agregados seleccionados
-            </label>
-            <div className="border border-gray-300 rounded p-2 min-h-12">
-              {selectedAgregados.length > 0 ? (
-                <ul className="space-y-1">
-                  {selectedAgregados.map((agregado, index) => (
-                    <li
-                      key={index}
-                      className="flex justify-between items-center"
-                    >
-                      <span>{agregado}</span>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveAgregado(agregado)}
-                        className="text-red-500"
-                      >
-                        ×
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-gray-400">Ningún agregado seleccionado</p>
-              )}
-            </div>
-          </div>
-          <div className="col-span-full">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Costos de Producción
-            </label>
-            <div className="border border-gray-300 rounded p-2">
-              {costosProduccion.length > 0 ? (
-                <table className="w-full">
-                  <thead>
-                    <tr className="text-left">
-                      <th className="py-1 px-2">Costo</th>
-                      <th className="py-1 px-2">Precio Unitario</th>
-                      <th className="py-1 px-2">Cantidad</th>
-                      <th className="py-1 px-2">Subtotal</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {costosProduccion.map((costo) => {
-                      const cantidadExistente = costosCantidades[costo.id] || 0;
+        <ArticuloForm
+          prendas={prendas}
+          talles={talles}
+          telas={telas}
+          todosLosAgregados={todosLosAgregados}
+          numeroArticulo={numeroArticulo}
+          selectedPrenda={selectedPrenda}
+          selectedTalle={selectedTalle}
+          selectedTela={selectedTela}
+          selectedAgregados={selectedAgregados}
+          agregadoParaAgregar={agregadoParaAgregar}
+          cantidad={cantidad}
+          ganancia={ganancia}
+          setNumeroArticulo={setNumeroArticulo}
+          setSelectedPrenda={setSelectedPrenda}
+          setSelectedTalle={setSelectedTalle}
+          setSelectedTela={setSelectedTela}
+          setSelectedAgregados={setSelectedAgregados}
+          setAgregadoParaAgregar={setAgregadoParaAgregar}
+          setCantidad={setCantidad}
+          setGanancia={setGanancia}
+          handleAgregarAgregado={handleAgregarAgregado}
+          handleRemoveAgregado={handleRemoveAgregado}
+        />
 
-                      return (
-                        <tr key={costo.id} className="border-t border-gray-200">
-                          <td className="py-1 px-2">{costo.nombre}</td>
-                          <td className="py-1 px-2">
-                            {costo.precio.toFixed(2)} $
-                          </td>
-                          <td className="py-1 px-2">
-                            <input
-                              type="number"
-                              min="0"
-                              value={cantidadExistente}
-                              onChange={(e) =>
-                                handleCostoCantidadChange(
-                                  costo.id,
-                                  e.target.value
-                                )
-                              }
-                              className="w-20 p-1 border border-gray-300 rounded"
-                            />
-                          </td>
-                          <td className="py-1 px-2">
-                            {(costo.precio * cantidadExistente).toFixed(2)} $
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              ) : (
-                <p className="text-gray-400">
-                  No hay costos de producción disponibles
-                </p>
-              )}
-            </div>
-          </div>
-          <div className="flex items-end gap-4">
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-700">
-                Costo Unitario:
-              </p>
-              <p className="text-lg font-semibold">
-                {calculatePrice(
-                  selectedPrenda,
-                  selectedTalle,
-                  selectedTela,
-                  selectedAgregados
-                ).costoUnitario.toFixed(2)}
-                $
-              </p>
-            </div>
-
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-700">Costo total:</p>
-              <p className="text-lg font-semibold">
-                {calculatePrice(
-                  selectedPrenda,
-                  selectedTalle,
-                  selectedTela,
-                  selectedAgregados
-                ).costoTotal.toFixed(2)}
-                $
-              </p>
-            </div>
-
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-700">Precio total:</p>
-              <p className="text-lg font-semibold">
-                {(
-                  calculatePrice(
-                    selectedPrenda,
-                    selectedTalle,
-                    selectedTela,
-                    selectedAgregados
-                  ).precioUnitario * cantidad
-                ).toFixed(2)}
-                $
-              </p>
-            </div>
-          </div>
-        </div>
+        <CostosProduccion
+          costosProduccion={costosProduccion}
+          costosCantidades={costosCantidades}
+          handleCostoCantidadChange={handleCostoCantidadChange}
+          calculatePrice={calculatePrice}
+          selectedPrenda={selectedPrenda}
+          selectedTalle={selectedTalle}
+          selectedTela={selectedTela}
+          selectedAgregados={selectedAgregados}
+          cantidad={cantidad}
+        />
 
         <div className="mt-4 flex justify-end space-x-2">
           {isEditing ? (
@@ -816,94 +660,12 @@ export const Cotizacion = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">Artículos del Pedido</h3>
-          <div className="text-xl font-bold">
-            Total: {typeof total === "number" ? total.toFixed(2) : "0.00"} $
-          </div>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="py-2 px-4 text-left">N° Artículo</th>
-                <th className="py-2 px-4 text-left">Prenda</th>
-                <th className="py-2 px-4 text-left">Talle</th>
-                <th className="py-2 px-4 text-left">Tela</th>
-                <th className="py-2 px-4 text-left">Cantidad</th>
-                <th className="py-2 px-4 text-left">Agregados</th>
-                <th className="py-2 px-4 text-left">Costo Unitario</th>
-                <th className="py-2 px-4 text-left">Costo Total</th>
-                <th className="py-2 px-4 text-left">Ganancia</th>
-                <th className="py-2 px-4 text-left">Precio Total</th>
-                <th className="py-2 px-4 text-center">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {articulos.length > 0 ? (
-                articulos.map((articulo) => (
-                  <tr
-                    key={articulo.id}
-                    className="border-t border-gray-200 hover:bg-gray-50"
-                  >
-                    <td className="py-2 px-4">{articulo.numero_articulo}</td>
-                    <td className="py-2 px-4">{articulo.nombre}</td>
-                    <td className="py-2 px-4">{articulo.talle}</td>
-                    <td className="py-2 px-4">{articulo.tela}</td>
-                    <td className="py-2 px-4">{articulo.cantidad}</td>
-                    <td className="py-2 px-4">
-                      {Array.isArray(articulo.agregados)
-                        ? articulo.agregados.join(", ")
-                        : articulo.agregados}
-                    </td>
-                    <td className="py-2 px-4">
-                      {articulo.precio ? formatCurrency(articulo.precio) : "0.00"}{" "}
-                      $
-                    </td>
-                    <td className="py-2 px-4">
-                      {articulo.precio
-                        ? formatCurrency(articulo.precio * articulo.cantidad)
-                        : "0.00"}{" "}
-                      $
-                    </td>
-                    <td className="py-2 px-4">
-                      {articulo.ganancia ? `${articulo.ganancia}%` : "0%"}
-                    </td>
-                    <td className="py-2 px-4">
-                      {articulo.precio
-                        ? formatCurrency(((articulo.precio*cantidad) * articulo.ganancia / 100)+(articulo.precio*articulo.cantidad))
-                        : "0.00"}{" "}
-                      $
-                    </td>
-                    <td className="py-2 px-4 text-center">
-                      <button
-                        onClick={() => handleStartEdit(articulo)}
-                        className="text-blue-500 hover:text-blue-700 mr-2"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => handleRemoveArticulo(articulo.id)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        Eliminar
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="11" className="py-4 text-center text-gray-500">
-                    No hay artículos en este pedido
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <ArticulosTable
+        articulos={articulos}
+        handleStartEdit={handleStartEdit}
+        handleRemoveArticulo={handleRemoveArticulo}
+        formatCurrency={formatCurrency}
+      />
     </div>
   );
 };
