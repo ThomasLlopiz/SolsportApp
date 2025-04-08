@@ -1,4 +1,3 @@
-// CostosProduccion.jsx
 const CostosProduccion = ({
   costosProduccion,
   costosCantidades,

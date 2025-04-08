@@ -1,4 +1,3 @@
-// ArticuloForm.jsx
 const ArticuloForm = ({
   prendas,
   talles,

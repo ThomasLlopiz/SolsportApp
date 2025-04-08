@@ -2,6 +2,9 @@ Quiero crear 4 tablas en una base de datos llamada solsport
 Un usuario puede crear varios pedidos
 Un pedido puede tener varios artículos
 Un articulo puede tener varias etapas
+admin
+admin123
+
 
 usuarios
 id
