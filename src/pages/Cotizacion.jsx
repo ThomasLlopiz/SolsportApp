@@ -4,7 +4,7 @@ import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import ArticuloForm from "../components/ArticuloForm";
 import CostosProduccion from "../components/CostosProduccion";
 import ArticulosTable from "../components/ArticulosTable";
-import jsPDF from "jspdf"; // Importar jsPDF
+import { EnviarCotizacionPdf } from "../components/EnviarCotizacionPdf";
 export const Cotizacion = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -34,143 +34,23 @@ export const Cotizacion = () => {
   const [costosCantidades, setCostosCantidades] = useState({});
   const [ganancia, setGanancia] = useState(0);
   const API_URL = import.meta.env.VITE_API_URL;
-
-  // const handlePrendaChange = (e) => setSelectedPrenda(e.target.value);
-  // const handleTalleChange = (e) => setSelectedTalle(e.target.value);
-  // const handleTelaChange = (e) => setSelectedTela(e.target.value);
-  // const handleAgregadoChange = (e) => setAgregadoParaAgregar(e.target.value);
-  // const handleNumeroArticuloChange = (e) => setNumeroArticulo(e.target.value);
-  // const handleCantidadChange = (e) => setCantidad(e.target.value);
   const [email, setEmail] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [sendStatus, setSendStatus] = useState(null);
 
   const enviarCotizacionPorEmail = async () => {
-    if (!email) {
-      alert("Por favor ingrese un email válido");
-      return;
-    }
-
-    setIsSending(true);
-    setSendStatus(null);
-
     try {
-      // Generar el PDF como Blob
-      const doc = new jsPDF();
-      doc.setFontSize(18);
-      doc.text(`Cotización Pedido #${pedido.numero_pedido}`, 10, 10);
-      doc.setFontSize(12);
-      doc.text(`Cliente: ${pedido.nombre_cliente}`, 10, 20);
-
-      const headers = [
-        "Prenda",
-        "Talle",
-        "Tela",
-        "Cantidad",
-        "Agregados",
-        "Precio",
-      ];
-      let y = 30;
-      doc.setFontSize(10);
-      headers.forEach((header, index) => {
-        doc.text(header, 10 + index * 30, y);
+      await EnviarCotizacionPdf({
+        pedido,
+        articulos,
+        email,
+        pedidoId,
+        API_URL,
+        setIsSending,
+        setSendStatus,
       });
-
-      doc.line(10, y + 2, 190, y + 2);
-      y += 10;
-
-      articulos.forEach((articulo) => {
-        const precioTotal = (
-          (articulo.precio * articulo.cantidad * articulo.ganancia) / 100 +
-          articulo.precio * articulo.cantidad
-        ).toFixed(2);
-        const row = [
-          articulo.nombre,
-          articulo.talle,
-          articulo.tela,
-          articulo.cantidad.toString(),
-          Array.isArray(articulo.agregados)
-            ? articulo.agregados.join(", ")
-            : articulo.agregados || "",
-          `$${precioTotal}`,
-        ];
-        row.forEach((cell, index) => {
-          doc.text(cell, 10 + index * 30, y);
-        });
-        y += 10;
-
-        if (y > 280) {
-          doc.addPage();
-          y = 10;
-        }
-      });
-
-      const total = articulos
-        .reduce((sum, item) => {
-          return sum + item.precio * item.cantidad * (1 + item.ganancia / 100);
-        }, 0)
-        .toFixed(2);
-      y += 10;
-      doc.setFontSize(12);
-      doc.text(`Total: $${total}`, 10, y);
-
-      // Convertir PDF a Blob y luego a base64
-      const pdfBlob = doc.output("blob");
-      const reader = new FileReader();
-      reader.readAsDataURL(pdfBlob);
-
-      reader.onloadend = async () => {
-        const base64data = reader.result.split(",")[1]; // Extraer solo la parte base64
-
-        try {
-          const response = await fetch(`${API_URL}/enviar-cotizacion`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-            body: JSON.stringify({
-              email: email,
-              pedidoId: pedidoId,
-              pdfBase64: base64data,
-              fileName: `cotizacion_pedido_${pedido.numero_pedido}.pdf`,
-            }),
-          });
-
-          if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(errorText || "Error al enviar la cotización");
-          }
-
-          const data = await response.json();
-          setSendStatus({
-            success: true,
-            message: data.message || "Cotización enviada correctamente",
-          });
-        } catch (error) {
-          console.error("Error completo:", error);
-          setSendStatus({
-            success: false,
-            message: error.message.includes("<!DOCTYPE html>")
-              ? "Error en el servidor al procesar la solicitud"
-              : error.message,
-          });
-        } finally {
-          setIsSending(false);
-        }
-      };
-
-      reader.onerror = () => {
-        throw new Error("Error al convertir el PDF");
-      };
     } catch (error) {
-      console.error("Error al generar PDF:", error);
-      setSendStatus({
-        success: false,
-        message: "Error al generar el PDF: " + error.message,
-      });
-      setIsSending(false);
+      console.error("Error en enviarCotizacionPorEmail:", error);
     }
   };
   useEffect(() => {
@@ -278,10 +158,10 @@ export const Cotizacion = () => {
     }));
   };
 
-  const handleGananciaChange = (e) => {
-    const value = parseFloat(e.target.value);
-    setGanancia(Math.min(value, 100));
-  };
+  // const handleGananciaChange = (e) => {
+  //   const value = parseFloat(e.target.value);
+  //   setGanancia(Math.min(value, 100));
+  // };
 
   const handleAgregarAgregado = () => {
     if (
@@ -616,124 +496,13 @@ export const Cotizacion = () => {
     }
   };
 
-  const total = articulos.reduce((sum, item) => {
-    return sum + (item.precio * item.cantidad || 0);
-  }, 0);
-
-  if (!pedido) {
-    return (
-      <div className="text-center mt-8">
-        <p>Cargando el pedido...</p>
-      </div>
-    );
-  }
-
   const formatCurrency = (value) => {
     const num = Number(value) || 0;
     return num.toFixed(2);
   };
 
-  const generatePDF = () => {
-    const doc = new jsPDF();
-    doc.setFontSize(18);
-    doc.text(`Cotización Pedido #${pedido.numero_pedido}`, 10, 10);
-    doc.setFontSize(12);
-    doc.text(`Cliente: ${pedido.nombre_cliente}`, 10, 20);
-
-    const headers = [
-      "Prenda",
-      "Talle",
-      "Tela",
-      "Cantidad",
-      "Agregados",
-      "Precio",
-    ];
-    let y = 30;
-    doc.setFontSize(10);
-    headers.forEach((header, index) => {
-      doc.text(header, 10 + index * 30, y);
-    });
-
-    doc.line(10, y + 2, 190, y + 2);
-    y += 10;
-
-    articulos.forEach((articulo) => {
-      const precioTotal = (
-        (articulo.precio * articulo.cantidad * articulo.ganancia) / 100 +
-        articulo.precio * articulo.cantidad
-      ).toFixed(2);
-      const row = [
-        articulo.nombre,
-        articulo.talle,
-        articulo.tela,
-        articulo.cantidad.toString(),
-        Array.isArray(articulo.agregados)
-          ? articulo.agregados.join(", ")
-          : articulo.agregados || "",
-        `$${precioTotal}`,
-      ];
-      row.forEach((cell, index) => {
-        doc.text(cell, 10 + index * 30, y);
-      });
-      y += 10;
-
-      if (y > 280) {
-        doc.addPage();
-        y = 10;
-      }
-    });
-
-    const total = articulos
-      .reduce((sum, item) => {
-        return sum + item.precio * item.cantidad * (1 + item.ganancia / 100);
-      }, 0)
-      .toFixed(2);
-    y += 10;
-    doc.setFontSize(12);
-    doc.text(`Total: $${total}`, 10, y);
-
-    doc.save(`cotizacion_pedido_${pedido.numero_pedido}.pdf`);
-  };
   return (
     <div className="p-6">
-      <div className="mt-4 flex items-center space-x-4">
-        <div className="flex-1">
-          <label
-            htmlFor="email"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Email para enviar cotización
-          </label>
-          <input
-            type="email"
-            id="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
-            placeholder="Ingrese el email del cliente"
-          />
-        </div>
-
-        <button
-          onClick={enviarCotizacionPorEmail}
-          disabled={isSending}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:bg-blue-300"
-        >
-          {isSending ? "Enviando..." : "Enviar por Email"}
-        </button>
-      </div>
-
-      {sendStatus && (
-        <div
-          className={`mt-2 p-2 rounded ${
-            sendStatus.success
-              ? "bg-green-100 text-green-800"
-              : "bg-red-100 text-red-800"
-          }`}
-        >
-          {sendStatus.message}
-        </div>
-      )}
       <div className="mb-6 flex justify-between items-center">
         <div>
           <h2 className="text-2xl text-left font-semibold">
@@ -750,12 +519,6 @@ export const Cotizacion = () => {
           >
             <ArrowLeftIcon className="h-5 w-5 mr-2" />
             Volver a la lista de pedidos
-          </button>
-          <button
-            onClick={generatePDF}
-            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-          >
-            Descargar PDF
           </button>
         </div>
       </div>
@@ -835,6 +598,37 @@ export const Cotizacion = () => {
         handleRemoveArticulo={handleRemoveArticulo}
         formatCurrency={formatCurrency}
       />
+      <div className="mt-4 flex justify-end items-center space-x-4">
+        {sendStatus && (
+          <div
+            className={`mt-2 p-2 rounded ${
+              sendStatus.success
+                ? "bg-green-100 text-green-800"
+                : "bg-red-100 text-red-800"
+            }`}
+          >
+            {sendStatus.message}
+          </div>
+        )}
+        <div className="flex items-center justify-center">
+          <input
+            type="email"
+            id="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
+            placeholder="Ingrese el email del cliente"
+          />
+        </div>
+
+        <button
+          onClick={enviarCotizacionPorEmail}
+          disabled={isSending}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:bg-blue-300"
+        >
+          {isSending ? "Enviando..." : "Enviar por Email"}
+        </button>
+      </div>
     </div>
   );
 };
