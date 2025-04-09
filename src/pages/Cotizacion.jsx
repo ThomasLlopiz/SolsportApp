@@ -5,6 +5,7 @@ import ArticuloForm from "../components/ArticuloForm";
 import CostosProduccion from "../components/CostosProduccion";
 import ArticulosTable from "../components/ArticulosTable";
 import { EnviarCotizacionPdf } from "../components/EnviarCotizacionPdf";
+
 export const Cotizacion = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -28,6 +29,7 @@ export const Cotizacion = () => {
   const [agregadoParaAgregar, setAgregadoParaAgregar] = useState("");
   const [numeroArticulo, setNumeroArticulo] = useState("");
   const [cantidad, setCantidad] = useState(1);
+  const [comentario, setComentario] = useState(""); // Nuevo estado para comentario
   const [articulos, setArticulos] = useState([]);
   const [editingArticulo, setEditingArticulo] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -53,6 +55,7 @@ export const Cotizacion = () => {
       console.error("Error en enviarCotizacionPorEmail:", error);
     }
   };
+
   useEffect(() => {
     fetchPedido();
     fetchAgregados();
@@ -158,11 +161,6 @@ export const Cotizacion = () => {
     }));
   };
 
-  // const handleGananciaChange = (e) => {
-  //   const value = parseFloat(e.target.value);
-  //   setGanancia(Math.min(value, 100));
-  // };
-
   const handleAgregarAgregado = () => {
     if (
       agregadoParaAgregar &&
@@ -252,6 +250,7 @@ export const Cotizacion = () => {
         costo: Number(calculos.costoUnitario),
         precio: Number(calculos.precioUnitario),
         ganancia: Number(ganancia),
+        comentario: comentario, // Añadido comentario
         pedidos_id: pedidoId,
         ruta: "",
       };
@@ -332,6 +331,7 @@ export const Cotizacion = () => {
     setSelectedTela("");
     setSelectedAgregados([]);
     setAgregadoParaAgregar("");
+    setComentario(""); // Resetear comentario
     setIsEditing(false);
     setEditingArticulo(null);
     setGanancia(0);
@@ -351,6 +351,7 @@ export const Cotizacion = () => {
       Array.isArray(articulo.agregados) ? [...articulo.agregados] : []
     );
     setCantidad(articulo.cantidad);
+    setComentario(articulo.comentario || ""); // Cargar comentario
     setGanancia(articulo.ganancia || 0);
     setIsEditing(true);
     setEditingArticulo(articulo);
@@ -397,6 +398,7 @@ export const Cotizacion = () => {
         costo: Number(calculos.costoUnitario.toFixed(2)),
         precio: Number(calculos.precioUnitario.toFixed(2)),
         ganancia: Number(ganancia),
+        comentario: comentario, // Añadido comentario
         pedidos_id: pedidoId,
       };
 
@@ -506,10 +508,10 @@ export const Cotizacion = () => {
       <div className="mb-6 flex justify-between items-center">
         <div>
           <h2 className="text-2xl text-left font-semibold">
-            Pedido #{pedido.numero_pedido}
+            Pedido #{pedido?.numero_pedido}
           </h2>
           <p className="text-gray-600 text-xl">
-            Cliente: {pedido.nombre_cliente}
+            Cliente: {pedido?.nombre_cliente}
           </p>
         </div>
         <div className="mt-4">
@@ -538,6 +540,7 @@ export const Cotizacion = () => {
           agregadoParaAgregar={agregadoParaAgregar}
           cantidad={cantidad}
           ganancia={ganancia}
+          comentario={comentario} // Pasar comentario
           setNumeroArticulo={setNumeroArticulo}
           setSelectedPrenda={setSelectedPrenda}
           setSelectedTalle={setSelectedTalle}
@@ -546,6 +549,7 @@ export const Cotizacion = () => {
           setAgregadoParaAgregar={setAgregadoParaAgregar}
           setCantidad={setCantidad}
           setGanancia={setGanancia}
+          setComentario={setComentario} // Pasar setter del comentario
           handleAgregarAgregado={handleAgregarAgregado}
           handleRemoveAgregado={handleRemoveAgregado}
         />

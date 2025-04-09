@@ -20,11 +20,8 @@ export const EnviarCotizacionPdf = async ({
   try {
     const doc = new jsPDF();
 
-    // Agregar logo
     const imgData = "/solsport.png";
     doc.addImage(imgData, "PNG", 15, 10, 40, 20);
-
-    // Encabezado corporativo
     doc.setFontSize(12);
     doc.setTextColor(0, 0, 0);
     doc.setFont("helvetica", "bold");
@@ -40,10 +37,8 @@ export const EnviarCotizacionPdf = async ({
     doc.text("Horarios de atención: Lunes a Viernes de 7 a 16 hrs.", 60, 36);
     doc.text(`CUIT: 30-66915469-7`, 60, 43);
     doc.text(`Teléfonos: (3564) 482356/588395`, 60, 50);
-
     doc.setDrawColor(0, 0, 0);
     doc.line(15, 55, 195, 55);
-
     doc.setFont("helvetica", "bold");
     doc.text(`Cliente: ${pedido.nombre_cliente}`, 15, 60);
     doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 140, 60);
@@ -51,12 +46,10 @@ export const EnviarCotizacionPdf = async ({
     doc.text(`Contacto: ${pedido.telefono}`, 15, 68);
     doc.text(`Número de pedido: ${pedido.numero_pedido}`, 15, 75);
     doc.line(15, 82, 195, 82);
-
     doc.setFontSize(14);
     doc.text("Presupuesto", 15, 95);
     doc.line(15, 100, 50, 100);
 
-    // Tabla de artículos
     let y = 110;
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
@@ -87,18 +80,22 @@ export const EnviarCotizacionPdf = async ({
           : articulo.agregados || "",
         `$${precioTotal}`,
       ];
+
       row.forEach((cell, index) => {
         doc.text(cell, 15 + index * 30, y);
       });
-      y += 10;
+      if (articulo.comentario) {
+        y += 5;
+        doc.text(`${articulo.comentario}`, 15, y);
+      }
 
-      if (y > 260) {
+      y += 10;
+      if (y > 250) {
         doc.addPage();
         y = 20;
       }
     });
 
-    // Total
     doc.setFont("helvetica", "bold");
     const total = articulos
       .reduce((sum, item) => {
@@ -107,7 +104,6 @@ export const EnviarCotizacionPdf = async ({
       .toFixed(2);
     doc.text(`Total: $${total}`, 150, y + 10);
 
-    // Footer
     y += 30;
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
@@ -124,12 +120,11 @@ export const EnviarCotizacionPdf = async ({
       y + 24
     );
 
-    // Convertir y enviar PDF
     const pdfBlob = doc.output("blob");
     const reader = new FileReader();
     reader.readAsDataURL(pdfBlob);
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve, addPageject) => {
       reader.onloadend = async () => {
         const base64data = reader.result.split(",")[1];
 
@@ -167,7 +162,7 @@ export const EnviarCotizacionPdf = async ({
               ? "Error en el servidor al procesar la solicitud"
               : error.message,
           });
-          reject(error);
+          addPageject(error);
         } finally {
           setIsSending(false);
         }
@@ -180,7 +175,7 @@ export const EnviarCotizacionPdf = async ({
           message: error.message,
         });
         setIsSending(false);
-        reject(error);
+        addPageject(error);
       };
     });
   } catch (error) {

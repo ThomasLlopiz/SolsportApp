@@ -11,6 +11,7 @@ const ArticuloForm = ({
   agregadoParaAgregar,
   cantidad,
   ganancia,
+  comentario,
   setNumeroArticulo,
   setSelectedPrenda,
   setSelectedTalle,
@@ -19,6 +20,7 @@ const ArticuloForm = ({
   setAgregadoParaAgregar,
   setCantidad,
   setGanancia,
+  setComentario,
   handleAgregarAgregado,
   handleRemoveAgregado,
 }) => {
@@ -174,6 +176,18 @@ const ArticuloForm = ({
             <p className="text-gray-400">Ningún agregado seleccionado</p>
           )}
         </div>
+      </div>
+      <div className="col-span-4">
+        <label className="block text-sm font-medium text-gray-700">
+          Comentario
+        </label>
+        <textarea
+          value={comentario}
+          onChange={(e) => setComentario(e.target.value)}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2"
+          rows="3"
+          placeholder="Ingrese un comentario (opcional)"
+        />
       </div>
     </div>
   );
