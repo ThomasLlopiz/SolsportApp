@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { PencilIcon } from "@heroicons/react/24/outline";
-import { CreateEtapaModal } from "../components/CreateEtapaModal";
 
 const formatDateForInput = (dateString) => {
   if (!dateString) return "";
@@ -19,18 +18,6 @@ const formatDateForDisplay = (dateString) => {
   const year = date.getUTCFullYear();
   return `${day}/${month}/${year}`;
 };
-
-const NOMBRE_OPTIONS = [
-  "Diseño",
-  "Corte",
-  "Bordado",
-  "Subilmado",
-  "Estampado",
-  "DTF",
-  "Prep.Confeccion",
-  "Confeccion",
-  "Calidad",
-];
 
 export const Etapas = ({ articuloId, pedidosId, cantidadArticulo }) => {
   const [etapas, setEtapas] = useState([]);
@@ -108,6 +95,15 @@ export const Etapas = ({ articuloId, pedidosId, cantidadArticulo }) => {
       return;
     }
 
+    // Validación para el campo tela cuando la etapa es "Corte"
+    if (
+      editEtapa.nombre === "Corte" &&
+      (!editEtapa.tela || editEtapa.tela === "")
+    ) {
+      alert("Debes ingresar un valor para Tela en la etapa de Corte");
+      return;
+    }
+
     if (editEtapa.cantidad < cantidadArticulo) {
       setConfirmAction(() => async () => {
         await performUpdate();
@@ -133,6 +129,8 @@ export const Etapas = ({ articuloId, pedidosId, cantidadArticulo }) => {
           fecha_fin: new Date().toISOString().split("T")[0],
           usuario_id: usuarioId,
           cantidad: editEtapa.cantidad === "" ? 0 : editEtapa.cantidad,
+          tela:
+            editEtapa.nombre === "Corte" ? Number(editEtapa.tela) : undefined,
         }),
       });
 
@@ -154,6 +152,7 @@ export const Etapas = ({ articuloId, pedidosId, cantidadArticulo }) => {
       fecha_inicio: formatDateForInput(etapa.fecha_inicio),
       fecha_fin: new Date().toISOString().split("T")[0],
       cantidad: etapa.cantidad ?? cantidadArticulo,
+      tela: etapa.tela ?? "", // Inicializamos tela como string vacío si no existe
       showWarning: false,
       exceedsLimit: false,
     });
@@ -204,27 +203,12 @@ export const Etapas = ({ articuloId, pedidosId, cantidadArticulo }) => {
       {isEditModalOpen && editEtapa && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
-            <h2 className="text-xl font-semibold mb-4">Editar Etapa</h2>
             <form onSubmit={handleUpdateEtapa}>
               <div className="mb-4">
                 <label className="block text-gray-700">Etapa</label>
-                <select
-                  value={editEtapa.nombre}
-                  onChange={(e) =>
-                    setEditEtapa({ ...editEtapa, nombre: e.target.value })
-                  }
-                  className="w-full p-2 border border-gray-300 rounded mt-1"
-                  required
-                >
-                  <option value="" disabled>
-                    Selecciona un Etapa
-                  </option>
-                  {NOMBRE_OPTIONS.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
+                <label className="w-full p-2 border border-gray-300 rounded mt-1">
+                  {editEtapa.nombre}
+                </label>
               </div>
               <div className="mb-4">
                 <label className="block text-gray-700">Fecha de Inicio</label>
@@ -249,7 +233,6 @@ export const Etapas = ({ articuloId, pedidosId, cantidadArticulo }) => {
                   className="w-full p-2 border border-gray-300 rounded mt-1 bg-gray-100"
                 />
               </div>
-
               <div className="mb-4">
                 <label className="block text-gray-700">
                   Cantidad (Artículo: {cantidadArticulo})
@@ -286,7 +269,27 @@ export const Etapas = ({ articuloId, pedidosId, cantidadArticulo }) => {
                     </div>
                   )}
               </div>
-
+              {/* Campo Tela - Solo visible para etapa "Corte" */}
+              {editEtapa.nombre === "Corte" && (
+                <div className="mb-4">
+                  <label className="block text-gray-700">Tela</label>
+                  <input
+                    type="number"
+                    value={editEtapa.tela}
+                    onChange={(e) =>
+                      setEditEtapa({
+                        ...editEtapa,
+                        tela: e.target.value,
+                      })
+                    }
+                    min="0"
+                    step="1"
+                    className="w-full p-2 border border-gray-300 rounded mt-1"
+                    required
+                    placeholder="Ingrese la cantidad de tela"
+                  />
+                </div>
+              )}
               <div className="mb-4">
                 <label className="block text-gray-700">Comentario</label>
                 <textarea
