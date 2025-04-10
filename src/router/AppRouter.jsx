@@ -12,6 +12,7 @@ import { Telas } from "../pages/Telas";
 import { Agregados } from "../pages/Agregados";
 import { PrivateAdminRoute, PrivateUserRoute } from "../hooks/PrivateRoutes";
 import { CostoProduccion } from "../pages/CostoProduccion";
+import { Prendas } from "../pages/Prendas";
 export const AppRouter = () => {
   return (
     <Routes>
@@ -51,6 +52,10 @@ export const AppRouter = () => {
       <Route
         path="/telas"
         element={<PrivateAdminRoute element={<Telas />} />}
+      />
+      <Route
+        path="/prendas"
+        element={<PrivateAdminRoute element={<Prendas />} />}
       />
       <Route
         path="/costosProduccion"

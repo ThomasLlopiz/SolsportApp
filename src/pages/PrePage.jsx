@@ -36,6 +36,14 @@ export const PrePage = () => {
                 </li>
                 <li>
                   <Link
+                    to="/prendas"
+                    className="block px-4 py-2 text-gray-800 hover:bg-blue-500 hover:text-white"
+                  >
+                    Prendas
+                  </Link>
+                </li>
+                <li>
+                  <Link
                     to="/agregados"
                     className="block px-4 py-2 text-gray-800 hover:bg-blue-500 hover:text-white"
                   >
@@ -47,7 +55,7 @@ export const PrePage = () => {
                     to="/costosProduccion"
                     className="block px-4 py-2 text-gray-800 hover:bg-blue-500 hover:text-white"
                   >
-                    Costos Producción
+                    Costos
                   </Link>
                 </li>
               </ul>
