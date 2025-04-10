@@ -29,7 +29,7 @@ export const Cotizacion = () => {
   const [agregadoParaAgregar, setAgregadoParaAgregar] = useState("");
   const [numeroArticulo, setNumeroArticulo] = useState("");
   const [cantidad, setCantidad] = useState(1);
-  const [comentario, setComentario] = useState(""); // Nuevo estado para comentario
+  const [comentario, setComentario] = useState("");
   const [articulos, setArticulos] = useState([]);
   const [editingArticulo, setEditingArticulo] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -39,22 +39,6 @@ export const Cotizacion = () => {
   const [email, setEmail] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [sendStatus, setSendStatus] = useState(null);
-
-  const enviarCotizacionPorEmail = async () => {
-    try {
-      await EnviarCotizacionPdf({
-        pedido,
-        articulos,
-        email,
-        pedidoId,
-        API_URL,
-        setIsSending,
-        setSendStatus,
-      });
-    } catch (error) {
-      console.error("Error en enviarCotizacionPorEmail:", error);
-    }
-  };
 
   useEffect(() => {
     fetchPedido();
@@ -75,27 +59,43 @@ export const Cotizacion = () => {
   }, [costosProduccion]);
 
   useEffect(() => {
-    const fetchCostosConCantidades = async () => {
-      if (editingArticulo && editingArticulo.id) {
-        try {
-          const response = await fetch(
-            `${API_URL}/costos_articulo_produccion?articulo_id=${editingArticulo.id}`
-          );
-          const data = await response.json();
-
-          const cantidades = {};
-          data.forEach((item) => {
-            cantidades[item.costo_id] = item.cantidad;
-          });
-          setCostosCantidades(cantidades);
-        } catch (error) {
-          console.error("Error al cargar costos existentes:", error);
-        }
-      }
-    };
-
     fetchCostosConCantidades();
   }, [editingArticulo]);
+
+  const enviarCotizacionPorEmail = async () => {
+    try {
+      await EnviarCotizacionPdf({
+        pedido,
+        articulos,
+        email,
+        pedidoId,
+        API_URL,
+        setIsSending,
+        setSendStatus,
+      });
+    } catch (error) {
+      console.error("Error en enviarCotizacionPorEmail:", error);
+    }
+  };
+
+  const fetchCostosConCantidades = async () => {
+    if (editingArticulo && editingArticulo.id) {
+      try {
+        const response = await fetch(
+          `${API_URL}/costos_articulo_produccion?articulo_id=${editingArticulo.id}`
+        );
+        const data = await response.json();
+
+        const cantidades = {};
+        data.forEach((item) => {
+          cantidades[item.costo_id] = item.cantidad;
+        });
+        setCostosCantidades(cantidades);
+      } catch (error) {
+        console.error("Error al cargar costos existentes:", error);
+      }
+    }
+  };
 
   const fetchAgregados = async () => {
     try {
@@ -220,15 +220,6 @@ export const Cotizacion = () => {
 
   const handleGuardar = async () => {
     try {
-      if (
-        !selectedPrenda ||
-        !selectedTalle ||
-        !selectedTela ||
-        !numeroArticulo
-      ) {
-        throw new Error("Por favor complete todos los campos obligatorios");
-      }
-
       const calculos = calculatePrice(
         selectedPrenda,
         selectedTalle,
@@ -250,7 +241,7 @@ export const Cotizacion = () => {
         costo: Number(calculos.costoUnitario),
         precio: Number(calculos.precioUnitario),
         ganancia: Number(ganancia),
-        comentario: comentario, // Añadido comentario
+        comentario: comentario,
         pedidos_id: pedidoId,
         ruta: "",
       };
@@ -331,7 +322,7 @@ export const Cotizacion = () => {
     setSelectedTela("");
     setSelectedAgregados([]);
     setAgregadoParaAgregar("");
-    setComentario(""); // Resetear comentario
+    setComentario("");
     setIsEditing(false);
     setEditingArticulo(null);
     setGanancia(0);
