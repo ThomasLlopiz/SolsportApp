@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { PencilIcon, PlusIcon, EyeIcon } from "@heroicons/react/24/outline";
+import { PencilIcon, EyeIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
 import { EditArticuloModal } from "../components/EditArticuloModal";
 
