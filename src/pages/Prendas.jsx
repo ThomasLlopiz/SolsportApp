@@ -8,7 +8,6 @@ const API_URL = import.meta.env.VITE_API_URL;
 export const Prendas = () => {
   const [newPrenda, setNewPrenda] = useState({
     nombre: "",
-    talle: "",
     consumo: "",
   });
   const [prendas, setPrendas] = useState([]);
@@ -61,7 +60,7 @@ export const Prendas = () => {
         },
         body: JSON.stringify(newPrenda),
       });
-      setNewPrenda({ nombre: "", talle: "", consumo: "" });
+      setNewPrenda({ nombre: "", consumo: "" });
       setIsCreateModalOpen(false);
       fetchPrendas();
     } catch (error) {
@@ -128,19 +127,7 @@ export const Prendas = () => {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-gray-700">Talle</label>
-                <input
-                  type="text"
-                  value={editPrenda.talle}
-                  onChange={(e) =>
-                    setEditPrenda({ ...editPrenda, talle: e.target.value })
-                  }
-                  className="w-full border border-gray-300 p-2 rounded"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700">Consumo (m)</label>
+                <label className="block text-gray-700">Consumo</label>
                 <input
                   type="number"
                   value={editPrenda.consumo || ""}
@@ -192,19 +179,7 @@ export const Prendas = () => {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-gray-700">Talle</label>
-                <input
-                  type="text"
-                  value={newPrenda.talle}
-                  onChange={(e) =>
-                    setNewPrenda({ ...newPrenda, talle: e.target.value })
-                  }
-                  className="w-full border border-gray-300 p-2 rounded"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700">Consumo (m)</label>
+                <label className="block text-gray-700">Consumo</label>
                 <input
                   type="number"
                   value={newPrenda.consumo || ""}
@@ -279,7 +254,6 @@ export const Prendas = () => {
         <thead>
           <tr>
             <th className="py-2 px-4 border-b text-left">Nombre</th>
-            <th className="py-2 px-4 border-b text-left">Talle</th>
             <th className="py-2 px-4 border-b text-left">Consumo</th>
             <th className="py-2 px-4 border-b text-left">Acciones</th>
           </tr>
@@ -288,7 +262,6 @@ export const Prendas = () => {
           {prendas.map((prenda) => (
             <tr key={prenda.id}>
               <td className="py-2 px-4 border-b">{prenda.nombre}</td>
-              <td className="py-2 px-4 border-b">{prenda.talle}</td>
               <td className="py-2 px-4 border-b">
                 {prenda.consumo ? prenda.consumo.toFixed(2) : "N/A"}
               </td>

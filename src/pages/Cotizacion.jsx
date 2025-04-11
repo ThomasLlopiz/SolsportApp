@@ -10,13 +10,7 @@ export const Cotizacion = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { id: pedidoId } = useParams();
-  const [prendas] = useState([
-    "Buzo",
-    "Remera",
-    "Campera",
-    "Pantalones",
-    "Chombas",
-  ]);
+  const [prendas, setPrendas] = useState([]); // Cambiado a estado dinámico
   const [talles] = useState(["XS", "S", "M", "L", "XL", "XXL", "XXXL"]);
   const [pedido, setPedido] = useState(null);
   const [todosLosAgregados, setTodosLosAgregados] = useState([]);
@@ -46,8 +40,21 @@ export const Cotizacion = () => {
     fetchTelas();
     fetchArticulosDelPedido();
     fetchCostosProduccion();
+    fetchPrendas(); // Nueva función para obtener prendas
   }, [pedidoId]);
 
+  // Nueva función para obtener prendas desde la API
+  const fetchPrendas = async () => {
+    try {
+      const response = await fetch(`${API_URL}/prendas`);
+      const data = await response.json();
+      setPrendas(data);
+    } catch (error) {
+      console.error("Error fetching prendas", error);
+    }
+  };
+
+  // Resto de useEffects (sin cambios)
   useEffect(() => {
     if (costosProduccion.length > 0) {
       const initialCostos = {};
@@ -62,6 +69,7 @@ export const Cotizacion = () => {
     fetchCostosConCantidades();
   }, [editingArticulo]);
 
+  // Resto de funciones fetch (sin cambios)
   const enviarCotizacionPorEmail = async () => {
     try {
       await EnviarCotizacionPdf({
@@ -176,7 +184,7 @@ export const Cotizacion = () => {
   };
 
   const calculatePrice = (prenda, talle, tela, agregados) => {
-    if (!tela)
+    if (!tela || !prenda)
       return {
         costoUnitario: 0,
         costoTotal: 0,
@@ -184,17 +192,25 @@ export const Cotizacion = () => {
       };
 
     const telaObj = telas.find((t) => t.nombre === tela);
+    const prendaObj = prendas.find((p) => p.nombre === prenda); // Buscar prenda
     const basePrice = telaObj ? telaObj.precio : 0;
+    const consumo = prendaObj ? prendaObj.consumo : 0; // Obtener consumo de la prenda
+
+    // Factores de talle (ajustados según tu indicación de 0.7 y 0.9)
     const talleFactor = {
-      XS: 0.3,
-      S: 0.4,
-      M: 0.5,
-      L: 0.6,
-      XL: 0.7,
-      XXL: 0.7,
-      XXXL: 0.7,
+      XS: 0.7,
+      S: 0.7,
+      M: 0.7,
+      L: 0.9,
+      XL: 0.9,
+      XXL: 0.9,
+      XXXL: 0.9,
     };
-    const tallePrice = talleFactor[talle] || 0;
+
+    const talleMultiplier = talleFactor[talle] || 0.7; // Por defecto 0.7 si no se encuentra
+
+    // Cálculo del costo base considerando el consumo
+    const costoBase = basePrice * consumo * talleMultiplier;
 
     const agregadoPrices = agregados.reduce((sum, agregado) => {
       const agregadoData = todosLosAgregados.find((a) => a.nombre === agregado);
@@ -206,8 +222,7 @@ export const Cotizacion = () => {
       return sum + costo.precio * cantidad;
     }, 0);
 
-    const costoUnitario =
-      basePrice * (1 + tallePrice) + agregadoPrices + costosTotal;
+    const costoUnitario = costoBase + agregadoPrices + costosTotal;
     const costoTotal = costoUnitario * cantidad;
     const precioUnitario = costoUnitario * (1 + ganancia / 100);
 
@@ -218,6 +233,7 @@ export const Cotizacion = () => {
     };
   };
 
+  // Resto de las funciones (sin cambios relevantes)
   const handleGuardar = async () => {
     try {
       const calculos = calculatePrice(
@@ -342,7 +358,7 @@ export const Cotizacion = () => {
       Array.isArray(articulo.agregados) ? [...articulo.agregados] : []
     );
     setCantidad(articulo.cantidad);
-    setComentario(articulo.comentario || ""); // Cargar comentario
+    setComentario(articulo.comentario || "");
     setGanancia(articulo.ganancia || 0);
     setIsEditing(true);
     setEditingArticulo(articulo);
@@ -389,7 +405,7 @@ export const Cotizacion = () => {
         costo: Number(calculos.costoUnitario.toFixed(2)),
         precio: Number(calculos.precioUnitario.toFixed(2)),
         ganancia: Number(ganancia),
-        comentario: comentario, // Añadido comentario
+        comentario: comentario,
         pedidos_id: pedidoId,
       };
 
@@ -519,7 +535,7 @@ export const Cotizacion = () => {
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
         <h3 className="text-lg font-semibold mb-4">Agregar Artículo</h3>
         <ArticuloForm
-          prendas={prendas}
+          prendas={prendas} // Pasamos las prendas dinámicas
           talles={talles}
           telas={telas}
           todosLosAgregados={todosLosAgregados}
@@ -531,7 +547,7 @@ export const Cotizacion = () => {
           agregadoParaAgregar={agregadoParaAgregar}
           cantidad={cantidad}
           ganancia={ganancia}
-          comentario={comentario} // Pasar comentario
+          comentario={comentario}
           setNumeroArticulo={setNumeroArticulo}
           setSelectedPrenda={setSelectedPrenda}
           setSelectedTalle={setSelectedTalle}
@@ -540,7 +556,7 @@ export const Cotizacion = () => {
           setAgregadoParaAgregar={setAgregadoParaAgregar}
           setCantidad={setCantidad}
           setGanancia={setGanancia}
-          setComentario={setComentario} // Pasar setter del comentario
+          setComentario={setComentario}
           handleAgregarAgregado={handleAgregarAgregado}
           handleRemoveAgregado={handleRemoveAgregado}
         />

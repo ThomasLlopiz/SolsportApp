@@ -50,11 +50,12 @@ const ArticuloForm = ({
           required
         >
           <option value="">Seleccionar prenda</option>
-          {prendas.map((prenda, index) => (
-            <option key={index} value={prenda}>
-              {prenda}
-            </option>
-          ))}
+          {Array.isArray(prendas) &&
+            prendas.map((prenda) => (
+              <option key={prenda.id} value={prenda.nombre}>
+                {prenda.nombre}
+              </option>
+            ))}
         </select>
       </div>
       <div>
