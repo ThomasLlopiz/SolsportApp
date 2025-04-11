@@ -9,6 +9,10 @@ export const PrePage = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
 
+  const closeDropdown = () => {
+    setIsDropdownOpen(false);
+  };
+
   return (
     <div className="flex justify-center items-center gap-32 mt-2 pb-12 bg-gray-100 text-xl font-semibold">
       <div className="flex gap-10">
@@ -29,6 +33,7 @@ export const PrePage = () => {
                 <li>
                   <Link
                     to="/telas"
+                    onClick={closeDropdown}
                     className="block px-4 py-2 text-gray-800 hover:bg-blue-500 hover:text-white"
                   >
                     Telas
@@ -37,6 +42,7 @@ export const PrePage = () => {
                 <li>
                   <Link
                     to="/prendas"
+                    onClick={closeDropdown}
                     className="block px-4 py-2 text-gray-800 hover:bg-blue-500 hover:text-white"
                   >
                     Prendas
@@ -45,6 +51,7 @@ export const PrePage = () => {
                 <li>
                   <Link
                     to="/agregados"
+                    onClick={closeDropdown}
                     className="block px-4 py-2 text-gray-800 hover:bg-blue-500 hover:text-white"
                   >
                     Agregados
@@ -53,6 +60,7 @@ export const PrePage = () => {
                 <li>
                   <Link
                     to="/costosProduccion"
+                    onClick={closeDropdown}
                     className="block px-4 py-2 text-gray-800 hover:bg-blue-500 hover:text-white"
                   >
                     Costos
