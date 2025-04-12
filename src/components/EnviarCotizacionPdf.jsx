@@ -53,43 +53,42 @@ export const EnviarCotizacionPdf = async ({
     let y = 110;
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
-    const headers = [
-      "Prenda",
-      "Talle",
-      "Tela",
-      "Cantidad",
-      "Agregados",
-      "Precio",
-    ];
+    const headers = ["Prenda", "Tela", "Agregados", "Precio"];
     headers.forEach((header, index) => {
-      doc.text(header, 15 + index * 30, y);
+      doc.text(header, 15 + index * 45, y);
     });
+
     doc.line(15, y + 2, 195, y + 2);
     y += 10;
 
     doc.setFont("helvetica", "normal");
     articulos.forEach((articulo) => {
-      const precioTotal = articulo.precio;
       const row = [
         articulo.nombre,
-        articulo.talle,
         articulo.tela,
-        articulo.cantidad.toString(),
         Array.isArray(articulo.agregados)
           ? articulo.agregados.join(", ")
           : articulo.agregados || "",
-        `$${precioTotal}`,
+        `$${articulo.precio}`,
       ];
 
       row.forEach((cell, index) => {
-        doc.text(cell, 15 + index * 30, y);
+        const safeText =
+          typeof cell === "string" || typeof cell === "number"
+            ? String(cell)
+            : "";
+        doc.text(safeText, 15 + index * 45, y);
       });
+
       if (articulo.comentario) {
+        const splitComentario = doc.splitTextToSize(articulo.comentario, 180);
         y += 5;
-        doc.text(`${articulo.comentario}`, 15, y);
+        doc.text(splitComentario, 15, y);
+        y += splitComentario.length * 5;
+      } else {
+        y += 10;
       }
 
-      y += 10;
       if (y > 250) {
         doc.addPage();
         y = 20;
@@ -98,10 +97,9 @@ export const EnviarCotizacionPdf = async ({
 
     doc.setFont("helvetica", "bold");
     const total = articulos
-      .reduce((sum, item) => {
-        return sum + item.precio * item.cantidad * (1 + item.ganancia / 100);
-      }, 0)
+      .reduce((sum, item) => sum + (parseFloat(item.precio) || 0), 0)
       .toFixed(2);
+
     doc.text(`Total: $${total}`, 150, y + 10);
 
     y += 30;
