@@ -4,7 +4,10 @@ import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import ArticuloForm from "../components/ArticuloForm";
 import CostosProduccion from "../components/CostosProduccion";
 import ArticulosTable from "../components/ArticulosTable";
-import { EnviarCotizacionPdf } from "../components/EnviarCotizacionPdf";
+import {
+  GenerarCotizacionPdf,
+  EnviarCotizacionPorEmail,
+} from "../components/EnviarCotizacionPdf";
 
 export const Cotizacion = () => {
   const { id } = useParams();
@@ -69,7 +72,7 @@ export const Cotizacion = () => {
 
   const enviarCotizacionPorEmail = async () => {
     try {
-      await EnviarCotizacionPdf({
+      await EnviarCotizacionPorEmail({
         pedido,
         articulos,
         email,
@@ -80,6 +83,16 @@ export const Cotizacion = () => {
       });
     } catch (error) {
       console.error("Error en enviarCotizacionPorEmail:", error);
+    }
+  };
+
+  const descargarCotizacionPdf = () => {
+    try {
+      const doc = GenerarCotizacionPdf({ pedido, articulos });
+      doc.save(`cotizacion_pedido_${pedido.numero_pedido}.pdf`);
+    } catch (error) {
+      console.error("Error al descargar PDF:", error);
+      alert("Error al generar el PDF para descarga");
     }
   };
 
@@ -529,7 +542,7 @@ export const Cotizacion = () => {
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
         <h3 className="text-lg font-semibold mb-4">Agregar Artículo</h3>
         <ArticuloForm
-          prendas={prendas} // Pasamos las prendas dinámicas
+          prendas={prendas}
           talles={talles}
           telas={telas}
           todosLosAgregados={todosLosAgregados}
@@ -603,36 +616,44 @@ export const Cotizacion = () => {
         handleRemoveArticulo={handleRemoveArticulo}
         formatCurrency={formatCurrency}
       />
-      <div className="mt-4 flex justify-end items-center space-x-4">
-        {sendStatus && (
-          <div
-            className={`mt-2 p-2 rounded ${
-              sendStatus.success
-                ? "bg-green-100 text-green-800"
-                : "bg-red-100 text-red-800"
-            }`}
-          >
-            {sendStatus.message}
-          </div>
-        )}
-        <div className="flex items-center justify-center">
-          <input
-            type="email"
-            id="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
-            placeholder="Ingrese el email del cliente"
-          />
-        </div>
-
+      <div className="mt-4 flex justify-between items-center space-x-4">
         <button
-          onClick={enviarCotizacionPorEmail}
-          disabled={isSending}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:bg-blue-300"
+          onClick={descargarCotizacionPdf}
+          className="bg-green-600 text-white px-4 py-3 rounded hover:bg-green-700"
         >
-          {isSending ? "Enviando..." : "Enviar por Email"}
+          Descargar PDF
         </button>
+        <div className="flex gap-2">
+          {sendStatus && (
+            <div
+              className={`mt-2 p-2 rounded ${
+                sendStatus.success
+                  ? "bg-green-100 text-green-800"
+                  : "bg-red-100 text-red-800"
+              }`}
+            >
+              {sendStatus.message}
+            </div>
+          )}
+          <div className="flex items-center justify-center">
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="block w-56 rounded-md border-gray-300 shadow-sm px-4 py-3 border"
+              placeholder="Ingrese el email del cliente"
+            />
+          </div>
+
+          <button
+            onClick={enviarCotizacionPorEmail}
+            disabled={isSending}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:bg-blue-300"
+          >
+            {isSending ? "Enviando..." : "Enviar por Email"}
+          </button>
+        </div>
       </div>
     </div>
   );
