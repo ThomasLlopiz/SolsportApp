@@ -4,6 +4,7 @@ import { PencilIcon, PlusIcon, EyeIcon } from "@heroicons/react/24/outline";
 
 export const Pedidos = () => {
   const [pedidos, setPedidos] = useState([]);
+  const [filteredPedidos, setFilteredPedidos] = useState([]);
   const [newPedido, setNewPedido] = useState({
     numero_pedido: "",
     nombre_cliente: "",
@@ -16,6 +17,7 @@ export const Pedidos = () => {
   const [editPedido, setEditPedido] = useState(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [showTerminados, setShowTerminados] = useState(false); // false: en producción, true: terminados
   const navigate = useNavigate();
 
   const API_URL = import.meta.env.VITE_API_URL;
@@ -23,6 +25,15 @@ export const Pedidos = () => {
   useEffect(() => {
     fetchPedidos();
   }, []);
+
+  useEffect(() => {
+    // Filter pedidos based on showTerminados
+    setFilteredPedidos(
+      pedidos.filter((pedido) =>
+        showTerminados ? pedido.terminado === 1 : pedido.terminado === 0
+      )
+    );
+  }, [showTerminados, pedidos]);
 
   const fetchPedidos = async () => {
     try {
@@ -87,6 +98,32 @@ export const Pedidos = () => {
     }
   };
 
+  const handleToggleTerminado = async (pedidoId, currentTerminado) => {
+    const newTerminado = currentTerminado === 1 ? 0 : 1;
+    try {
+      const response = await fetch(`${API_URL}/pedidos/${pedidoId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ terminado: newTerminado }),
+      });
+      if (response.ok) {
+        setPedidos((prevPedidos) =>
+          prevPedidos.map((pedido) =>
+            pedido.id === pedidoId
+              ? { ...pedido, terminado: newTerminado }
+              : pedido
+          )
+        );
+      } else {
+        console.error("Error updating terminado");
+      }
+    } catch (error) {
+      console.error("Error updating terminado", error);
+    }
+  };
+
   const handleEditClick = (pedido) => {
     setEditPedido({
       ...pedido,
@@ -104,138 +141,92 @@ export const Pedidos = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
-      <h1 className="text-2xl font-bold mb-6 text-center">PEDIDOS</h1>
-      <div className="flex justify-between mb-4">
-        <button
-          onClick={() => setIsCreateModalOpen(true)}
-          className="bg-blue-500 text-white px-4 py-2 rounded flex items-center"
-        >
-          <PlusIcon className="h-5 w-5 mr-2" />
-          Crear Nuevo Pedido
-        </button>
-      </div>
-
-      {/* Modal de Crear Pedido */}
-      {isCreateModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
-            <h2 className="text-xl font-semibold mb-4">Crear Nuevo Pedido</h2>
-            <form onSubmit={handleCreatePedido}>
-              <div className="mb-4">
-                <label className="block text-gray-700">Número de Pedido</label>
-                <input
-                  type="text"
-                  value={newPedido.numero_pedido}
-                  onChange={(e) =>
-                    setNewPedido({
-                      ...newPedido,
-                      numero_pedido: e.target.value,
-                    })
-                  }
-                  className="w-full p-2 border border-gray-300 rounded mt-1 bg-gray-100"
-                  required
-                />
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-gray-700">
-                  Nombre del Cliente
-                </label>
-                <input
-                  type="text"
-                  value={newPedido.nombre_cliente}
-                  onChange={(e) =>
-                    setNewPedido({
-                      ...newPedido,
-                      nombre_cliente: e.target.value,
-                    })
-                  }
-                  className="w-full p-2 border border-gray-300 rounded mt-1"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700">Correo</label>
-                <input
-                  type="email"
-                  value={newPedido.correo}
-                  onChange={(e) =>
-                    setNewPedido({ ...newPedido, correo: e.target.value })
-                  }
-                  className="w-full p-2 border border-gray-300 rounded mt-1"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700">Teléfono</label>
-                <input
-                  type="text"
-                  value={newPedido.telefono}
-                  onChange={(e) =>
-                    setNewPedido({ ...newPedido, telefono: e.target.value })
-                  }
-                  className="w-full p-2 border border-gray-300 rounded mt-1"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700">Localidad</label>
-                <input
-                  type="text"
-                  value={newPedido.localidad}
-                  onChange={(e) =>
-                    setNewPedido({ ...newPedido, localidad: e.target.value })
-                  }
-                  className="w-full p-2 border border-gray-300 rounded mt-1"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700">Fecha de Pago</label>
-                <input
-                  type="date"
-                  value={newPedido.fecha_pago}
-                  onChange={(e) =>
-                    setNewPedido({ ...newPedido, fecha_pago: e.target.value })
-                  }
-                  className="w-full p-2 border border-gray-300 rounded mt-1"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700">Fecha Estimada</label>
-                <input
-                  type="date"
-                  value={newPedido.fecha_estimada}
-                  onChange={(e) =>
-                    setNewPedido({
-                      ...newPedido,
-                      fecha_estimada: e.target.value,
-                    })
-                  }
-                  className="w-full p-2 border border-gray-300 rounded mt-1"
-                  required
-                />
-              </div>
-              <div className="flex justify-end mt-4">
-                <button
-                  type="submit"
-                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition mr-2"
-                >
-                  Crear Pedido
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsCreateModalOpen(false)}
-                  className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition"
-                >
-                  Cancelar
-                </button>
-              </div>
-            </form>
+      <div className="flex items-center justify-center mb-6">
+        <h1 className="text-2xl font-bold mr-6">
+          {showTerminados ? "PEDIDOS TERMINADOS" : "PEDIDOS EN PRODUCCIÓN"}
+        </h1>
+        <div className="flex items-center">
+          <div className="relative inline-block w-11 h-5">
+            <input
+              id="toggle-filter"
+              type="checkbox"
+              checked={showTerminados}
+              onChange={() => setShowTerminados(!showTerminados)}
+              className="peer appearance-none w-11 h-4 bg-slate-100 border border-slate-300 rounded-full checked:bg-slate-800 checked:border-slate-800 cursor-pointer transition-colors duration-300"
+            />
+            <label
+              htmlFor="toggle-filter"
+              className="absolute top-0 left-0 w-5 h-5 bg-white rounded-full border border-slate-300 shadow transition-transform duration-300 peer-checked:translate-x-6 peer-checked:border-slate-800 cursor-pointer"
+            ></label>
           </div>
         </div>
-      )}
+      </div>
+
+      {/* Tabla de Pedidos */}
+      <div className="overflow-x-auto bg-white shadow-md rounded coordenador">
+        <table className="min-w-full bg-white">
+          <thead className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+            <tr>
+              <th className="py-3 px-6 text-left">Número de Pedido</th>
+              <th className="py-3 px-6 text-left">Cliente</th>
+              <th className="py-3 px-6 text-left">Correo</th>
+              <th className="py-3 px-6 text-left">Teléfono</th>
+              <th className="py-3 px-6 text-left">Localidad</th>
+              <th className="py-3 px-6 text-center">Acciones</th>
+              <th className="py-3 px-6 text-center">Terminado</th>
+            </tr>
+          </thead>
+          <tbody className="text-gray-600 text-sm font-light">
+            {filteredPedidos.map((pedido) => (
+              <tr
+                key={pedido.id}
+                className="border-b border-gray-200 hover:bg-gray-100"
+              >
+                <td className="py-3 px-6 text-left whitespace-nowrap">
+                  {pedido.numero_pedido}
+                </td>
+                <td className="py-3 px-6 text-left">{pedido.nombre_cliente}</td>
+                <td className="py-3 px-6 text-left">{pedido.correo}</td>
+                <td className="py-3 px-6 text-left">{pedido.telefono}</td>
+                <td className="py-3 px-6 text-left">{pedido.localidad}</td>
+                <td className="py-3 px-6 text-center">
+                  <div className="flex item-center justify-center space-x-2">
+                    <button
+                      onClick={() => handleEditClick(pedido)}
+                      className="transform hover:text-purple-500 hover:scale-110"
+                    >
+                      <PencilIcon className="h-5 w-5" />
+                    </button>
+                    <button
+                      onClick={() => handleViewClick(pedido.id)}
+                      className="transform hover:text-blue-500 hover:scale-110"
+                    >
+                      <EyeIcon className="h-6 w-6" />
+                    </button>
+                  </div>
+                </td>
+                <td className="py-3 px-6 text-center">
+                  <div className="relative inline-block w-11 h-5">
+                    <input
+                      id={`switch-${pedido.id}`}
+                      type="checkbox"
+                      checked={pedido.terminado === 1}
+                      onChange={() =>
+                        handleToggleTerminado(pedido.id, pedido.terminado)
+                      }
+                      className="peer appearance-none w-11 h-5 bg-slate-100 border border-slate-300 rounded-full checked:bg-slate-800 checked:border-slate-800 cursor-pointer transition-colors duration-300"
+                    />
+                    <label
+                      htmlFor={`switch-${pedido.id}`}
+                      className="absolute top-0 left-0 w-5 h-5 bg-white rounded-full border border-slate-300 shadow transition-transform duration-300 peer-checked:translate-x-6 peer-checked:border-slate-800 cursor-pointer"
+                    ></label>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       {/* Modal de Edición de Pedido */}
       {isEditModalOpen && editPedido && (
@@ -258,13 +249,12 @@ export const Pedidos = () => {
                   required
                 />
               </div>
-
               <div className="mb-4">
                 <label className="block text-gray-700">
                   Nombre del Cliente
                 </label>
                 <input
-                  type="text"
+                  type_FROM="text"
                   value={editPedido.nombre_cliente}
                   onChange={(e) =>
                     setEditPedido({
@@ -358,54 +348,6 @@ export const Pedidos = () => {
           </div>
         </div>
       )}
-
-      {/* Tabla de Pedidos */}
-      <div className="overflow-x-auto bg-white shadow-md rounded-lg">
-        <table className="min-w-full bg-white">
-          <thead className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-            <tr>
-              <th className="py-3 px-6 text-left">Número de Pedido</th>
-              <th className="py-3 px-6 text-left">Cliente</th>
-              <th className="py-3 px-6 text-left">Correo</th>
-              <th className="py-3 px-6 text-left">Teléfono</th>
-              <th className="py-3 px-6 text-left">Localidad</th>
-              <th className="py-3 px-6 text-center">Acciones</th>
-            </tr>
-          </thead>
-          <tbody className="text-gray-600 text-sm font-light">
-            {pedidos.map((pedido) => (
-              <tr
-                key={pedido.id}
-                className="border-b border-gray-200 hover:bg-gray-100"
-              >
-                <td className="py-3 px-6 text-left whitespace-nowrap">
-                  {pedido.numero_pedido}
-                </td>
-                <td className="py-3 px-6 text-left">{pedido.nombre_cliente}</td>
-                <td className="py-3 px-6 text-left">{pedido.correo}</td>
-                <td className="py-3 px-6 text-left">{pedido.telefono}</td>
-                <td className="py-3 px-6 text-left">{pedido.localidad}</td>
-                <td className="py-3 px-6 text-center">
-                  <div className="flex item-center justify-center space-x-2">
-                    <button
-                      onClick={() => handleEditClick(pedido)}
-                      className="transform hover:text-purple-500 hover:scale-110"
-                    >
-                      <PencilIcon className="h-5 w-5" />
-                    </button>
-                    <button
-                      onClick={() => handleViewClick(pedido.id)}
-                      className="transform hover:text-blue-500 hover:scale-110"
-                    >
-                      <EyeIcon className="h-6 w-6" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
     </div>
   );
 };
