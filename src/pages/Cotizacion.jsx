@@ -10,7 +10,7 @@ export const Cotizacion = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { id: pedidoId } = useParams();
-  const [prendas, setPrendas] = useState([]); // Cambiado a estado dinámico
+  const [prendas, setPrendas] = useState([]);
   const [talles] = useState(["XS", "S", "M", "L", "XL", "XXL", "XXXL"]);
   const [pedido, setPedido] = useState(null);
   const [todosLosAgregados, setTodosLosAgregados] = useState([]);
@@ -40,10 +40,9 @@ export const Cotizacion = () => {
     fetchTelas();
     fetchArticulosDelPedido();
     fetchCostosProduccion();
-    fetchPrendas(); // Nueva función para obtener prendas
+    fetchPrendas();
   }, [pedidoId]);
 
-  // Nueva función para obtener prendas desde la API
   const fetchPrendas = async () => {
     try {
       const response = await fetch(`${API_URL}/prendas`);
@@ -54,7 +53,6 @@ export const Cotizacion = () => {
     }
   };
 
-  // Resto de useEffects (sin cambios)
   useEffect(() => {
     if (costosProduccion.length > 0) {
       const initialCostos = {};
@@ -69,7 +67,6 @@ export const Cotizacion = () => {
     fetchCostosConCantidades();
   }, [editingArticulo]);
 
-  // Resto de funciones fetch (sin cambios)
   const enviarCotizacionPorEmail = async () => {
     try {
       await EnviarCotizacionPdf({
@@ -192,11 +189,10 @@ export const Cotizacion = () => {
       };
 
     const telaObj = telas.find((t) => t.nombre === tela);
-    const prendaObj = prendas.find((p) => p.nombre === prenda); // Buscar prenda
+    const prendaObj = prendas.find((p) => p.nombre === prenda);
     const basePrice = telaObj ? telaObj.precio : 0;
-    const consumo = prendaObj ? prendaObj.consumo : 0; // Obtener consumo de la prenda
+    const consumo = prendaObj ? prendaObj.consumo : 0;
 
-    // Factores de talle (ajustados según tu indicación de 0.7 y 0.9)
     const talleFactor = {
       XS: 0.7,
       S: 0.7,
@@ -207,9 +203,8 @@ export const Cotizacion = () => {
       XXXL: 0.9,
     };
 
-    const talleMultiplier = talleFactor[talle] || 0.7; // Por defecto 0.7 si no se encuentra
+    const talleMultiplier = talleFactor[talle] || 0.7;
 
-    // Cálculo del costo base considerando el consumo
     const costoBase = basePrice * consumo * talleMultiplier;
 
     const agregadoPrices = agregados.reduce((sum, agregado) => {
@@ -233,7 +228,6 @@ export const Cotizacion = () => {
     };
   };
 
-  // Resto de las funciones (sin cambios relevantes)
   const handleGuardar = async () => {
     try {
       const calculos = calculatePrice(
