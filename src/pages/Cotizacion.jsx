@@ -14,7 +14,17 @@ export const Cotizacion = () => {
   const navigate = useNavigate();
   const { id: pedidoId } = useParams();
   const [prendas, setPrendas] = useState([]);
-  const [talles] = useState(["XS", "S", "M", "L", "XL", "XXL", "XXXL"]);
+  const [talles] = useState([
+    "Niños",
+    "XS",
+    "S",
+    "M",
+    "L",
+    "XL",
+    "XXL",
+    "XXXL",
+    "Especial",
+  ]);
   const [pedido, setPedido] = useState(null);
   const [todosLosAgregados, setTodosLosAgregados] = useState([]);
   const [telas, setTelas] = useState([]);
