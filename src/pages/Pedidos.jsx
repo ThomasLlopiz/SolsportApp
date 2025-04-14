@@ -152,7 +152,7 @@ export const Pedidos = () => {
               type="checkbox"
               checked={showTerminados}
               onChange={() => setShowTerminados(!showTerminados)}
-              className="peer appearance-none w-11 h-4 bg-slate-100 border border-slate-300 rounded-full checked:bg-slate-800 checked:border-slate-800 cursor-pointer transition-colors duration-300"
+              className="peer appearance-none w-11 h-5 bg-slate-100 border border-slate-300 rounded-full checked:bg-blue-600 checked:border-blue-600 cursor-pointer transition-colors duration-300"
             />
             <label
               htmlFor="toggle-filter"
