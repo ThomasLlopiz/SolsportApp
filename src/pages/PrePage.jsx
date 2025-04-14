@@ -66,6 +66,15 @@ export const PrePage = () => {
                     Costos
                   </Link>
                 </li>
+                <li>
+                  <Link
+                    to="/usuarios"
+                    onClick={closeDropdown}
+                    className="block px-4 py-2 text-gray-800 hover:bg-blue-500 hover:text-white"
+                  >
+                    Usuarios
+                  </Link>
+                </li>
               </ul>
             </div>
           )}
