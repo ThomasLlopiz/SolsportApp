@@ -4,11 +4,15 @@ const CostosProduccion = ({
   handleCostoCantidadChange,
   calculatePrice,
   selectedPrenda,
+  selectedColor,
   selectedTalle,
   selectedTela,
   selectedAgregados,
   cantidad,
 }) => {
+  const canCalculatePrice =
+    selectedPrenda && selectedColor && selectedTalle && selectedTela;
+
   return (
     <div className="mt-4">
       <div className="col-span-full">
@@ -59,42 +63,52 @@ const CostosProduccion = ({
           )}
         </div>
       </div>
+      {/* --- CAMBIO: Actualizar cálculos con guardia y selectedColor --- */}
       <div className="flex items-end gap-4 mt-4">
         <div className="flex-1">
           <p className="text-sm font-medium text-gray-700">Costo Unitario:</p>
           <p className="text-lg font-semibold">
-            {calculatePrice(
-              selectedPrenda,
-              selectedTalle,
-              selectedTela,
-              selectedAgregados
-            ).costoUnitario.toFixed(2)}
+            {canCalculatePrice
+              ? calculatePrice(
+                  selectedPrenda,
+                  selectedColor,
+                  selectedTalle,
+                  selectedTela,
+                  selectedAgregados || []
+                ).costoUnitario.toFixed(2)
+              : "0.00"}
             $
           </p>
         </div>
         <div className="flex-1">
           <p className="text-sm font-medium text-gray-700">Costo total:</p>
           <p className="text-lg font-semibold">
-            {calculatePrice(
-              selectedPrenda,
-              selectedTalle,
-              selectedTela,
-              selectedAgregados
-            ).costoTotal.toFixed(2)}
+            {canCalculatePrice
+              ? calculatePrice(
+                  selectedPrenda,
+                  selectedColor,
+                  selectedTalle,
+                  selectedTela,
+                  selectedAgregados || []
+                ).costoTotal.toFixed(2)
+              : "0.00"}
             $
           </p>
         </div>
         <div className="flex-1">
           <p className="text-sm font-medium text-gray-700">Precio total:</p>
           <p className="text-lg font-semibold">
-            {(
-              calculatePrice(
-                selectedPrenda,
-                selectedTalle,
-                selectedTela,
-                selectedAgregados
-              ).precioUnitario * cantidad
-            ).toFixed(2)}
+            {canCalculatePrice
+              ? (
+                  calculatePrice(
+                    selectedPrenda,
+                    selectedColor,
+                    selectedTalle,
+                    selectedTela,
+                    selectedAgregados || []
+                  ).precioUnitario * cantidad
+                ).toFixed(2)
+              : "0.00"}
             $
           </p>
         </div>
