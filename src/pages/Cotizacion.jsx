@@ -14,6 +14,7 @@ export const Cotizacion = () => {
   const navigate = useNavigate();
   const { id: pedidoId } = useParams();
   const [prendas, setPrendas] = useState([]);
+  const [colores, setColores] = useState([]); // New state for colors
   const [talles] = useState([
     "Niños",
     "XS",
@@ -30,6 +31,7 @@ export const Cotizacion = () => {
   const [telas, setTelas] = useState([]);
   const [costosProduccion, setCostosProduccion] = useState([]);
   const [selectedPrenda, setSelectedPrenda] = useState("");
+  const [selectedColor, setSelectedColor] = useState(""); // New state for selected color
   const [selectedTalle, setSelectedTalle] = useState("");
   const [selectedTela, setSelectedTela] = useState("");
   const [selectedAgregados, setSelectedAgregados] = useState([]);
@@ -54,6 +56,7 @@ export const Cotizacion = () => {
     fetchArticulosDelPedido();
     fetchCostosProduccion();
     fetchPrendas();
+    fetchColores(); // Fetch colors
   }, [pedidoId]);
 
   const fetchPrendas = async () => {
@@ -63,6 +66,16 @@ export const Cotizacion = () => {
       setPrendas(data);
     } catch (error) {
       console.error("Error fetching prendas", error);
+    }
+  };
+
+  const fetchColores = async () => {
+    try {
+      const response = await fetch(`${API_URL}/colores`);
+      const data = await response.json();
+      setColores(data);
+    } catch (error) {
+      console.error("Error fetching colores", error);
     }
   };
 
@@ -203,8 +216,9 @@ export const Cotizacion = () => {
     setSelectedAgregados((prev) => prev.filter((item) => item !== agregado));
   };
 
-  const calculatePrice = (prenda, talle, tela, agregados) => {
-    if (!tela || !prenda)
+  const calculatePrice = (prenda, color, talle, tela, agregados) => {
+    if (!tela || !prenda || !color)
+      // Require color
       return {
         costoUnitario: 0,
         costoTotal: 0,
@@ -213,8 +227,10 @@ export const Cotizacion = () => {
 
     const telaObj = telas.find((t) => t.nombre === tela);
     const prendaObj = prendas.find((p) => p.nombre === prenda);
+    const colorObj = colores.find((c) => c.nombre === color); // Find color
     const basePrice = telaObj ? telaObj.precio : 0;
-    const consumo = prendaObj ? prendaObj.consumo : 0;
+    const consumoPrenda = prendaObj ? prendaObj.consumo : 0;
+    const consumoColor = colorObj ? colorObj.consumo : 0; // Color consumo
 
     const talleFactor = {
       XS: 0.7,
@@ -228,7 +244,9 @@ export const Cotizacion = () => {
 
     const talleMultiplier = talleFactor[talle] || 0.7;
 
-    const costoBase = basePrice * consumo * talleMultiplier;
+    // Combine prenda and color consumo
+    const consumoTotal = consumoPrenda + consumoColor;
+    const costoBase = basePrice * consumoTotal * talleMultiplier;
 
     const agregadoPrices = agregados.reduce((sum, agregado) => {
       const agregadoData = todosLosAgregados.find((a) => a.nombre === agregado);
@@ -255,6 +273,7 @@ export const Cotizacion = () => {
     try {
       const calculos = calculatePrice(
         selectedPrenda,
+        selectedColor, // Include color
         selectedTalle,
         selectedTela,
         selectedAgregados
@@ -267,6 +286,7 @@ export const Cotizacion = () => {
       const articuloData = {
         numero_articulo: numeroArticulo,
         nombre: selectedPrenda,
+        color: selectedColor, // Add color
         talle: selectedTalle,
         tela: selectedTela,
         agregados: selectedAgregados,
@@ -338,7 +358,6 @@ export const Cotizacion = () => {
       fetchArticulosDelPedido();
     } catch (error) {
       console.error("Error completo en handleGuardar:", error);
-
       if (error.response) {
         error.response.json().then((data) => {
           console.error("Detalles del error:", data);
@@ -351,6 +370,7 @@ export const Cotizacion = () => {
     setNumeroArticulo("");
     setCantidad(1);
     setSelectedPrenda("");
+    setSelectedColor(""); // Reset color
     setSelectedTalle("");
     setSelectedTela("");
     setSelectedAgregados([]);
@@ -369,6 +389,7 @@ export const Cotizacion = () => {
   const handleStartEdit = async (articulo) => {
     setNumeroArticulo(articulo.numero_articulo);
     setSelectedPrenda(articulo.nombre);
+    setSelectedColor(articulo.color || ""); // Load color
     setSelectedTalle(articulo.talle);
     setSelectedTela(articulo.tela);
     setSelectedAgregados(
@@ -403,6 +424,7 @@ export const Cotizacion = () => {
     try {
       const calculos = calculatePrice(
         selectedPrenda,
+        selectedColor, // Include color
         selectedTalle,
         selectedTela,
         selectedAgregados
@@ -415,6 +437,7 @@ export const Cotizacion = () => {
       const articuloActualizado = {
         numero_articulo: numeroArticulo,
         nombre: selectedPrenda,
+        color: selectedColor, // Add color
         talle: selectedTalle,
         tela: selectedTela,
         agregados: selectedAgregados,
@@ -528,7 +551,7 @@ export const Cotizacion = () => {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-6 w-3/4 mx-auto">
       <div className="mb-6 flex justify-between items-center">
         <div>
           <h2 className="text-2xl text-left font-semibold">
@@ -549,15 +572,17 @@ export const Cotizacion = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+      <div className="bg-white rounded-lg shadow-md p-6 mb-8 mx-auto">
         <h3 className="text-lg font-semibold mb-4">Agregar Artículo</h3>
         <ArticuloForm
           prendas={prendas}
+          colores={colores} // Pass colors to form
           talles={talles}
           telas={telas}
           todosLosAgregados={todosLosAgregados}
           numeroArticulo={numeroArticulo}
           selectedPrenda={selectedPrenda}
+          selectedColor={selectedColor} // Pass color state
           selectedTalle={selectedTalle}
           selectedTela={selectedTela}
           selectedAgregados={selectedAgregados}
@@ -567,6 +592,7 @@ export const Cotizacion = () => {
           comentario={comentario}
           setNumeroArticulo={setNumeroArticulo}
           setSelectedPrenda={setSelectedPrenda}
+          setSelectedColor={setSelectedColor} // Pass color setter
           setSelectedTalle={setSelectedTalle}
           setSelectedTela={setSelectedTela}
           setSelectedAgregados={setSelectedAgregados}
@@ -584,6 +610,7 @@ export const Cotizacion = () => {
           handleCostoCantidadChange={handleCostoCantidadChange}
           calculatePrice={calculatePrice}
           selectedPrenda={selectedPrenda}
+          selectedColor={selectedColor} // Pass color to calculatePrice
           selectedTalle={selectedTalle}
           selectedTela={selectedTela}
           selectedAgregados={selectedAgregados}
