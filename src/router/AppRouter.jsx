@@ -14,6 +14,7 @@ import { PrivateAdminRoute, PrivateUserRoute } from "../hooks/PrivateRoutes";
 import { CostoProduccion } from "../pages/CostoProduccion";
 import { Prendas } from "../pages/Prendas";
 import { Usuarios } from "../pages/Usuarios";
+import { Colores } from "../pages/Colores";
 export const AppRouter = () => {
   return (
     <Routes>
@@ -66,9 +67,13 @@ export const AppRouter = () => {
         path="/agregados"
         element={<PrivateAdminRoute element={<Agregados />} />}
       />
-            <Route
+      <Route
         path="/usuarios"
         element={<PrivateAdminRoute element={<Usuarios />} />}
+      />
+            <Route
+        path="/colores"
+        element={<PrivateAdminRoute element={<Colores />} />}
       />
     </Routes>
   );
