@@ -28,7 +28,7 @@ const ArticuloForm = ({
   handleRemoveAgregado,
 }) => {
   return (
-    <div className="flex flex-col gap-4 w-full">
+    <div className="flex flex-col gap-4 w-">
       <div className="flex w-full gap-4">
         {/* Número de Artículo */}
         <div className="w-full">

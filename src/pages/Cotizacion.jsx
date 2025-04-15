@@ -14,9 +14,9 @@ export const Cotizacion = () => {
   const navigate = useNavigate();
   const { id: pedidoId } = useParams();
   const [prendas, setPrendas] = useState([]);
-  const [colores, setColores] = useState([]);
+  const [colores, setColores] = useState([]); // New state for colors
   const [talles] = useState([
-    "NINOS",
+    "Niños",
     "XS",
     "S",
     "M",
@@ -24,14 +24,14 @@ export const Cotizacion = () => {
     "XL",
     "XXL",
     "XXXL",
-    "ESPECIAL",
+    "Especial",
   ]);
   const [pedido, setPedido] = useState(null);
   const [todosLosAgregados, setTodosLosAgregados] = useState([]);
   const [telas, setTelas] = useState([]);
   const [costosProduccion, setCostosProduccion] = useState([]);
   const [selectedPrenda, setSelectedPrenda] = useState("");
-  const [selectedColor, setSelectedColor] = useState("");
+  const [selectedColor, setSelectedColor] = useState(""); // New state for selected color
   const [selectedTalle, setSelectedTalle] = useState("");
   const [selectedTela, setSelectedTela] = useState("");
   const [selectedAgregados, setSelectedAgregados] = useState([]);
@@ -216,23 +216,23 @@ export const Cotizacion = () => {
     setSelectedAgregados((prev) => prev.filter((item) => item !== agregado));
   };
 
-  const calculatePrice = (prenda, color, talle, tela, agregados = []) => {
-    if (!tela || !prenda || !color || !talle) {
+  const calculatePrice = (prenda, color, talle, tela, agregados) => {
+    if (!tela || !prenda || !color)
+      // Require color
       return {
         costoUnitario: 0,
         costoTotal: 0,
         precioUnitario: 0,
       };
-    }
 
     const telaObj = telas.find((t) => t.nombre === tela);
     const prendaObj = prendas.find((p) => p.nombre === prenda);
-    const colorObj = colores.find((c) => c.nombre === color);
+    const colorObj = colores.find((c) => c.nombre === color); // Find color
     const basePrice = telaObj ? telaObj.precio : 0;
     const consumoPrenda = prendaObj ? prendaObj.consumo : 0;
-    const consumoColor = colorObj ? colorObj.consumo : 0;
+    const consumoColor = colorObj ? colorObj.consumo : 0; // Color consumo
+
     const talleFactor = {
-      NINOS: 0.5,
       XS: 0.7,
       S: 0.7,
       M: 0.7,
@@ -240,9 +240,11 @@ export const Cotizacion = () => {
       XL: 0.9,
       XXL: 0.9,
       XXXL: 0.9,
-      ESPECIAL: 1.0,
     };
+
     const talleMultiplier = talleFactor[talle] || 0.7;
+
+    // Combine prenda and color consumo
     const consumoTotal = consumoPrenda + consumoColor;
     const costoBase = basePrice * consumoTotal * talleMultiplier;
 
@@ -387,7 +389,7 @@ export const Cotizacion = () => {
   const handleStartEdit = async (articulo) => {
     setNumeroArticulo(articulo.numero_articulo);
     setSelectedPrenda(articulo.nombre);
-    setSelectedColor(articulo.color || "");
+    setSelectedColor(articulo.color || ""); // Load color
     setSelectedTalle(articulo.talle);
     setSelectedTela(articulo.tela);
     setSelectedAgregados(
@@ -574,13 +576,13 @@ export const Cotizacion = () => {
         <h3 className="text-lg font-semibold mb-4">Agregar Artículo</h3>
         <ArticuloForm
           prendas={prendas}
-          colores={colores}
+          colores={colores} // Pass colors to form
           talles={talles}
           telas={telas}
           todosLosAgregados={todosLosAgregados}
           numeroArticulo={numeroArticulo}
           selectedPrenda={selectedPrenda}
-          selectedColor={selectedColor}
+          selectedColor={selectedColor} // Pass color state
           selectedTalle={selectedTalle}
           selectedTela={selectedTela}
           selectedAgregados={selectedAgregados}
@@ -590,7 +592,7 @@ export const Cotizacion = () => {
           comentario={comentario}
           setNumeroArticulo={setNumeroArticulo}
           setSelectedPrenda={setSelectedPrenda}
-          setSelectedColor={setSelectedColor}
+          setSelectedColor={setSelectedColor} // Pass color setter
           setSelectedTalle={setSelectedTalle}
           setSelectedTela={setSelectedTela}
           setSelectedAgregados={setSelectedAgregados}
@@ -608,10 +610,10 @@ export const Cotizacion = () => {
           handleCostoCantidadChange={handleCostoCantidadChange}
           calculatePrice={calculatePrice}
           selectedPrenda={selectedPrenda}
-          selectedColor={selectedColor}
+          selectedColor={selectedColor} // Pass color to calculatePrice
           selectedTalle={selectedTalle}
           selectedTela={selectedTela}
-          selectedAgregados={selectedAgregados || []} // Asegurar array
+          selectedAgregados={selectedAgregados}
           cantidad={cantidad}
         />
 
