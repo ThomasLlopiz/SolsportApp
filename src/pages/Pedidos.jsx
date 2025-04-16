@@ -1,23 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { PencilIcon, PlusIcon, EyeIcon } from "@heroicons/react/24/outline";
+import { PencilIcon, EyeIcon } from "@heroicons/react/24/outline";
 
 export const Pedidos = () => {
   const [pedidos, setPedidos] = useState([]);
   const [filteredPedidos, setFilteredPedidos] = useState([]);
-  const [newPedido, setNewPedido] = useState({
-    numero_pedido: "",
-    nombre_cliente: "",
-    correo: "",
-    telefono: "",
-    localidad: "",
-    fecha_pago: "",
-    fecha_estimada: "",
-  });
   const [editPedido, setEditPedido] = useState(null);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [showTerminados, setShowTerminados] = useState(false); // false: en producción, true: terminados
+  const [showTerminados, setShowTerminados] = useState(false);
   const navigate = useNavigate();
 
   const API_URL = import.meta.env.VITE_API_URL;
@@ -27,12 +17,16 @@ export const Pedidos = () => {
   }, []);
 
   useEffect(() => {
-    // Filter pedidos based on showTerminados
-    setFilteredPedidos(
-      pedidos.filter((pedido) =>
-        showTerminados ? pedido.terminado === 1 : pedido.terminado === 0
-      )
+    const filtered = pedidos.filter((pedido) =>
+      showTerminados ? pedido.terminado === 1 : pedido.terminado === 0
     );
+    // Sort by fecha_estimada in ascending order
+    const sorted = filtered.sort((a, b) => {
+      const dateA = new Date(a.fecha_estimada);
+      const dateB = new Date(b.fecha_estimada);
+      return dateA - dateB;
+    });
+    setFilteredPedidos(sorted);
   }, [showTerminados, pedidos]);
 
   const fetchPedidos = async () => {
@@ -43,36 +37,6 @@ export const Pedidos = () => {
       setPedidos(pedidosFiltrados);
     } catch (error) {
       console.error("Error fetching pedidos", error);
-    }
-  };
-
-  const handleCreatePedido = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await fetch(`${API_URL}/pedidos`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(newPedido),
-      });
-      if (response.ok) {
-        setNewPedido({
-          numero_pedido: "",
-          nombre_cliente: "",
-          correo: "",
-          telefono: "",
-          localidad: "",
-          fecha_pago: "",
-          fecha_estimada: "",
-        });
-        setIsCreateModalOpen(false);
-        fetchPedidos();
-      } else {
-        console.error("Error creating pedido");
-      }
-    } catch (error) {
-      console.error("Error creating pedido", error);
     }
   };
 
@@ -172,6 +136,8 @@ export const Pedidos = () => {
               <th className="py-3 px-6 text-left">Correo</th>
               <th className="py-3 px-6 text-left">Teléfono</th>
               <th className="py-3 px-6 text-left">Localidad</th>
+              <th className="py-3 px-6 text-left">Fecha de Pago</th>
+              <th className="py-3 px-6 text-left">Fecha Estimada</th>
               <th className="py-3 px-6 text-center">Acciones</th>
               <th className="py-3 px-6 text-center">Terminado</th>
             </tr>
@@ -189,6 +155,8 @@ export const Pedidos = () => {
                 <td className="py-3 px-6 text-left">{pedido.correo}</td>
                 <td className="py-3 px-6 text-left">{pedido.telefono}</td>
                 <td className="py-3 px-6 text-left">{pedido.localidad}</td>
+                <td className="py-3 px-6 text-left">{pedido.fecha_pago}</td>
+                <td className="py-3 px-6 text-left">{pedido.fecha_estimada}</td>
                 <td className="py-3 px-6 text-center">
                   <div className="flex item-center justify-center space-x-2">
                     <button
@@ -254,7 +222,7 @@ export const Pedidos = () => {
                   Nombre del Cliente
                 </label>
                 <input
-                  type_FROM="text"
+                  type="text"
                   value={editPedido.nombre_cliente}
                   onChange={(e) =>
                     setEditPedido({
