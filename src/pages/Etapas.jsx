@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { PencilIcon } from "@heroicons/react/24/outline";
+import { PencilIcon, PlayIcon } from "@heroicons/react/24/outline";
 
 const formatDateForInput = (dateString) => {
   if (!dateString) return "";
@@ -78,6 +78,47 @@ export const Etapas = ({ articuloId, pedidosId, cantidadArticulo }) => {
     }
   };
 
+  const handleStartEtapa = async (etapaId) => {
+    if (!token || !usuarioId) {
+      console.error("No se encontró el token o usuario_id");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/etapas/${etapaId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          fecha_inicio: new Date().toISOString().split("T")[0],
+          usuario_id: usuarioId,
+        }),
+      });
+
+      if (response.ok) {
+        setEtapas((prevEtapas) =>
+          prevEtapas.map((etapa) =>
+            etapa.id === etapaId
+              ? {
+                  ...etapa,
+                  fecha_inicio: new Date().toISOString().split("T")[0],
+                  usuario_id: usuarioId,
+                }
+              : etapa
+          )
+        );
+        fetchEtapas(); // Refrescar para asegurar consistencia
+      } else {
+        const data = await response.json();
+        console.error("Error al iniciar la etapa:", data.message);
+      }
+    } catch (error) {
+      console.error("Error en la solicitud:", error);
+    }
+  };
+
   const handleUpdateEtapa = async (e) => {
     e.preventDefault();
     if (!token || !usuarioId) {
@@ -95,7 +136,6 @@ export const Etapas = ({ articuloId, pedidosId, cantidadArticulo }) => {
       return;
     }
 
-    // Validación para el campo tela cuando la etapa es "Corte"
     if (
       editEtapa.nombre === "Corte" &&
       (!editEtapa.tela || editEtapa.tela === "")
@@ -152,7 +192,7 @@ export const Etapas = ({ articuloId, pedidosId, cantidadArticulo }) => {
       fecha_inicio: formatDateForInput(etapa.fecha_inicio),
       fecha_fin: new Date().toISOString().split("T")[0],
       cantidad: etapa.cantidad ?? cantidadArticulo,
-      tela: etapa.tela ?? "", // Inicializamos tela como string vacío si no existe
+      tela: etapa.tela ?? "",
       showWarning: false,
       exceedsLimit: false,
     });
@@ -215,11 +255,8 @@ export const Etapas = ({ articuloId, pedidosId, cantidadArticulo }) => {
                 <input
                   type="date"
                   value={editEtapa.fecha_inicio}
-                  onChange={(e) =>
-                    setEditEtapa({ ...editEtapa, fecha_inicio: e.target.value })
-                  }
-                  className="w-full p-2 border border-gray-300 rounded mt-1"
-                  required
+                  readOnly
+                  className="w-full p-2 border border-gray-300 rounded mt-1 bg-gray-100"
                 />
               </div>
               <div className="mb-4">
@@ -330,6 +367,7 @@ export const Etapas = ({ articuloId, pedidosId, cantidadArticulo }) => {
             <th className="py-2 px-4 border-b text-left">Comentario</th>
             <th className="py-2 px-4 border-b text-left">Usuario</th>
             <th className="py-2 px-4 border-b text-left">Acciones</th>
+            <th className="py-2 px-4 border-b text-left">Iniciar</th>
           </tr>
         </thead>
         <tbody>
@@ -349,6 +387,14 @@ export const Etapas = ({ articuloId, pedidosId, cantidadArticulo }) => {
               <td className="py-2 px-4 border-b">
                 <button onClick={() => handleEditClick(etapa)}>
                   <PencilIcon className="h-5 w-5 ml-5" />
+                </button>
+              </td>
+              <td className="py-2 px-4 border-b">
+                <button
+                  onClick={() => handleStartEtapa(etapa.id)}
+                  className="bg-blue-500 text-white px-1 py-1.5 rounded-full hover:bg-blue-600 transition flex items-center justify-center"
+                >
+                  <PlayIcon className="h-6 w-6 text-center ml-1" strokeWidth={3} />
                 </button>
               </td>
             </tr>
