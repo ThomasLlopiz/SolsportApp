@@ -2,6 +2,16 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PencilIcon, EyeIcon } from "@heroicons/react/24/outline";
 
+const formatDate = (dateString) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  if (isNaN(date)) return "";
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const year = date.getUTCFullYear();
+  return `${day}/${month}/${year}`;
+};
+
 export const Pedidos = () => {
   const [pedidos, setPedidos] = useState([]);
   const [filteredPedidos, setFilteredPedidos] = useState([]);
@@ -17,18 +27,27 @@ export const Pedidos = () => {
   }, []);
 
   useEffect(() => {
-    setFilteredPedidos(
-      pedidos.filter((pedido) =>
-        showTerminados ? pedido.terminado === 1 : pedido.terminado === 0
-      )
+    const filtered = pedidos.filter((pedido) =>
+      showTerminados ? pedido.terminado === 1 : pedido.terminado === 0
     );
+    // Sort by fecha_estimada in ascending order
+    const sorted = filtered.sort((a, b) => {
+      const dateA = a.fecha_estimada
+        ? new Date(a.fecha_estimada)
+        : new Date(9999, 11, 31);
+      const dateB = b.fecha_estimada
+        ? new Date(b.fecha_estimada)
+        : new Date(9999, 11, 31);
+      return dateA - dateB;
+    });
+    setFilteredPedidos(sorted);
   }, [showTerminados, pedidos]);
 
   const fetchPedidos = async () => {
     try {
       const response = await fetch(`${API_URL}/pedidos`);
       const data = await response.json();
-      console.log("Datos de la API:", data); // Agrega esto
+      console.log("Datos de la API:", data); // Para depuración
       const pedidosFiltrados = data.filter((pedido) => pedido.estado === 1);
       setPedidos(pedidosFiltrados);
     } catch (error) {
@@ -151,8 +170,12 @@ export const Pedidos = () => {
                 <td className="py-3 px-6 text-left">{pedido.correo}</td>
                 <td className="py-3 px-6 text-left">{pedido.telefono}</td>
                 <td className="py-3 px-6 text-left">{pedido.localidad}</td>
-                <td className="py-3 px-6 text-left">{pedido.fecha_pago}</td>
-                <td className="py-3 px-6 text-left">{pedido.fecha_estimada}</td>
+                <td className="py-3 px-6 text-left">
+                  {formatDate(pedido.fecha_pago)}
+                </td>
+                <td className="py-3 px-6 text-left">
+                  {formatDate(pedido.fecha_estimada)}
+                </td>
                 <td className="py-3 px-6 text-center">
                   <div className="flex item-center justify-center space-x-2">
                     <button
@@ -218,7 +241,7 @@ export const Pedidos = () => {
                   Nombre del Cliente
                 </label>
                 <input
-                  type_FROM="text"
+                  type="text"
                   value={editPedido.nombre_cliente}
                   onChange={(e) =>
                     setEditPedido({
