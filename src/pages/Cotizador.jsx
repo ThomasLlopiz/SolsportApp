@@ -13,6 +13,14 @@ const formatDate = (dateString) => {
   return `${day}/${month}/${year}`;
 };
 
+const getCurrentDate = () => {
+  const date = new Date();
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${year}-${month}-${day}`; // Format for API (YYYY-MM-DD)
+};
+
 export const Cotizador = () => {
   const { id } = useParams();
   const [pedidos, setPedidos] = useState([]);
@@ -126,13 +134,17 @@ export const Cotizador = () => {
     try {
       const pedidoActual = pedidos.find((p) => p.id === pedidoId);
       const nuevoEstado = !pedidoActual.estado;
+      const updatedFields = {
+        estado: nuevoEstado,
+        ...(nuevoEstado && { fecha_pago: getCurrentDate() }), // Update fecha_pago only when estado is true
+      };
 
       const response = await fetch(`${API_URL}/pedidos/${pedidoId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ estado: nuevoEstado }),
+        body: JSON.stringify(updatedFields),
       });
 
       if (!response.ok) {
@@ -141,7 +153,13 @@ export const Cotizador = () => {
 
       setPedidos((prevPedidos) =>
         prevPedidos.map((pedido) =>
-          pedido.id === pedidoId ? { ...pedido, estado: nuevoEstado } : pedido
+          pedido.id === pedidoId
+            ? {
+                ...pedido,
+                estado: nuevoEstado,
+                fecha_pago: nuevoEstado ? getCurrentDate() : pedido.fecha_pago,
+              }
+            : pedido
         )
       );
     } catch (error) {
