@@ -17,22 +17,18 @@ export const Pedidos = () => {
   }, []);
 
   useEffect(() => {
-    const filtered = pedidos.filter((pedido) =>
-      showTerminados ? pedido.terminado === 1 : pedido.terminado === 0
+    setFilteredPedidos(
+      pedidos.filter((pedido) =>
+        showTerminados ? pedido.terminado === 1 : pedido.terminado === 0
+      )
     );
-    // Sort by fecha_estimada in ascending order
-    const sorted = filtered.sort((a, b) => {
-      const dateA = new Date(a.fecha_estimada);
-      const dateB = new Date(b.fecha_estimada);
-      return dateA - dateB;
-    });
-    setFilteredPedidos(sorted);
   }, [showTerminados, pedidos]);
 
   const fetchPedidos = async () => {
     try {
       const response = await fetch(`${API_URL}/pedidos`);
       const data = await response.json();
+      console.log("Datos de la API:", data); // Agrega esto
       const pedidosFiltrados = data.filter((pedido) => pedido.estado === 1);
       setPedidos(pedidosFiltrados);
     } catch (error) {
@@ -222,7 +218,7 @@ export const Pedidos = () => {
                   Nombre del Cliente
                 </label>
                 <input
-                  type="text"
+                  type_FROM="text"
                   value={editPedido.nombre_cliente}
                   onChange={(e) =>
                     setEditPedido({
