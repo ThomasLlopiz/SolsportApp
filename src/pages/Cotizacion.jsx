@@ -14,7 +14,7 @@ export const Cotizacion = () => {
   const navigate = useNavigate();
   const { id: pedidoId } = useParams();
   const [prendas, setPrendas] = useState([]);
-  const [colores, setColores] = useState([]); // New state for colors
+  const [colores, setColores] = useState([]);
   const [talles] = useState([
     "Niños",
     "XS",
@@ -31,7 +31,7 @@ export const Cotizacion = () => {
   const [telas, setTelas] = useState([]);
   const [costosProduccion, setCostosProduccion] = useState([]);
   const [selectedPrenda, setSelectedPrenda] = useState("");
-  const [selectedColor, setSelectedColor] = useState(""); // New state for selected color
+  const [selectedColor, setSelectedColor] = useState("");
   const [selectedTalle, setSelectedTalle] = useState("");
   const [selectedTela, setSelectedTela] = useState("");
   const [selectedAgregados, setSelectedAgregados] = useState([]);
@@ -39,6 +39,7 @@ export const Cotizacion = () => {
   const [numeroArticulo, setNumeroArticulo] = useState("");
   const [cantidad, setCantidad] = useState(1);
   const [comentario, setComentario] = useState("");
+  const [prioridad, setPrioridad] = useState(null);
   const [articulos, setArticulos] = useState([]);
   const [editingArticulo, setEditingArticulo] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -56,7 +57,7 @@ export const Cotizacion = () => {
     fetchArticulosDelPedido();
     fetchCostosProduccion();
     fetchPrendas();
-    fetchColores(); // Fetch colors
+    fetchColores();
   }, [pedidoId]);
 
   const fetchPrendas = async () => {
@@ -218,7 +219,6 @@ export const Cotizacion = () => {
 
   const calculatePrice = (prenda, color, talle, tela, agregados) => {
     if (!tela || !prenda || !color)
-      // Require color
       return {
         costoUnitario: 0,
         costoTotal: 0,
@@ -227,10 +227,10 @@ export const Cotizacion = () => {
 
     const telaObj = telas.find((t) => t.nombre === tela);
     const prendaObj = prendas.find((p) => p.nombre === prenda);
-    const colorObj = colores.find((c) => c.nombre === color); // Find color
+    const colorObj = colores.find((c) => c.nombre === color);
     const basePrice = telaObj ? telaObj.precio : 0;
     const consumoPrenda = prendaObj ? prendaObj.consumo : 0;
-    const consumoColor = colorObj ? colorObj.consumo : 0; // Color consumo
+    const consumoColor = colorObj ? colorObj.consumo : 0;
 
     const talleFactor = {
       XS: 0.7,
@@ -244,7 +244,6 @@ export const Cotizacion = () => {
 
     const talleMultiplier = talleFactor[talle] || 0.7;
 
-    // Combine prenda and color consumo
     const consumoTotal = consumoPrenda + consumoColor;
     const costoBase = basePrice * consumoTotal * talleMultiplier;
 
@@ -273,7 +272,7 @@ export const Cotizacion = () => {
     try {
       const calculos = calculatePrice(
         selectedPrenda,
-        selectedColor, // Include color
+        selectedColor,
         selectedTalle,
         selectedTela,
         selectedAgregados
@@ -286,7 +285,7 @@ export const Cotizacion = () => {
       const articuloData = {
         numero_articulo: numeroArticulo,
         nombre: selectedPrenda,
-        color: selectedColor, // Add color
+        color: selectedColor,
         talle: selectedTalle,
         tela: selectedTela,
         agregados: selectedAgregados,
@@ -295,6 +294,7 @@ export const Cotizacion = () => {
         precio: Number(calculos.precioUnitario),
         ganancia: Number(ganancia),
         comentario: comentario,
+        prioridad: prioridad ? Number(prioridad) : null,
         pedidos_id: pedidoId,
         ruta: "",
       };
@@ -323,33 +323,27 @@ export const Cotizacion = () => {
           cantidad: Number(costosCantidades[costo.id] || 0),
         }));
 
-      const resultadosCostos = await Promise.all(
+      await Promise.all(
         costosAGuardar.map(async (costo) => {
-          try {
-            const response = await fetch(
-              `${API_URL}/costos_articulo_produccion`,
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Accept: "application/json",
-                },
-                body: JSON.stringify(costo),
-              }
-            );
-
-            if (!response.ok) {
-              const error = await response.json();
-              console.error("Error al guardar costo:", costo, "Error:", error);
-              throw new Error(
-                `Error al guardar costo ${costo.costo_id}: ${error.message}`
-              );
+          const response = await fetch(
+            `${API_URL}/costos_articulo_produccion`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+              body: JSON.stringify(costo),
             }
-            return await response.json();
-          } catch (error) {
-            console.error("Error en costo específico:", error);
-            throw error;
+          );
+
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(
+              `Error al guardar costo ${costo.costo_id}: ${error.message}`
+            );
           }
+          return await response.json();
         })
       );
 
@@ -358,11 +352,6 @@ export const Cotizacion = () => {
       fetchArticulosDelPedido();
     } catch (error) {
       console.error("Error completo en handleGuardar:", error);
-      if (error.response) {
-        error.response.json().then((data) => {
-          console.error("Detalles del error:", data);
-        });
-      }
     }
   };
 
@@ -370,12 +359,13 @@ export const Cotizacion = () => {
     setNumeroArticulo("");
     setCantidad(1);
     setSelectedPrenda("");
-    setSelectedColor(""); // Reset color
+    setSelectedColor("");
     setSelectedTalle("");
     setSelectedTela("");
     setSelectedAgregados([]);
     setAgregadoParaAgregar("");
     setComentario("");
+    setPrioridad(null); // Resetear prioridad
     setIsEditing(false);
     setEditingArticulo(null);
     setGanancia(0);
@@ -389,7 +379,7 @@ export const Cotizacion = () => {
   const handleStartEdit = async (articulo) => {
     setNumeroArticulo(articulo.numero_articulo);
     setSelectedPrenda(articulo.nombre);
-    setSelectedColor(articulo.color || ""); // Load color
+    setSelectedColor(articulo.color || "");
     setSelectedTalle(articulo.talle);
     setSelectedTela(articulo.tela);
     setSelectedAgregados(
@@ -398,6 +388,7 @@ export const Cotizacion = () => {
     setCantidad(articulo.cantidad);
     setComentario(articulo.comentario || "");
     setGanancia(articulo.ganancia || 0);
+    setPrioridad(articulo.prioridad || null); // Cargar prioridad
     setIsEditing(true);
     setEditingArticulo(articulo);
 
@@ -424,7 +415,7 @@ export const Cotizacion = () => {
     try {
       const calculos = calculatePrice(
         selectedPrenda,
-        selectedColor, // Include color
+        selectedColor,
         selectedTalle,
         selectedTela,
         selectedAgregados
@@ -437,7 +428,7 @@ export const Cotizacion = () => {
       const articuloActualizado = {
         numero_articulo: numeroArticulo,
         nombre: selectedPrenda,
-        color: selectedColor, // Add color
+        color: selectedColor,
         talle: selectedTalle,
         tela: selectedTela,
         agregados: selectedAgregados,
@@ -446,6 +437,7 @@ export const Cotizacion = () => {
         precio: Number(calculos.precioUnitario.toFixed(2)),
         ganancia: Number(ganancia),
         comentario: comentario,
+        prioridad: prioridad ? Number(prioridad) : null,
         pedidos_id: pedidoId,
       };
 
@@ -576,13 +568,13 @@ export const Cotizacion = () => {
         <h3 className="text-lg font-semibold mb-4">Agregar Artículo</h3>
         <ArticuloForm
           prendas={prendas}
-          colores={colores} // Pass colors to form
+          colores={colores}
           talles={talles}
           telas={telas}
           todosLosAgregados={todosLosAgregados}
           numeroArticulo={numeroArticulo}
           selectedPrenda={selectedPrenda}
-          selectedColor={selectedColor} // Pass color state
+          selectedColor={selectedColor}
           selectedTalle={selectedTalle}
           selectedTela={selectedTela}
           selectedAgregados={selectedAgregados}
@@ -592,7 +584,7 @@ export const Cotizacion = () => {
           comentario={comentario}
           setNumeroArticulo={setNumeroArticulo}
           setSelectedPrenda={setSelectedPrenda}
-          setSelectedColor={setSelectedColor} // Pass color setter
+          setSelectedColor={setSelectedColor}
           setSelectedTalle={setSelectedTalle}
           setSelectedTela={setSelectedTela}
           setSelectedAgregados={setSelectedAgregados}
@@ -610,7 +602,7 @@ export const Cotizacion = () => {
           handleCostoCantidadChange={handleCostoCantidadChange}
           calculatePrice={calculatePrice}
           selectedPrenda={selectedPrenda}
-          selectedColor={selectedColor} // Pass color to calculatePrice
+          selectedColor={selectedColor}
           selectedTalle={selectedTalle}
           selectedTela={selectedTela}
           selectedAgregados={selectedAgregados}
@@ -652,6 +644,7 @@ export const Cotizacion = () => {
         handleStartEdit={handleStartEdit}
         handleRemoveArticulo={handleRemoveArticulo}
         formatCurrency={formatCurrency}
+        onPrioridadChange={fetchArticulosDelPedido} // Pasar fetchArticulosDelPedido
       />
       <div className="mt-4 flex justify-between items-center space-x-4">
         <button

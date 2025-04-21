@@ -1,17 +1,68 @@
+import { useState } from "react";
+
 const ArticulosTable = ({
   articulos,
   handleStartEdit,
   handleRemoveArticulo,
   formatCurrency,
+  onPrioridadChange, // Nueva prop para notificar cambios
 }) => {
+  const [prioridades, setPrioridades] = useState({}); // Estado local para prioridades editadas
+  const API_URL = import.meta.env.VITE_API_URL;
+
+  // Calcular el total
   const total = articulos.reduce((sum, item) => {
-    return sum + (item.precio * item.cantidad || 0);
+    return (
+      sum +
+      (item.precio
+        ? (item.precio * item.cantidad * item.ganancia) / 100 +
+          item.precio * item.cantidad
+        : 0)
+    );
   }, 0);
+
+  // Función para manejar el cambio de prioridad
+  const handlePrioridadChange = async (articuloId, value) => {
+    try {
+      const nuevaPrioridad = value ? Number(value) : null;
+      setPrioridades((prev) => ({ ...prev, [articuloId]: nuevaPrioridad }));
+
+      // Actualizar la prioridad en la base de datos
+      const response = await fetch(`${API_URL}/articulos/${articuloId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({ prioridad: nuevaPrioridad }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Error al actualizar prioridad");
+      }
+
+      // Notificar al componente padre para refrescar los artículos
+      if (onPrioridadChange) {
+        onPrioridadChange();
+      }
+    } catch (error) {
+      console.error("Error al actualizar prioridad:", error);
+    }
+  };
+
+  // Ordenar artículos por prioridad (nulos al final)
+  const articulosOrdenados = [...articulos].sort((a, b) => {
+    if (a.prioridad === null && b.prioridad === null) return 0;
+    if (a.prioridad === null) return 1;
+    if (b.prioridad === null) return -1;
+    return a.prioridad - b.prioridad;
+  });
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold">Artículos de la cotizacion</h3>
+        <h3 className="text-lg font-semibold">Artículos de la cotización</h3>
         <div className="text-xl font-bold">
           Total: {typeof total === "number" ? total.toFixed(2) : "0.00"} $
         </div>
@@ -31,12 +82,14 @@ const ArticulosTable = ({
               <th className="py-2 px-4 text-left">Costo Total</th>
               <th className="py-2 px-4 text-left">Ganancia</th>
               <th className="py-2 px-4 text-left">Precio Total</th>
+              <th className="py-2 px-4 text-left">Prioridad</th>{" "}
+              {/* Nueva columna */}
               <th className="py-2 px-4 text-center">Acciones</th>
             </tr>
           </thead>
           <tbody>
-            {articulos.length > 0 ? (
-              articulos.map((articulo) => (
+            {articulosOrdenados.length > 0 ? (
+              articulosOrdenados.map((articulo) => (
                 <tr
                   key={articulo.id}
                   className="border-t border-gray-200 hover:bg-gray-50"
@@ -76,6 +129,24 @@ const ArticulosTable = ({
                       : "0.00"}{" "}
                     $
                   </td>
+                  <td className="py-2 px-4">
+                    <select
+                      value={
+                        prioridades[articulo.id] ?? articulo.prioridad ?? ""
+                      }
+                      onChange={(e) =>
+                        handlePrioridadChange(articulo.id, e.target.value)
+                      }
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                    >
+                      <option value="">Sin prioridad</option>
+                      {[...Array(20)].map((_, i) => (
+                        <option key={i + 1} value={i + 1}>
+                          {i + 1}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
                   <td className="py-2 px-4 text-center">
                     <button
                       onClick={() => handleStartEdit(articulo)}
@@ -94,7 +165,7 @@ const ArticulosTable = ({
               ))
             ) : (
               <tr>
-                <td colSpan="11" className="py-4 text-center text-gray-500">
+                <td colSpan="12" className="py-4 text-center text-gray-500">
                   No hay artículos en este pedido
                 </td>
               </tr>
