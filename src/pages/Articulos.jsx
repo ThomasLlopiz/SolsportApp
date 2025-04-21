@@ -230,6 +230,11 @@ export const Articulos = ({ pedidoId }) => {
     navigate(`/articulos/${id}`);
   };
 
+  // Ordenar artículos por prioridad (ascendente)
+  const sortedArticulos = [...articulos].sort(
+    (a, b) => a.prioridad - b.prioridad
+  );
+
   return (
     <div className="text-sm">
       <EditArticuloModal
@@ -259,6 +264,8 @@ export const Articulos = ({ pedidoId }) => {
             <th className="py-2 px-4 border-b">Talle</th>
             <th className="py-2 px-4 border-b">Tela</th>
             <th className="py-2 px-4 border-b">Agregados</th>
+            <th className="py-2 px-4 border-b">Prioridad</th>{" "}
+            {/* Nueva columna */}
             <th className="py-2 px-4 border-b">Fecha Inicio</th>
             <th className="py-2 px-4 border-b">Fecha Fin</th>
             <th className="py-2 px-4 border-b">Última Etapa</th>
@@ -267,7 +274,7 @@ export const Articulos = ({ pedidoId }) => {
           </tr>
         </thead>
         <tbody>
-          {articulos.map((articulo) => {
+          {sortedArticulos.map((articulo) => {
             const etapas = etapasMap[articulo.id] || [];
 
             const etapasPorInicio = [...etapas].sort((a, b) => {
@@ -323,6 +330,8 @@ export const Articulos = ({ pedidoId }) => {
                 <td className="py-2 px-4 border-b">
                   {articulo.agregados ? articulo.agregados.join(", ") : ""}
                 </td>
+                <td className="py-2 px-4 border-b">{articulo.prioridad}</td>{" "}
+                {/* Mostrar prioridad */}
                 <td className="py-2 px-4 border-b">{firstDate}</td>
                 <td className="py-2 px-4 border-b">{lastDate}</td>
                 <td className="py-2 px-4 border-b">{lastEtapaNombre}</td>
