@@ -246,13 +246,14 @@ export const Etapas = ({ articuloId, pedidosId, cantidadArticulo }) => {
       {/* Modal de edición */}
       {isEditModalOpen && editEtapa && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-sm">
             <form onSubmit={handleUpdateEtapa}>
               <div className="mb-4">
-                <label className="block text-gray-700">Etapa</label>
-                <label className="w-full p-2 border border-gray-300 rounded mt-1">
+                <label className="block text-gray-700 mb-1">Etapa</label>
+
+                <h3 className="w-full p-2 border border-gray-300 rounded">
                   {editEtapa.nombre}
-                </label>
+                </h3>
               </div>
 
               <div className="mb-4">
@@ -267,7 +268,7 @@ export const Etapas = ({ articuloId, pedidosId, cantidadArticulo }) => {
 
               <div className="mb-4">
                 <label className="block text-gray-700">
-                  Fecha de Fin (automática)
+                  Fecha de Fin
                 </label>
                 <input
                   type="date"
