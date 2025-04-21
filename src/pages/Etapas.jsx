@@ -138,6 +138,7 @@ export const Etapas = ({ articuloId, pedidosId, cantidadArticulo }) => {
 
     if (
       editEtapa.nombre === "Corte" &&
+      editEtapa.cantidad === cantidadArticulo &&
       (!editEtapa.tela || editEtapa.tela === "")
     ) {
       alert("Debes ingresar un valor para Tela en la etapa de Corte");
@@ -170,7 +171,10 @@ export const Etapas = ({ articuloId, pedidosId, cantidadArticulo }) => {
           usuario_id: usuarioId,
           cantidad: editEtapa.cantidad === "" ? 0 : editEtapa.cantidad,
           tela:
-            editEtapa.nombre === "Corte" ? Number(editEtapa.tela) : undefined,
+            editEtapa.nombre === "Corte" &&
+            editEtapa.cantidad === cantidadArticulo
+              ? Number(editEtapa.tela)
+              : undefined,
         }),
       });
 
@@ -250,6 +254,7 @@ export const Etapas = ({ articuloId, pedidosId, cantidadArticulo }) => {
                   {editEtapa.nombre}
                 </label>
               </div>
+
               <div className="mb-4">
                 <label className="block text-gray-700">Fecha de Inicio</label>
                 <input
@@ -259,6 +264,7 @@ export const Etapas = ({ articuloId, pedidosId, cantidadArticulo }) => {
                   className="w-full p-2 border border-gray-300 rounded mt-1 bg-gray-100"
                 />
               </div>
+
               <div className="mb-4">
                 <label className="block text-gray-700">
                   Fecha de Fin (automática)
@@ -270,6 +276,7 @@ export const Etapas = ({ articuloId, pedidosId, cantidadArticulo }) => {
                   className="w-full p-2 border border-gray-300 rounded mt-1 bg-gray-100"
                 />
               </div>
+
               <div className="mb-4">
                 <label className="block text-gray-700">
                   Cantidad (Artículo: {cantidadArticulo})
@@ -321,8 +328,13 @@ export const Etapas = ({ articuloId, pedidosId, cantidadArticulo }) => {
                     }
                     min="0"
                     step="1"
-                    className="w-full p-2 border border-gray-300 rounded mt-1"
-                    required
+                    className={`w-full p-2 border border-gray-300 rounded mt-1 ${
+                      editEtapa.cantidad !== cantidadArticulo
+                        ? "bg-gray-100 cursor-not-allowed"
+                        : ""
+                    }`}
+                    required={editEtapa.cantidad === cantidadArticulo}
+                    disabled={editEtapa.cantidad !== cantidadArticulo}
                     placeholder="Ingrese la cantidad de tela"
                   />
                 </div>
@@ -337,6 +349,7 @@ export const Etapas = ({ articuloId, pedidosId, cantidadArticulo }) => {
                   className="w-full p-2 border border-gray-300 rounded mt-1"
                 />
               </div>
+
               <div className="flex justify-end mt-4">
                 <button
                   type="submit"
@@ -394,7 +407,10 @@ export const Etapas = ({ articuloId, pedidosId, cantidadArticulo }) => {
                   onClick={() => handleStartEtapa(etapa.id)}
                   className="bg-blue-500 text-white px-1 py-1.5 rounded-full hover:bg-blue-600 transition flex items-center justify-center"
                 >
-                  <PlayIcon className="h-6 w-6 text-center ml-1" strokeWidth={3} />
+                  <PlayIcon
+                    className="h-6 w-6 text-center ml-1"
+                    strokeWidth={3}
+                  />
                 </button>
               </td>
             </tr>
