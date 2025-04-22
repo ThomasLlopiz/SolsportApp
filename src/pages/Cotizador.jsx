@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { PencilIcon, PlusIcon, EyeIcon } from "@heroicons/react/24/outline";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { useParams } from "react-router-dom";
-
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 const formatDate = (dateString) => {
   if (!dateString) return "";
   const date = new Date(dateString);
@@ -136,7 +137,7 @@ export const Cotizador = () => {
       const nuevoEstado = !pedidoActual.estado;
       const updatedFields = {
         estado: nuevoEstado,
-        ...(nuevoEstado && { fecha_pago: getCurrentDate() }), // Update fecha_pago only when estado is true
+        ...(nuevoEstado && { fecha_pago: getCurrentDate() }),
       };
 
       const response = await fetch(`${API_URL}/pedidos/${pedidoId}`, {
@@ -162,13 +163,67 @@ export const Cotizador = () => {
             : pedido
         )
       );
+
+      // Enviar notificación web
+      if (Notification.permission === "granted") {
+        new Notification(
+          `Cambio de estado en pedido #${pedidoActual.numero_pedido}`,
+          {
+            body: `El pedido ahora está ${
+              nuevoEstado ? "Pagado" : "No pagado"
+            }.`,
+            icon: "/path/to/icon.png", // Opcional: ruta a un ícono
+          }
+        );
+      } else if (Notification.permission !== "denied") {
+        const permission = await Notification.requestPermission();
+        if (permission === "granted") {
+          new Notification(
+            `Cambio de estado en pedido #${pedidoActual.numero_pedido}`,
+            {
+              body: `El pedido ahora está ${
+                nuevoEstado ? "Pagado" : "No pagado"
+              }.`,
+              icon: "/path/to/icon.png",
+            }
+          );
+        }
+      }
+
+      // Notificación en la interfaz con react-toastify
+      toast.success(
+        `El estado del pedido #${pedidoActual.numero_pedido} ha cambiado a ${
+          nuevoEstado ? "Pagado" : "No pagado"
+        }.`,
+        {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        }
+      );
     } catch (error) {
       console.error("Error updating estado", error);
+      toast.error("Error al actualizar el estado: " + error.message, {
+        position: "top-right",
+        autoClose: 3000,
+      });
     }
   };
-
+  useEffect(() => {
+    // Solicitar permiso para notificaciones si no está denegado
+    if (
+      Notification.permission !== "granted" &&
+      Notification.permission !== "denied"
+    ) {
+      Notification.requestPermission();
+    }
+  }, []);
   return (
     <div className="min-h-screen bg-gray-100 p-6">
+      <ToastContainer />
       <div className="flex justify-between mb-10">
         <h1 className="text-2xl font-bold mb-6 text-center"></h1>
         <button

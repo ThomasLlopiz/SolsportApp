@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PencilIcon, EyeIcon } from "@heroicons/react/24/outline";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const formatDate = (dateString) => {
   if (!dateString) return "";
@@ -30,7 +32,6 @@ export const Pedidos = () => {
     const filtered = pedidos.filter((pedido) =>
       showTerminados ? pedido.terminado === 1 : pedido.terminado === 0
     );
-    // Sort by fecha_estimada in ascending order
     const sorted = filtered.sort((a, b) => {
       const dateA = a.fecha_estimada
         ? new Date(a.fecha_estimada)
@@ -43,11 +44,21 @@ export const Pedidos = () => {
     setFilteredPedidos(sorted);
   }, [showTerminados, pedidos]);
 
+  // Solicitar permisos de notificación al montar el componente
+  useEffect(() => {
+    if (
+      Notification.permission !== "granted" &&
+      Notification.permission !== "denied"
+    ) {
+      Notification.requestPermission();
+    }
+  }, []);
+
   const fetchPedidos = async () => {
     try {
       const response = await fetch(`${API_URL}/pedidos`);
       const data = await response.json();
-      console.log("Datos de la API:", data); // Para depuración
+      console.log("Datos de la API:", data);
       const pedidosFiltrados = data.filter((pedido) => pedido.estado === 1);
       setPedidos(pedidosFiltrados);
     } catch (error) {
@@ -71,9 +82,17 @@ export const Pedidos = () => {
         fetchPedidos();
       } else {
         console.error("Error updating pedido");
+        toast.error("Error al actualizar el pedido", {
+          position: "top-right",
+          autoClose: 3000,
+        });
       }
     } catch (error) {
       console.error("Error updating pedido", error);
+      toast.error("Error al actualizar el pedido: " + error.message, {
+        position: "top-right",
+        autoClose: 3000,
+      });
     }
   };
 
@@ -87,19 +106,66 @@ export const Pedidos = () => {
         },
         body: JSON.stringify({ terminado: newTerminado }),
       });
-      if (response.ok) {
-        setPedidos((prevPedidos) =>
-          prevPedidos.map((pedido) =>
-            pedido.id === pedidoId
-              ? { ...pedido, terminado: newTerminado }
-              : pedido
-          )
-        );
-      } else {
-        console.error("Error updating terminado");
+
+      if (!response.ok) {
+        throw new Error("Error updating terminado");
       }
+
+      setPedidos((prevPedidos) =>
+        prevPedidos.map((pedido) =>
+          pedido.id === pedidoId
+            ? { ...pedido, terminado: newTerminado }
+            : pedido
+        )
+      );
+
+      // Enviar notificación web
+      const pedidoActual = pedidos.find((p) => p.id === pedidoId);
+      if (Notification.permission === "granted") {
+        new Notification(
+          `Cambio de estado en pedido #${pedidoActual.numero_pedido}`,
+          {
+            body: `El pedido ahora está ${
+              newTerminado === 1 ? "Terminado" : "En producción"
+            }.`,
+            icon: "/icon.png", // Opcional: agrega un ícono en la carpeta public
+          }
+        );
+      } else if (Notification.permission !== "denied") {
+        const permission = await Notification.requestPermission();
+        if (permission === "granted") {
+          new Notification(
+            `Cambio de estado en pedido #${pedidoActual.numero_pedido}`,
+            {
+              body: `El pedido ahora está ${
+                newTerminado === 1 ? "Terminado" : "En producción"
+              }.`,
+              icon: "/icon.png",
+            }
+          );
+        }
+      }
+
+      // Notificación en la interfaz con react-toastify
+      toast.success(
+        `El pedido #${pedidoActual.numero_pedido} ahora está ${
+          newTerminado === 1 ? "Terminado" : "En producción"
+        }.`,
+        {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        }
+      );
     } catch (error) {
       console.error("Error updating terminado", error);
+      toast.error("Error al actualizar el estado: " + error.message, {
+        position: "top-right",
+        autoClose: 3000,
+      });
     }
   };
 
@@ -120,6 +186,7 @@ export const Pedidos = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
+      <ToastContainer /> {/* Agregar para renderizar notificaciones */}
       <div className="flex items-center justify-center mb-6">
         <h1 className="text-2xl font-bold mr-6">
           {showTerminados ? "PEDIDOS TERMINADOS" : "PEDIDOS EN PRODUCCIÓN"}
@@ -140,7 +207,6 @@ export const Pedidos = () => {
           </div>
         </div>
       </div>
-
       {/* Tabla de Pedidos */}
       <div className="overflow-x-auto bg-white shadow-md rounded coordenador">
         <table className="min-w-full bg-white">
@@ -214,7 +280,6 @@ export const Pedidos = () => {
           </tbody>
         </table>
       </div>
-
       {/* Modal de Edición de Pedido */}
       {isEditModalOpen && editPedido && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
