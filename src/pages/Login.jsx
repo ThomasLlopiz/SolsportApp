@@ -27,7 +27,7 @@ export const Login = () => {
         localStorage.setItem("usuario_id", data.usuario_id); 
         if (data.rol === "admin") {
           navigate("/cotizador");
-        } else if (data.rol === "user") {
+        } else if (data.rol === "usuario") {
           navigate("/pedidos");
         }
       } else {

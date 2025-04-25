@@ -12,11 +12,12 @@ export const App = () => {
     navigate("/");
   };
 
+  const token = localStorage.getItem("token");
   const rol = localStorage.getItem("rol");
 
   return (
     <>
-      {rol === "admin" && <PrePage />}
+      {token && rol && <PrePage />}
 
       <div className="absolute right-6 top-2">
         <button

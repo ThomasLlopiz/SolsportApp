@@ -193,17 +193,35 @@ export const Pedidos = () => {
         </h1>
         <div className="flex items-center">
           <div className="relative inline-block w-11 h-5">
-            <input
-              id="toggle-filter"
-              type="checkbox"
-              checked={showTerminados}
-              onChange={() => setShowTerminados(!showTerminados)}
-              className="peer appearance-none w-11 h-5 bg-slate-100 border border-slate-300 rounded-full checked:bg-blue-600 checked:border-blue-600 cursor-pointer transition-colors duration-300"
-            />
-            <label
-              htmlFor="toggle-filter"
-              className="absolute top-0 left-0 w-5 h-5 bg-white rounded-full border border-slate-300 shadow transition-transform duration-300 peer-checked:translate-x-6 peer-checked:border-slate-800 cursor-pointer"
-            ></label>
+            {localStorage.getItem("rol") === "admin" ? (
+              <>
+                <input
+                  id="toggle-filter"
+                  type="checkbox"
+                  checked={showTerminados}
+                  onChange={() => setShowTerminados(!showTerminados)}
+                  className="peer appearance-none w-11 h-5 bg-slate-100 border border-slate-300 rounded-full checked:bg-blue-600 checked:border-blue-600 cursor-pointer transition-colors duration-300"
+                />
+                <label
+                  htmlFor="toggle-filter"
+                  className="absolute top-0 left-0 w-5 h-5 bg-white rounded-full border border-slate-300 shadow transition-transform duration-300 peer-checked:translate-x-6 peer-checked:border-slate-800 cursor-pointer"
+                ></label>
+              </>
+            ) : (
+              <>
+                <input
+                  id="toggle-filter"
+                  type="checkbox"
+                  checked={showTerminados}
+                  disabled
+                  className="peer appearance-none w-11 h-5 bg-slate-100 border border-slate-300 rounded-full checked:bg-blue-600 checked:border-blue-600 opacity-50 cursor-not-allowed transition-colors duration-300"
+                />
+                <label
+                  htmlFor="toggle-filter"
+                  className="absolute top-0 left-0 w-5 h-5 bg-white rounded-full border border-slate-300 shadow transition-transform duration-300 peer-checked:translate-x-6 peer-checked:border-slate-800 opacity-50 cursor-not-allowed"
+                ></label>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -244,12 +262,21 @@ export const Pedidos = () => {
                 </td>
                 <td className="py-3 px-6 text-center">
                   <div className="flex item-center justify-center space-x-2">
-                    <button
-                      onClick={() => handleEditClick(pedido)}
-                      className="transform hover:text-purple-500 hover:scale-110"
-                    >
-                      <PencilIcon className="h-5 w-5" />
-                    </button>
+                    {localStorage.getItem("rol") === "admin" ? (
+                      <button
+                        onClick={() => handleEditClick(pedido)}
+                        className="transform hover:text-purple-500 hover:scale-110"
+                      >
+                        <PencilIcon className="h-5 w-5" />
+                      </button>
+                    ) : (
+                      <button
+                        disabled
+                        className="transform text-gray-400 cursor-not-allowed"
+                      >
+                        <PencilIcon className="h-5 w-5" />
+                      </button>
+                    )}
                     <button
                       onClick={() => handleViewClick(pedido.id)}
                       className="transform hover:text-blue-500 hover:scale-110"
@@ -259,21 +286,37 @@ export const Pedidos = () => {
                   </div>
                 </td>
                 <td className="py-3 px-6 text-center">
-                  <div className="relative inline-block w-11 h-5">
-                    <input
-                      id={`switch-${pedido.id}`}
-                      type="checkbox"
-                      checked={pedido.terminado === 1}
-                      onChange={() =>
-                        handleToggleTerminado(pedido.id, pedido.terminado)
-                      }
-                      className="peer appearance-none w-11 h-5 bg-slate-100 border border-slate-300 rounded-full checked:bg-slate-800 checked:border-slate-800 cursor-pointer transition-colors duration-300"
-                    />
-                    <label
-                      htmlFor={`switch-${pedido.id}`}
-                      className="absolute top-0 left-0 w-5 h-5 bg-white rounded-full border border-slate-300 shadow transition-transform duration-300 peer-checked:translate-x-6 peer-checked:border-slate-800 cursor-pointer"
-                    ></label>
-                  </div>
+                  {localStorage.getItem("rol") === "admin" ? (
+                    <div className="relative inline-block w-11 h-5">
+                      <input
+                        id={`switch-${pedido.id}`}
+                        type="checkbox"
+                        checked={pedido.terminado === 1}
+                        onChange={() =>
+                          handleToggleTerminado(pedido.id, pedido.terminado)
+                        }
+                        className="peer appearance-none w-11 h-5 bg-slate-100 border border-slate-300 rounded-full checked:bg-slate-800 checked:border-slate-800 cursor-pointer transition-colors duration-300"
+                      />
+                      <label
+                        htmlFor={`switch-${pedido.id}`}
+                        className="absolute top-0 left-0 w-5 h-5 bg-white rounded-full border border-slate-300 shadow transition-transform duration-300 peer-checked:translate-x-6 peer-checked:border-slate-800 cursor-pointer"
+                      ></label>
+                    </div>
+                  ) : (
+                    <div className="relative inline-block w-11 h-5">
+                      <input
+                        id={`switch-${pedido.id}`}
+                        type="checkbox"
+                        checked={pedido.terminado === 1}
+                        disabled
+                        className="peer appearance-none w-11 h-5 bg-slate-100 border border-slate-300 rounded-full checked:bg-slate-800 checked:border-slate-800 opacity-50 cursor-not-allowed transition-colors duration-300"
+                      />
+                      <label
+                        htmlFor={`switch-${pedido.id}`}
+                        className="absolute top-0 left-0 w-5 h-5 bg-white rounded-full border border-slate-300 shadow transition-transform duration-300 peer-checked:translate-x-6 peer-checked:border-slate-800 opacity-50 cursor-not-allowed"
+                      ></label>
+                    </div>
+                  )}
                 </td>
               </tr>
             ))}
