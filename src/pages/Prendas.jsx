@@ -136,7 +136,7 @@ export const Prendas = () => {
                   }
                   className="w-full border border-gray-300 p-2 rounded"
                   min="0"
-                  step="0.01"
+                  step="0.001"
                   required
                 />
               </div>
@@ -188,7 +188,7 @@ export const Prendas = () => {
                   }
                   className="w-full border border-gray-300 p-2 rounded"
                   min="0"
-                  step="0.01"
+                  step="0.0001"
                   required
                 />
               </div>
@@ -263,7 +263,7 @@ export const Prendas = () => {
             <tr key={prenda.id}>
               <td className="py-2 px-4 border-b">{prenda.nombre}</td>
               <td className="py-2 px-4 border-b">
-                {prenda.consumo ? prenda.consumo.toFixed(2) : "N/A"}
+                {prenda.consumo ? prenda.consumo.toFixed(4) : "N/A"}
               </td>
               <td className="py-2 px-4 border-b space-x-2">
                 <button
