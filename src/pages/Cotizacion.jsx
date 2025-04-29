@@ -16,15 +16,21 @@ export const Cotizacion = () => {
   const [prendas, setPrendas] = useState([]);
   const [colores, setColores] = useState([]);
   const [talles] = useState([
-    "Niños",
+    "2",
+    "4",
+    "6",
+    "8",
+    "10",
+    "12",
+    "14",
     "XS",
     "S",
     "M",
     "L",
     "XL",
-    "XXL",
-    "XXXL",
-    "Especial",
+    "2XL",
+    "3XL",
+    "4XL",
   ]);
   const [pedido, setPedido] = useState(null);
   const [todosLosAgregados, setTodosLosAgregados] = useState([]);
@@ -233,13 +239,21 @@ export const Cotizacion = () => {
     const consumoColor = colorObj ? colorObj.consumo : 0;
 
     const talleFactor = {
-      XS: 0.7,
-      S: 0.7,
-      M: 0.7,
-      L: 0.9,
-      XL: 0.9,
-      XXL: 0.9,
-      XXXL: 0.9,
+      2: 0.40,
+      4: 0.45,
+      6: 0.50,
+      8: 0.55,
+      10: 0.60,
+      12: 0.65,
+      14: 0.70,
+      XS: 0.70,
+      S: 0.70,
+      M: 0.75,
+      L: 0.80,
+      XL: 0.85,
+      "2XL": 1.03,
+      "3XL": 1.15,
+      "4XL": 1.2,
     };
 
     const talleMultiplier = talleFactor[talle] || 0.7;
