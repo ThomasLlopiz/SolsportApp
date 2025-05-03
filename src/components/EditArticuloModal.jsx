@@ -21,6 +21,7 @@ export const EditArticuloModal = ({
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
   };
+
   return (
     isEditModalOpen &&
     editArticulo && (
@@ -46,6 +47,7 @@ export const EditArticuloModal = ({
                 required
               />
             </div>
+
             {/* Nuevo campo para subir archivo */}
             <div className="mb-4">
               <label className="block text-gray-700">Archivo</label>
@@ -67,6 +69,7 @@ export const EditArticuloModal = ({
                 </a>
               )}
             </div>
+
             {/* Select para Prenda */}
             <select
               value={editArticulo.nombre}
@@ -88,6 +91,7 @@ export const EditArticuloModal = ({
                 );
               })}
             </select>
+
             {/* Select para Talle */}
             <select
               value={editArticulo.talle}
@@ -110,6 +114,7 @@ export const EditArticuloModal = ({
                 );
               })}
             </select>
+
             {/* Select para Tela */}
             <select
               value={editArticulo.tela}
@@ -135,6 +140,7 @@ export const EditArticuloModal = ({
                 );
               })}
             </select>
+
             {/* Agregados */}
             <select
               value={agregadoParaAgregar || ""}
@@ -189,7 +195,6 @@ export const EditArticuloModal = ({
                 )}
               </ul>
             </div>
-
             {/* Cantidad */}
             <div className="mb-4">
               <label className="block text-gray-700">Cantidad</label>
