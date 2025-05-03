@@ -197,6 +197,7 @@ export const EditArticuloModal = ({
                 )}
               </ul>
             </div>
+            
             {/* Cantidad */}
             <div className="mb-4">
               <label className="block text-gray-700">Cantidad</label>

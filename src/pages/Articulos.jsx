@@ -178,6 +178,9 @@ export const Articulos = ({ pedidoId }) => {
 
       if (file) {
         formData.append("file", file);
+        console.log("Archivo enviado:", file.name); // Depuración
+      } else {
+        console.log("No se seleccionó ningún archivo");
       }
 
       const response = await fetch(`${API_URL}/articulos/${editArticulo.id}`, {
@@ -194,7 +197,6 @@ export const Articulos = ({ pedidoId }) => {
       }
 
       const updatedArticulo = await response.json();
-
       setArticulos((prevArticulos) =>
         prevArticulos.map((art) =>
           art.id === updatedArticulo.id ? updatedArticulo : art
@@ -208,7 +210,6 @@ export const Articulos = ({ pedidoId }) => {
       console.error("Error updating articulo:", error.message);
     }
   };
-
   const handleEditClick = (articulo) => {
     let agregadosArray = [];
 
