@@ -11,8 +11,9 @@ import {
 
 export const Cotizacion = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
   const { id: pedidoId } = useParams();
+  const navigate = useNavigate();
+  const API_URL = import.meta.env.VITE_API_URL;
   const [prendas, setPrendas] = useState([]);
   const [colores, setColores] = useState([]);
   const [talles] = useState([
@@ -51,7 +52,6 @@ export const Cotizacion = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [costosCantidades, setCostosCantidades] = useState({});
   const [ganancia, setGanancia] = useState(0);
-  const API_URL = import.meta.env.VITE_API_URL;
   const [email, setEmail] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [sendStatus, setSendStatus] = useState(null);
@@ -65,26 +65,6 @@ export const Cotizacion = () => {
     fetchPrendas();
     fetchColores();
   }, [pedidoId]);
-
-  const fetchPrendas = async () => {
-    try {
-      const response = await fetch(`${API_URL}/prendas`);
-      const data = await response.json();
-      setPrendas(data);
-    } catch (error) {
-      console.error("Error fetching prendas", error);
-    }
-  };
-
-  const fetchColores = async () => {
-    try {
-      const response = await fetch(`${API_URL}/colores`);
-      const data = await response.json();
-      setColores(data);
-    } catch (error) {
-      console.error("Error fetching colores", error);
-    }
-  };
 
   useEffect(() => {
     if (costosProduccion.length > 0) {
@@ -100,29 +80,13 @@ export const Cotizacion = () => {
     fetchCostosConCantidades();
   }, [editingArticulo]);
 
-  const enviarCotizacionPorEmail = async () => {
+  const fetchPrendas = async () => {
     try {
-      await EnviarCotizacionPorEmail({
-        pedido,
-        articulos,
-        email,
-        pedidoId,
-        API_URL,
-        setIsSending,
-        setSendStatus,
-      });
+      const response = await fetch(`${API_URL}/prendas`);
+      const data = await response.json();
+      setPrendas(data);
     } catch (error) {
-      console.error("Error en enviarCotizacionPorEmail:", error);
-    }
-  };
-
-  const descargarCotizacionPdf = () => {
-    try {
-      const doc = GenerarCotizacionPdf({ pedido, articulos });
-      doc.save(`cotizacion_pedido_${pedido.numero_pedido}.pdf`);
-    } catch (error) {
-      console.error("Error al descargar PDF:", error);
-      alert("Error al generar el PDF para descarga");
+      console.error("Error fetching prendas", error);
     }
   };
 
@@ -197,6 +161,42 @@ export const Cotizacion = () => {
     }
   };
 
+  const fetchColores = async () => {
+    try {
+      const response = await fetch(`${API_URL}/colores`);
+      const data = await response.json();
+      setColores(data);
+    } catch (error) {
+      console.error("Error fetching colores", error);
+    }
+  };
+
+  const enviarCotizacionPorEmail = async () => {
+    try {
+      await EnviarCotizacionPorEmail({
+        pedido,
+        articulos,
+        email,
+        pedidoId,
+        API_URL,
+        setIsSending,
+        setSendStatus,
+      });
+    } catch (error) {
+      console.error("Error en enviarCotizacionPorEmail:", error);
+    }
+  };
+
+  const descargarCotizacionPdf = () => {
+    try {
+      const doc = GenerarCotizacionPdf({ pedido, articulos });
+      doc.save(`cotizacion_pedido_${pedido.numero_pedido}.pdf`);
+    } catch (error) {
+      console.error("Error al descargar PDF:", error);
+      alert("Error al generar el PDF para descarga");
+    }
+  };
+
   const handleBackClick = () => {
     navigate(`/cotizador`);
   };
@@ -239,17 +239,17 @@ export const Cotizacion = () => {
     const consumoColor = colorObj ? colorObj.consumo : 0;
 
     const talleFactor = {
-      2: 0.40,
+      2: 0.4,
       4: 0.45,
-      6: 0.50,
+      6: 0.5,
       8: 0.55,
-      10: 0.60,
+      10: 0.6,
       12: 0.65,
-      14: 0.70,
-      XS: 0.70,
-      S: 0.70,
+      14: 0.7,
+      XS: 0.7,
+      S: 0.7,
       M: 0.75,
-      L: 0.80,
+      L: 0.8,
       XL: 0.85,
       "2XL": 1.03,
       "3XL": 1.15,
@@ -284,7 +284,6 @@ export const Cotizacion = () => {
 
   const handleGuardar = async () => {
     try {
-      // Validar que selectedColor esté seleccionado
       if (!selectedColor) {
         alert("Por favor seleccione un color.");
         return;
@@ -298,7 +297,7 @@ export const Cotizacion = () => {
 
       const calculos = calculatePrice(
         selectedPrenda,
-        selectedColor, // Sigue usando el nombre para calculatePrice
+        selectedColor,
         selectedTalle,
         selectedTela,
         selectedAgregados
@@ -311,7 +310,7 @@ export const Cotizacion = () => {
       const articuloData = {
         numero_articulo: numeroArticulo,
         nombre: selectedPrenda,
-        color_id: colorObj.id, // Enviar color_id en lugar de color
+        color_id: colorObj.id,
         talle: selectedTalle,
         tela: selectedTela,
         agregados: selectedAgregados,
@@ -324,8 +323,6 @@ export const Cotizacion = () => {
         pedidos_id: pedidoId,
         ruta: "",
       };
-
-      console.log("Datos enviados al backend:", articuloData); // Para depuración
 
       const articuloResponse = await fetch(`${API_URL}/articulos`, {
         method: "POST",
@@ -407,11 +404,10 @@ export const Cotizacion = () => {
 
   const handleStartEdit = async (articulo) => {
     try {
-      // Buscar el nombre del color basado en color_id
       const colorObj = colores.find((c) => c.id === articulo.color_id);
       setNumeroArticulo(articulo.numero_articulo);
       setSelectedPrenda(articulo.nombre);
-      setSelectedColor(colorObj ? colorObj.nombre : ""); // Usar el nombre del color
+      setSelectedColor(colorObj ? colorObj.nombre : "");
       setSelectedTalle(articulo.talle);
       setSelectedTela(articulo.tela);
       setSelectedAgregados(
@@ -452,7 +448,7 @@ export const Cotizacion = () => {
 
       const calculos = calculatePrice(
         selectedPrenda,
-        selectedColor, // Sigue usando el nombre para calculatePrice
+        selectedColor,
         selectedTalle,
         selectedTela,
         selectedAgregados
@@ -465,7 +461,7 @@ export const Cotizacion = () => {
       const articuloActualizado = {
         numero_articulo: numeroArticulo,
         nombre: selectedPrenda,
-        color_id: colorObj.id, // Enviar color_id en lugar de color
+        color_id: colorObj.id,
         talle: selectedTalle,
         tela: selectedTela,
         agregados: selectedAgregados,
@@ -477,11 +473,6 @@ export const Cotizacion = () => {
         prioridad: prioridad ? Number(prioridad) : null,
         pedidos_id: pedidoId,
       };
-
-      console.log(
-        "Datos enviados al backend para actualizar:",
-        articuloActualizado
-      ); // Para depuración
 
       const response = await fetch(
         `${API_URL}/articulos/${editingArticulo.id}`,

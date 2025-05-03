@@ -14,14 +14,24 @@ const formatDate = (dateString) => {
 };
 
 export const Articulos = ({ pedidoId }) => {
-  const [talles] = useState(["XS", "S", "M", "L", "XL", "XXL", "XXXL"]);
-  const [prendas] = useState([
-    "Buzo",
-    "Remera",
-    "Campera",
-    "Pantalones",
-    "Chombas",
+  const [talles] = useState([
+    "2",
+    "4",
+    "6",
+    "8",
+    "10",
+    "12",
+    "14",
+    "XS",
+    "S",
+    "M",
+    "L",
+    "XL",
+    "2XL",
+    "3XL",
+    "4XL",
   ]);
+  const [prendas, setPrendas] = useState([]); // Dynamic prendas state
   const [todosLosAgregados, setTodosLosAgregados] = useState([]);
   const [agregadoParaAgregar, setAgregadoParaAgregar] = useState("");
   const [telas, setTelas] = useState([]);
@@ -48,9 +58,20 @@ export const Articulos = ({ pedidoId }) => {
       await fetchEtapas();
       await fetchTelas();
       await fetchAgregados();
+      await fetchPrendas(); // Fetch prendas
     };
     fetchData();
   }, [pedidoId]);
+
+  const fetchPrendas = async () => {
+    try {
+      const response = await fetch(`${API_URL}/prendas`);
+      const data = await response.json();
+      setPrendas(data);
+    } catch (error) {
+      console.error("Error fetching prendas", error);
+    }
+  };
 
   const fetchTelas = async () => {
     try {
@@ -243,7 +264,7 @@ export const Articulos = ({ pedidoId }) => {
         editArticulo={editArticulo}
         setEditArticulo={setEditArticulo}
         handleUpdateArticulo={handleUpdateArticulo}
-        prendas={prendas}
+        prendas={prendas} // Pass dynamic prendas
         talles={talles}
         telas={telas}
         todosLosAgregados={todosLosAgregados}
@@ -264,8 +285,7 @@ export const Articulos = ({ pedidoId }) => {
             <th className="py-2 px-4 border-b">Talle</th>
             <th className="py-2 px-4 border-b">Tela</th>
             <th className="py-2 px-4 border-b">Agregados</th>
-            <th className="py-2 px-4 border-b">Prioridad</th>{" "}
-            {/* Nueva columna */}
+            <th className="py-2 px-4 border-b">Prioridad</th>
             <th className="py-2 px-4 border-b">Fecha Inicio</th>
             <th className="py-2 px-4 border-b">Fecha Fin</th>
             <th className="py-2 px-4 border-b">Última Etapa</th>
@@ -330,8 +350,7 @@ export const Articulos = ({ pedidoId }) => {
                 <td className="py-2 px-4 border-b">
                   {articulo.agregados ? articulo.agregados.join(", ") : ""}
                 </td>
-                <td className="py-2 px-4 border-b">{articulo.prioridad}</td>{" "}
-                {/* Mostrar prioridad */}
+                <td className="py-2 px-4 border-b">{articulo.prioridad}</td>
                 <td className="py-2 px-4 border-b">{firstDate}</td>
                 <td className="py-2 px-4 border-b">{lastDate}</td>
                 <td className="py-2 px-4 border-b">{lastEtapaNombre}</td>

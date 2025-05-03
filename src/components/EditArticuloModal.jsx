@@ -1,5 +1,6 @@
 import { CreateEtapaModal } from "./CreateEtapaModal";
 import { useState } from "react";
+
 export const EditArticuloModal = ({
   isEditModalOpen,
   setIsEditModalOpen,
@@ -72,7 +73,7 @@ export const EditArticuloModal = ({
 
             {/* Select para Prenda */}
             <select
-              value={editArticulo.nombre}
+              value={editArticulo.nombre || ""} // Ensure the current prenda nombre is selected
               onChange={(e) =>
                 setEditArticulo({
                   ...editArticulo,
@@ -83,13 +84,14 @@ export const EditArticuloModal = ({
               required
             >
               <option value="">Selecciona una prenda</option>
-              {prendas.map((prenda, index) => {
-                return (
-                  <option key={`prenda-${index}`} value={prenda}>
-                    {prenda}
-                  </option>
-                );
-              })}
+              {prendas.map((prenda, index) => (
+                <option
+                  key={`prenda-${prenda.id || index}`}
+                  value={prenda.nombre}
+                >
+                  {prenda.nombre}
+                </option>
+              ))}
             </select>
 
             {/* Select para Talle */}
