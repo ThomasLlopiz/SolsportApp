@@ -31,6 +31,7 @@ export const Cotizador = () => {
     correo: "",
     telefono: "",
     localidad: "",
+    terminado: 0,
   });
   const [editPedido, setEditPedido] = useState(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -256,7 +257,7 @@ export const Cotizador = () => {
               <div className="mb-4">
                 <label className="block text-gray-700">Número de Pedido</label>
                 <input
-                  type="text"
+                  type="number"
                   value={newPedido.numero_pedido}
                   onChange={(e) =>
                     setNewPedido({
@@ -300,7 +301,7 @@ export const Cotizador = () => {
               <div className="mb-4">
                 <label className="block text-gray-700">Teléfono</label>
                 <input
-                  type="text"
+                  type="number"
                   value={newPedido.telefono}
                   onChange={(e) =>
                     setNewPedido({ ...newPedido, telefono: e.target.value })
