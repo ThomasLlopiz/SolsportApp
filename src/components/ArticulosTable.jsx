@@ -5,12 +5,11 @@ const ArticulosTable = ({
   handleStartEdit,
   handleRemoveArticulo,
   formatCurrency,
-  onPrioridadChange, // Nueva prop para notificar cambios
+  onPrioridadChange,
 }) => {
-  const [prioridades, setPrioridades] = useState({}); // Estado local para prioridades editadas
+  const [prioridades, setPrioridades] = useState({}); 
   const API_URL = import.meta.env.VITE_API_URL;
 
-  // Calcular el total
   const total = articulos.reduce((sum, item) => {
     return (
       sum +
@@ -21,13 +20,11 @@ const ArticulosTable = ({
     );
   }, 0);
 
-  // Función para manejar el cambio de prioridad
   const handlePrioridadChange = async (articuloId, value) => {
     try {
       const nuevaPrioridad = value ? Number(value) : null;
       setPrioridades((prev) => ({ ...prev, [articuloId]: nuevaPrioridad }));
 
-      // Actualizar la prioridad en la base de datos
       const response = await fetch(`${API_URL}/articulos/${articuloId}`, {
         method: "PUT",
         headers: {
@@ -42,7 +39,6 @@ const ArticulosTable = ({
         throw new Error(errorData.message || "Error al actualizar prioridad");
       }
 
-      // Notificar al componente padre para refrescar los artículos
       if (onPrioridadChange) {
         onPrioridadChange();
       }
@@ -51,7 +47,6 @@ const ArticulosTable = ({
     }
   };
 
-  // Ordenar artículos por prioridad (nulos al final)
   const articulosOrdenados = [...articulos].sort((a, b) => {
     if (a.prioridad === null && b.prioridad === null) return 0;
     if (a.prioridad === null) return 1;
@@ -83,7 +78,6 @@ const ArticulosTable = ({
               <th className="py-2 px-4 text-left">Ganancia</th>
               <th className="py-2 px-4 text-left">Precio Total</th>
               <th className="py-2 px-4 text-left">Prioridad</th>{" "}
-              {/* Nueva columna */}
               <th className="py-2 px-4 text-center">Acciones</th>
             </tr>
           </thead>

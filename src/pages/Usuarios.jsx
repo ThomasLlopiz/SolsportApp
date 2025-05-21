@@ -9,7 +9,7 @@ export const Usuarios = () => {
   const [newUsuario, setNewUsuario] = useState({
     usuario: "",
     contraseña: "",
-    rol: "usuario", // Default to "usuario"
+    rol: "usuario",
   });
   const [usuarios, setUsuarios] = useState([]);
   const [editUsuario, setEditUsuario] = useState(null);
@@ -58,7 +58,6 @@ export const Usuarios = () => {
         usuario: editUsuario.usuario,
         rol: editUsuario.rol,
       };
-      // Only include contraseña if provided
       if (editUsuario.contraseña) {
         updateData.contraseña = editUsuario.contraseña;
       }
@@ -90,7 +89,7 @@ export const Usuarios = () => {
   };
 
   const handleEditClick = (usuario) => {
-    setEditUsuario({ ...usuario, contraseña: "" }); // Clear password for security
+    setEditUsuario({ ...usuario, contraseña: "" });
     setIsEditModalOpen(true);
   };
 
@@ -100,7 +99,7 @@ export const Usuarios = () => {
   };
 
   const handleBackClick = () => {
-    navigate(`/prepage`); // Adjust this route as needed
+    navigate(`/prepage`);
   };
 
   return (

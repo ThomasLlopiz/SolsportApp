@@ -91,7 +91,7 @@ export const Prendas = () => {
   };
 
   const handleBackClick = () => {
-    navigate(`/prepage`); // Ajusta esta ruta según tu estructura
+    navigate(`/prepage`);
   };
 
   return (

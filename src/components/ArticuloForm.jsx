@@ -1,12 +1,12 @@
 const ArticuloForm = ({
   prendas,
-  colores, // New prop
+  colores, 
   talles,
   telas,
   todosLosAgregados,
   numeroArticulo,
   selectedPrenda,
-  selectedColor, // New prop
+  selectedColor, 
   selectedTalle,
   selectedTela,
   selectedAgregados,
@@ -16,7 +16,7 @@ const ArticuloForm = ({
   comentario,
   setNumeroArticulo,
   setSelectedPrenda,
-  setSelectedColor, // New prop
+  setSelectedColor, 
   setSelectedTalle,
   setSelectedTela,
   setSelectedAgregados,

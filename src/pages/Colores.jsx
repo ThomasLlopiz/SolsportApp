@@ -91,7 +91,7 @@ export const Colores = () => {
   };
 
   const handleBackClick = () => {
-    navigate(`/prepage`); // Adjust this route as needed
+    navigate(`/prepage`);
   };
 
   return (

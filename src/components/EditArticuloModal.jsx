@@ -73,7 +73,7 @@ export const EditArticuloModal = ({
 
             {/* Select para Prenda */}
             <select
-              value={editArticulo.nombre || ""} // Ensure the current prenda nombre is selected
+              value={editArticulo.nombre || ""}
               onChange={(e) =>
                 setEditArticulo({
                   ...editArticulo,

@@ -109,7 +109,7 @@ export const Etapas = ({ articuloId, pedidosId, cantidadArticulo }) => {
               : etapa
           )
         );
-        fetchEtapas(); // Refrescar para asegurar consistencia
+        fetchEtapas(); 
       } else {
         const data = await response.json();
         console.error("Error al iniciar la etapa:", data.message);

@@ -31,7 +31,7 @@ export const Articulos = ({ pedidoId }) => {
     "3XL",
     "4XL",
   ]);
-  const [prendas, setPrendas] = useState([]); // Dynamic prendas state
+  const [prendas, setPrendas] = useState([]);
   const [todosLosAgregados, setTodosLosAgregados] = useState([]);
   const [agregadoParaAgregar, setAgregadoParaAgregar] = useState("");
   const [telas, setTelas] = useState([]);
@@ -58,7 +58,7 @@ export const Articulos = ({ pedidoId }) => {
       await fetchEtapas();
       await fetchTelas();
       await fetchAgregados();
-      await fetchPrendas(); // Fetch prendas
+      await fetchPrendas();
     };
     fetchData();
   }, [pedidoId]);
@@ -246,7 +246,6 @@ export const Articulos = ({ pedidoId }) => {
     navigate(`/articulos/${id}`);
   };
 
-  // Ordenar artículos por prioridad (ascendente)
   const sortedArticulos = [...articulos].sort(
     (a, b) => a.prioridad - b.prioridad
   );
@@ -259,7 +258,7 @@ export const Articulos = ({ pedidoId }) => {
         editArticulo={editArticulo}
         setEditArticulo={setEditArticulo}
         handleUpdateArticulo={handleUpdateArticulo}
-        prendas={prendas} // Pass dynamic prendas
+        prendas={prendas} 
         talles={talles}
         telas={telas}
         todosLosAgregados={todosLosAgregados}

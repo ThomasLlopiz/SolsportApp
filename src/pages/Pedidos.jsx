@@ -44,7 +44,6 @@ export const Pedidos = () => {
     setFilteredPedidos(sorted);
   }, [showTerminados, pedidos]);
 
-  // Solicitar permisos de notificación al montar el componente
   useEffect(() => {
     if (
       Notification.permission !== "granted" &&
@@ -118,7 +117,6 @@ export const Pedidos = () => {
         )
       );
 
-      // Enviar notificación web
       const pedidoActual = pedidos.find((p) => p.id === pedidoId);
       if (Notification.permission === "granted") {
         new Notification(
@@ -127,7 +125,7 @@ export const Pedidos = () => {
             body: `El pedido ahora está ${
               newTerminado === 1 ? "Terminado" : "En producción"
             }.`,
-            icon: "/icon.png", // Opcional: agrega un ícono en la carpeta public
+            icon: "/icon.png",
           }
         );
       } else if (Notification.permission !== "denied") {
@@ -145,7 +143,6 @@ export const Pedidos = () => {
         }
       }
 
-      // Notificación en la interfaz con react-toastify
       toast.success(
         `El pedido #${pedidoActual.numero_pedido} ahora está ${
           newTerminado === 1 ? "Terminado" : "En producción"
