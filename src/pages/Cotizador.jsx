@@ -19,7 +19,7 @@ const getCurrentDate = () => {
   const day = String(date.getDate()).padStart(2, "0");
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const year = date.getFullYear();
-  return `${year}-${month}-${day}`; // Format for API (YYYY-MM-DD)
+  return `${year}-${month}-${day}`;
 };
 
 export const Cotizador = () => {
@@ -165,7 +165,6 @@ export const Cotizador = () => {
         )
       );
 
-      // Enviar notificación web
       if (Notification.permission === "granted") {
         new Notification(
           `Cambio de estado en pedido #${pedidoActual.numero_pedido}`,
@@ -173,7 +172,7 @@ export const Cotizador = () => {
             body: `El pedido ahora está ${
               nuevoEstado ? "Pagado" : "No pagado"
             }.`,
-            icon: "/path/to/icon.png", // Opcional: ruta a un ícono
+            icon: "/path/to/icon.png",
           }
         );
       } else if (Notification.permission !== "denied") {
@@ -191,7 +190,6 @@ export const Cotizador = () => {
         }
       }
 
-      // Notificación en la interfaz con react-toastify
       toast.success(
         `El estado del pedido #${pedidoActual.numero_pedido} ha cambiado a ${
           nuevoEstado ? "Pagado" : "No pagado"
@@ -214,7 +212,6 @@ export const Cotizador = () => {
     }
   };
   useEffect(() => {
-    // Solicitar permiso para notificaciones si no está denegado
     if (
       Notification.permission !== "granted" &&
       Notification.permission !== "denied"
@@ -252,7 +249,7 @@ export const Cotizador = () => {
       {isCreateModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
-            <h2 className="text-xl font-semibold mb-4">Crear Nuevo Pedido</h2>
+            <h2 className="text-xl font-semibold mb-4">Crear nueva cotización</h2>
             <form onSubmit={handleCreatePedido}>
               <div className="mb-4">
                 <label className="block text-gray-700">Número de Pedido</label>

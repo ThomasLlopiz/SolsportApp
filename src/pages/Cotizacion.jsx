@@ -155,12 +155,14 @@ export const Cotizacion = () => {
         `${API_URL}/articulos?pedidos_id=${pedidoId}`
       );
       const data = await response.json();
-      setArticulos(data);
+      const articulosFiltrados = data.filter(
+        (articulo) => articulo.pedidos_id === Number(pedidoId)
+      );
+      setArticulos(articulosFiltrados);
     } catch (error) {
       console.error("Error fetching articulos del pedido", error);
     }
   };
-
   const fetchColores = async () => {
     try {
       const response = await fetch(`${API_URL}/colores`);
@@ -593,7 +595,7 @@ export const Cotizacion = () => {
             className="flex items-center bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
           >
             <ArrowLeftIcon className="h-5 w-5 mr-2" />
-            Volver a la lista de pedidos
+            Volver a la lista de cotizaciones
           </button>
         </div>
       </div>
