@@ -197,7 +197,7 @@ export const CreateEtapaModal = ({ articuloId, pedidoId, fetchEtapas }) => {
                   )}
                 </div>
 
-                <div className="mb-4">
+                {/* <div className="mb-4">
                   <label className="block text-gray-700">Cantidad</label>
                   <input
                     type="number"
@@ -219,7 +219,7 @@ export const CreateEtapaModal = ({ articuloId, pedidoId, fetchEtapas }) => {
                       {errors.cantidad}
                     </span>
                   )}
-                </div>
+                </div> */}
 
                 <div className="mb-4">
                   <label className="block text-gray-700">Fecha de Inicio</label>
