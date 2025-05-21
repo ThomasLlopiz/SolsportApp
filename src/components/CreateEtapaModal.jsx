@@ -75,8 +75,6 @@ export const CreateEtapaModal = ({ articuloId, pedidoId, fetchEtapas }) => {
       usuario_id: usuarioId,
     };
 
-    console.log("Datos enviados al servidor:", requestBody);
-
     try {
       const response = await fetch(`${URL}/etapas`, {
         method: "POST",
@@ -88,10 +86,6 @@ export const CreateEtapaModal = ({ articuloId, pedidoId, fetchEtapas }) => {
       });
 
       const data = await response.json();
-      console.log("Respuesta completa del servidor:", {
-        status: response.status,
-        data,
-      });
 
       if (!response.ok) {
         console.error("Error completo de la API:", data);

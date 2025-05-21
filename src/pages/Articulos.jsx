@@ -176,12 +176,6 @@ export const Articulos = ({ pedidoId }) => {
         formData.append("agregados", agregadosString);
       }
 
-      if (file) {
-        formData.append("file", file);
-        console.log("Archivo enviado:", file.name); // Depuración
-      } else {
-        console.log("No se seleccionó ningún archivo");
-      }
 
       const response = await fetch(`${API_URL}/articulos/${editArticulo.id}`, {
         method: "POST",

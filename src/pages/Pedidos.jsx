@@ -58,7 +58,6 @@ export const Pedidos = () => {
     try {
       const response = await fetch(`${API_URL}/pedidos`);
       const data = await response.json();
-      console.log("Datos de la API:", data);
       const pedidosFiltrados = data.filter((pedido) => pedido.estado === 1);
       setPedidos(pedidosFiltrados);
     } catch (error) {
