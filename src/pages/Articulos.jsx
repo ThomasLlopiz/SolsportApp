@@ -175,6 +175,13 @@ export const Articulos = ({ pedidoId }) => {
           .join(", ");
         formData.append("agregados", agregadosString);
       }
+<<<<<<< HEAD
+
+      if (file) {
+        formData.append("file", file);
+      }
+
+=======
   
       // Agregar el archivo al FormData si existe
       if (file) {
@@ -186,6 +193,7 @@ export const Articulos = ({ pedidoId }) => {
         console.log(`${pair[0]}: ${pair[1]}`);
       }
   
+>>>>>>> 172e43276dfa6a78fb0012096a304c405ad0891a
       const response = await fetch(`${API_URL}/articulos/${editArticulo.id}`, {
         method: "POST",
         headers: {
@@ -267,7 +275,7 @@ export const Articulos = ({ pedidoId }) => {
         editArticulo={editArticulo}
         setEditArticulo={setEditArticulo}
         handleUpdateArticulo={handleUpdateArticulo}
-        prendas={prendas} 
+        prendas={prendas}
         talles={talles}
         telas={telas}
         todosLosAgregados={todosLosAgregados}

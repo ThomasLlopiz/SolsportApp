@@ -7,7 +7,7 @@ const ArticulosTable = ({
   formatCurrency,
   onPrioridadChange,
 }) => {
-  const [prioridades, setPrioridades] = useState({}); 
+  const [prioridades, setPrioridades] = useState({});
   const API_URL = import.meta.env.VITE_API_URL;
 
   const total = articulos.reduce((sum, item) => {
