@@ -161,25 +161,39 @@ export const Articulos = ({ pedidoId }) => {
     e.preventDefault();
     try {
       const formData = new FormData();
-
+  
       formData.append("numero_articulo", editArticulo.numero_articulo);
       formData.append("nombre", editArticulo.nombre);
       formData.append("cantidad", editArticulo.cantidad);
       formData.append("talle", editArticulo.talle);
       formData.append("tela", editArticulo.tela);
       formData.append("pedidos_id", pedidoId);
-
+  
       if (editArticulo.agregados && editArticulo.agregados.length > 0) {
         const agregadosString = editArticulo.agregados
           .map((agregado) => agregado.nombre)
           .join(", ");
         formData.append("agregados", agregadosString);
       }
+<<<<<<< HEAD
 
       if (file) {
         formData.append("file", file);
       }
 
+=======
+  
+      // Agregar el archivo al FormData si existe
+      if (file) {
+        formData.append("file", file);
+      }
+  
+      // Depuración: mostrar los datos enviados
+      for (let pair of formData.entries()) {
+        console.log(`${pair[0]}: ${pair[1]}`);
+      }
+  
+>>>>>>> 172e43276dfa6a78fb0012096a304c405ad0891a
       const response = await fetch(`${API_URL}/articulos/${editArticulo.id}`, {
         method: "POST",
         headers: {
@@ -187,19 +201,19 @@ export const Articulos = ({ pedidoId }) => {
         },
         body: formData,
       });
-
+  
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(`Error: ${JSON.stringify(errorData)}`);
       }
-
+  
       const updatedArticulo = await response.json();
       setArticulos((prevArticulos) =>
         prevArticulos.map((art) =>
           art.id === updatedArticulo.id ? updatedArticulo : art
         )
       );
-
+  
       setEditArticulo(null);
       setIsEditModalOpen(false);
       await fetchArticulos();
