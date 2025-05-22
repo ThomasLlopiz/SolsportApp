@@ -81,7 +81,7 @@ export const EditArticuloModal = ({
                 })
               }
               className="w-full border border-gray-300 p-2 rounded mb-4"
-              required
+              
             >
               <option value="">Selecciona una prenda</option>
               {prendas.map((prenda, index) => (
@@ -104,7 +104,7 @@ export const EditArticuloModal = ({
                 })
               }
               className="w-full border border-gray-300 p-2 rounded mb-4"
-              required
+              
             >
               <option value="">Selecciona un talle</option>
               {talles.map((talle, index) => {
@@ -127,7 +127,7 @@ export const EditArticuloModal = ({
                 })
               }
               className="w-full border border-gray-300 p-2 rounded mb-4"
-              required
+              
             >
               <option value="">Selecciona una tela</option>
               {telas.map((tela, index) => {
