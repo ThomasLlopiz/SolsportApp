@@ -176,6 +176,9 @@ export const Articulos = ({ pedidoId }) => {
         formData.append("agregados", agregadosString);
       }
 
+      if (file) {
+        formData.append("file", file);
+      }
 
       const response = await fetch(`${API_URL}/articulos/${editArticulo.id}`, {
         method: "POST",
@@ -258,7 +261,7 @@ export const Articulos = ({ pedidoId }) => {
         editArticulo={editArticulo}
         setEditArticulo={setEditArticulo}
         handleUpdateArticulo={handleUpdateArticulo}
-        prendas={prendas} 
+        prendas={prendas}
         talles={talles}
         telas={telas}
         todosLosAgregados={todosLosAgregados}
