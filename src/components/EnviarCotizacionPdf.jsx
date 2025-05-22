@@ -3,9 +3,12 @@ import jsPDF from "jspdf";
 export const GenerarCotizacionPdf = ({ pedido, articulos }) => {
   const doc = new jsPDF();
 
-  const imgData = "/solsport.png";
-  doc.addImage(imgData, "PNG", 15, 10, 40, 20);
-  doc.setFontSize(12);
+  const imgData = "./solsport/solsport.png";
+  try {
+    doc.addImage(imgData, 'PNG', 15, 10, 40, 20);
+  } catch (e) {
+    console.error('Error al añadir imagen:', e);
+  } doc.setFontSize(12);
   doc.setTextColor(0, 0, 0);
   doc.setFont("helvetica", "bold");
   doc.text(
@@ -49,19 +52,23 @@ export const GenerarCotizacionPdf = ({ pedido, articulos }) => {
     const row = [
       articulo.nombre,
       articulo.tela,
-      Array.isArray(articulo.agregados)
-        ? articulo.agregados.join(", ")
-        : articulo.agregados || "",
+      "", // Dejar vacío para no mostrar agregados en la misma fila
       `$${articulo.precio}`,
     ];
 
     row.forEach((cell, index) => {
-      const safeText =
-        typeof cell === "string" || typeof cell === "number"
-          ? String(cell)
-          : "";
+      const safeText = typeof cell === "string" || typeof cell === "number" ? String(cell) : "";
       doc.text(safeText, 15 + index * 45, y);
     });
+
+    // Mostrar agregados uno debajo del otro
+    if (Array.isArray(articulo.agregados) && articulo.agregados.length > 0) {
+      y += 5;
+      articulo.agregados.forEach((agregado) => {
+        doc.text(agregado, 105, y); // Ajusta 105 según la columna de "Agregados"
+        y += 5;
+      });
+    }
 
     if (articulo.comentario) {
       const splitComentario = doc.splitTextToSize(articulo.comentario, 180);
@@ -71,7 +78,10 @@ export const GenerarCotizacionPdf = ({ pedido, articulos }) => {
     } else {
       y += 10;
     }
-
+    // Agregar línea divisoria entre artículos
+    doc.setDrawColor(0, 0, 0);
+    doc.line(15, y, 195, y); // Línea horizontal después de cada artículo
+    y += 5; // Espacio después de la línea
     if (y > 250) {
       doc.addPage();
       y = 20;
