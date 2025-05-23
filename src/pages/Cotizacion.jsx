@@ -10,7 +10,6 @@ import {
 } from "../components/EnviarCotizacionPdf";
 
 export const Cotizacion = () => {
-  const { id } = useParams();
   const { id: pedidoId } = useParams();
   const navigate = useNavigate();
   const API_URL = import.meta.env.VITE_API_URL;
@@ -141,7 +140,7 @@ export const Cotizacion = () => {
 
   const fetchPedido = async () => {
     try {
-      const response = await fetch(`${API_URL}/pedidos/${id}`);
+      const response = await fetch(`${API_URL}/pedidos/${pedidoId}`);
       const data = await response.json();
       setPedido(data);
     } catch (error) {
@@ -175,6 +174,12 @@ export const Cotizacion = () => {
   };
 
   const enviarCotizacionPorEmail = async () => {
+    if (!pedido || !articulos.length) {
+      alert(
+        "No se puede enviar la cotización: falta el pedido o los artículos."
+      );
+      return;
+    }
     try {
       await EnviarCotizacionPorEmail({
         pedido,
@@ -187,16 +192,21 @@ export const Cotizacion = () => {
       });
     } catch (error) {
       console.error("Error en enviarCotizacionPorEmail:", error);
+      alert("Error al enviar la cotización: " + error.message);
     }
   };
 
-  const descargarCotizacionPdf = () => {
+  const descargarCotizacionPdf = async () => {
+    if (!pedido || !articulos.length) {
+      alert("No se puede generar el PDF: falta el pedido o los artículos.");
+      return;
+    }
     try {
-      const doc = GenerarCotizacionPdf({ pedido, articulos });
+      const doc = await GenerarCotizacionPdf({ pedido, articulos });
       doc.save(`cotizacion_pedido_${pedido.numero_pedido}.pdf`);
     } catch (error) {
       console.error("Error al descargar PDF:", error);
-      alert("Error al generar el PDF para descarga");
+      alert("Error al generar el PDF: " + error.message);
     }
   };
 
@@ -229,7 +239,6 @@ export const Cotizacion = () => {
   const calculatePrice = (prenda, color, talle, tela, agregados) => {
     let costoUnitario = 0;
 
-    // Calcular costo base si hay tela, prenda y color
     if (tela && prenda && color) {
       const telaObj = telas.find((t) => t.nombre === tela);
       const prendaObj = prendas.find((p) => p.nombre === prenda);
@@ -239,8 +248,21 @@ export const Cotizacion = () => {
       const consumoColor = colorObj ? colorObj.consumo : 0;
 
       const talleFactor = {
-        2: 0.4, 4: 0.45, 6: 0.5, 8: 0.55, 10: 0.6, 12: 0.65, 14: 0.7,
-        XS: 0.7, S: 0.7, M: 0.75, L: 0.8, XL: 0.85, "2XL": 1.03, "3XL": 1.15, "4XL": 1.2,
+        2: 0.4,
+        4: 0.45,
+        6: 0.5,
+        8: 0.55,
+        10: 0.6,
+        12: 0.65,
+        14: 0.7,
+        XS: 0.7,
+        S: 0.7,
+        M: 0.75,
+        L: 0.8,
+        XL: 0.85,
+        "2XL": 1.03,
+        "3XL": 1.15,
+        "4XL": 1.2,
       };
 
       const talleMultiplier = talle ? talleFactor[talle] || 0.7 : 0.7;
@@ -248,13 +270,11 @@ export const Cotizacion = () => {
       costoUnitario += basePrice * consumoTotal * talleMultiplier;
     }
 
-    // Sumar precios de agregados
     const agregadoPrices = agregados.reduce((sum, agregado) => {
       const agregadoData = todosLosAgregados.find((a) => a.nombre === agregado);
       return sum + (agregadoData ? agregadoData.precio : 0);
     }, 0);
 
-    // Sumar costos de producción
     const costosTotal = costosProduccion.reduce((sum, costo) => {
       const cantidad = costosCantidades[costo.id] || 0;
       return sum + costo.precio * cantidad;
@@ -273,8 +293,16 @@ export const Cotizacion = () => {
 
   const handleGuardar = async () => {
     try {
-      if (selectedAgregados.length === 0 && !selectedPrenda && !selectedTela && !selectedColor && !selectedTalle) {
-        alert("Por favor seleccione al menos un agregado o complete los campos de prenda, tela, color o talle.");
+      if (
+        selectedAgregados.length === 0 &&
+        !selectedPrenda &&
+        !selectedTela &&
+        !selectedColor &&
+        !selectedTalle
+      ) {
+        alert(
+          "Por favor seleccione al menos un agregado o complete los campos de prenda, tela, color o talle."
+        );
         return;
       }
 
@@ -427,8 +455,16 @@ export const Cotizacion = () => {
     if (!editingArticulo) return;
 
     try {
-      if (selectedAgregados.length === 0 && !selectedPrenda && !selectedTela && !selectedColor && !selectedTalle) {
-        alert("Por favor seleccione al menos un agregado o complete los campos de prenda, tela, color o talle.");
+      if (
+        selectedAgregados.length === 0 &&
+        !selectedPrenda &&
+        !selectedTela &&
+        !selectedColor &&
+        !selectedTalle
+      ) {
+        alert(
+          "Por favor seleccione al menos un agregado o complete los campos de prenda, tela, color o talle."
+        );
         return;
       }
 
@@ -680,10 +716,11 @@ export const Cotizacion = () => {
         <div className="flex gap-2">
           {sendStatus && (
             <div
-              className={`mt-2 p-2 rounded ${sendStatus.success
-                ? "bg-green-100 text-green-800"
-                : "bg-red-100 text-red-800"
-                }`}
+              className={`mt-2 p-2 rounded ${
+                sendStatus.success
+                  ? "bg-green-100 text-green-800"
+                  : "bg-red-100 text-red-800"
+              }`}
             >
               {sendStatus.message}
             </div>

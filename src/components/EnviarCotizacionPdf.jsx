@@ -1,14 +1,36 @@
 import jsPDF from "jspdf";
+import logo from "../../public/faviconsolsports.png";
 
-export const GenerarCotizacionPdf = ({ pedido, articulos }) => {
+export const GenerarCotizacionPdf = async ({ pedido, articulos }) => {
   const doc = new jsPDF();
 
-  const imgData = "./solsport/solsport.png";
+  const getBase64Image = (imgUrl) => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.src = imgUrl;
+      img.crossOrigin = "Anonymous";
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0);
+        const dataURL = canvas.toDataURL("image/png");
+        resolve(dataURL);
+      };
+      img.onerror = () =>
+        reject(new Error(`No se pudo cargar la imagen: ${imgUrl}`));
+    });
+  };
+
   try {
-    doc.addImage(imgData, 'PNG', 15, 10, 40, 20);
+    const base64Img = await getBase64Image(logo); 
+   doc.addImage(base64Img, "PNG", 17.5, 14, 40, 40); 
   } catch (e) {
-    console.error('Error al añadir imagen:', e);
-  } doc.setFontSize(12);
+    console.error("Error al añadir imagen:", e);
+  }
+
+  doc.setFontSize(12);
   doc.setTextColor(0, 0, 0);
   doc.setFont("helvetica", "bold");
   doc.text(
@@ -16,7 +38,6 @@ export const GenerarCotizacionPdf = ({ pedido, articulos }) => {
     60,
     15
   );
-
   doc.setFont("helvetica", "normal");
   doc.text("Correo Electrónico: Solsportindumentaria@gmail.com", 60, 22);
   doc.text("Dirección: Bv. 25 de Mayo 850", 60, 29);
@@ -49,23 +70,20 @@ export const GenerarCotizacionPdf = ({ pedido, articulos }) => {
 
   doc.setFont("helvetica", "normal");
   articulos.forEach((articulo) => {
-    const row = [
-      articulo.nombre,
-      articulo.tela,
-      "", // Dejar vacío para no mostrar agregados en la misma fila
-      `$${articulo.precio}`,
-    ];
+    const row = [articulo.nombre, articulo.tela, "", `$${articulo.precio}`];
 
     row.forEach((cell, index) => {
-      const safeText = typeof cell === "string" || typeof cell === "number" ? String(cell) : "";
+      const safeText =
+        typeof cell === "string" || typeof cell === "number"
+          ? String(cell)
+          : "";
       doc.text(safeText, 15 + index * 45, y);
     });
 
-    // Mostrar agregados uno debajo del otro
     if (Array.isArray(articulo.agregados) && articulo.agregados.length > 0) {
       y += 5;
       articulo.agregados.forEach((agregado) => {
-        doc.text(agregado, 105, y); // Ajusta 105 según la columna de "Agregados"
+        doc.text(agregado, 105, y);
         y += 5;
       });
     }
@@ -78,10 +96,9 @@ export const GenerarCotizacionPdf = ({ pedido, articulos }) => {
     } else {
       y += 10;
     }
-    // Agregar línea divisoria entre artículos
     doc.setDrawColor(0, 0, 0);
-    doc.line(15, y, 195, y); // Línea horizontal después de cada artículo
-    y += 5; // Espacio después de la línea
+    doc.line(15, y, 195, y);
+    y += 5;
     if (y > 250) {
       doc.addPage();
       y = 20;
@@ -132,7 +149,7 @@ export const EnviarCotizacionPorEmail = async ({
   setSendStatus(null);
 
   try {
-    const doc = GenerarCotizacionPdf({ pedido, articulos });
+    const doc = await GenerarCotizacionPdf({ pedido, articulos });
     const pdfBlob = doc.output("blob");
     const reader = new FileReader();
     reader.readAsDataURL(pdfBlob);
