@@ -31,6 +31,10 @@ export const Cotizacion = () => {
     "2XL",
     "3XL",
     "4XL",
+    "2 a 8",
+    "10 a XS",
+    "S a XL",
+    "2XL a 3XL",
   ]);
   const [pedido, setPedido] = useState(null);
   const [todosLosAgregados, setTodosLosAgregados] = useState([]);
@@ -291,6 +295,16 @@ export const Cotizacion = () => {
     };
   };
 
+  const getTalleRange = (talle) => {
+    const talleRanges = {
+      "2 a 8": ["2", "4", "6", "8"],
+      "10 a XS": ["10", "XS"],
+      "S a XL": ["S", "M", "L", "XL"],
+      "2XL a 3XL": ["2XL", "3XL"],
+    };
+    return talleRanges[talle] || [talle];
+  };
+
   const handleGuardar = async () => {
     try {
       if (
@@ -306,88 +320,93 @@ export const Cotizacion = () => {
         return;
       }
 
+      const tallesToCreate = getTalleRange(selectedTalle);
       const colorObj = selectedColor
         ? colores.find((c) => c.nombre === selectedColor)
         : null;
 
-      const calculos = calculatePrice(
-        selectedPrenda,
-        selectedColor,
-        selectedTalle,
-        selectedTela,
-        selectedAgregados
-      ) || {
-        costoUnitario: 0,
-        costoTotal: 0,
-        precioUnitario: 0,
-      };
+      const nuevosArticulos = [];
+      for (const talle of tallesToCreate) {
+        const calculos = calculatePrice(
+          selectedPrenda,
+          selectedColor,
+          talle,
+          selectedTela,
+          selectedAgregados
+        ) || {
+          costoUnitario: 0,
+          costoTotal: 0,
+          precioUnitario: 0,
+        };
 
-      const articuloData = {
-        numero_articulo: numeroArticulo,
-        nombre: selectedPrenda,
-        color_id: colorObj ? colorObj.id : null,
-        talle: selectedTalle,
-        tela: selectedTela,
-        agregados: selectedAgregados,
-        cantidad: Number(cantidad),
-        costo: Number(calculos.costoUnitario),
-        precio: Number(calculos.precioUnitario),
-        ganancia: Number(ganancia),
-        comentario: comentario,
-        prioridad: prioridad ? Number(prioridad) : null,
-        pedidos_id: pedidoId,
-        ruta: "",
-      };
+        const articuloData = {
+          numero_articulo: numeroArticulo,
+          nombre: selectedPrenda,
+          color_id: colorObj ? colorObj.id : null,
+          talle: talle,
+          tela: selectedTela,
+          agregados: selectedAgregados,
+          cantidad: Number(cantidad),
+          costo: Number(calculos.costoUnitario),
+          precio: Number(calculos.precioUnitario),
+          ganancia: Number(ganancia),
+          comentario: comentario,
+          prioridad: prioridad ? Number(prioridad) : null,
+          pedidos_id: pedidoId,
+          ruta: "",
+        };
 
-      const articuloResponse = await fetch(`${API_URL}/articulos`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(articuloData),
-      });
+        const articuloResponse = await fetch(`${API_URL}/articulos`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify(articuloData),
+        });
 
-      if (!articuloResponse.ok) {
-        const errorData = await articuloResponse.json();
-        throw new Error(errorData.message || "Error al guardar artículo");
+        if (!articuloResponse.ok) {
+          const errorData = await articuloResponse.json();
+          throw new Error(errorData.message || "Error al guardar artículo");
+        }
+
+        const nuevoArticulo = await articuloResponse.json();
+        nuevosArticulos.push(nuevoArticulo);
+
+        const costosAGuardar = costosProduccion
+          .filter((costo) => (costosCantidades[costo.id] || 0) > 0)
+          .map((costo) => ({
+            articulo_id: nuevoArticulo.id,
+            costo_id: costo.id,
+            cantidad: Number(costosCantidades[costo.id] || 0),
+          }));
+
+        await Promise.all(
+          costosAGuardar.map(async (costo) => {
+            const response = await fetch(
+              `${API_URL}/costos_articulo_produccion`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Accept: "application/json",
+                },
+                body: JSON.stringify(costo),
+              }
+            );
+
+            if (!response.ok) {
+              const error = await response.json();
+              throw new Error(
+                `Error al guardar costo ${costo.costo_id}: ${error.message}`
+              );
+            }
+            return await response.json();
+          })
+        );
       }
 
-      const nuevoArticulo = await articuloResponse.json();
-
-      const costosAGuardar = costosProduccion
-        .filter((costo) => (costosCantidades[costo.id] || 0) > 0)
-        .map((costo) => ({
-          articulo_id: nuevoArticulo.id,
-          costo_id: costo.id,
-          cantidad: Number(costosCantidades[costo.id] || 0),
-        }));
-
-      await Promise.all(
-        costosAGuardar.map(async (costo) => {
-          const response = await fetch(
-            `${API_URL}/costos_articulo_produccion`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-              },
-              body: JSON.stringify(costo),
-            }
-          );
-
-          if (!response.ok) {
-            const error = await response.json();
-            throw new Error(
-              `Error al guardar costo ${costo.costo_id}: ${error.message}`
-            );
-          }
-          return await response.json();
-        })
-      );
-
-      setArticulos((prev) => [...prev, nuevoArticulo]);
+      setArticulos((prev) => [...prev, ...nuevosArticulos]);
       resetForm();
       fetchArticulosDelPedido();
     } catch (error) {
