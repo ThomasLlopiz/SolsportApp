@@ -229,15 +229,76 @@ export const Cotizacion = () => {
   const handleAgregarAgregado = () => {
     if (
       agregadoParaAgregar &&
-      !selectedAgregados.includes(agregadoParaAgregar)
+      !selectedAgregados.some((ag) => ag.nombre === agregadoParaAgregar)
     ) {
-      setSelectedAgregados((prev) => [...prev, agregadoParaAgregar]);
+      setSelectedAgregados((prev) => [
+        ...prev,
+        { nombre: agregadoParaAgregar, count: 1 },
+      ]);
+      setCantidad((prev) => prev + 1);
       setAgregadoParaAgregar("");
     }
   };
 
-  const handleRemoveAgregado = (agregado) => {
-    setSelectedAgregados((prev) => prev.filter((item) => item !== agregado));
+  const handleRemoveAgregado = (nombre) => {
+    const agregado = selectedAgregados.find((ag) => ag.nombre === nombre);
+    if (agregado) {
+      setSelectedAgregados((prev) => prev.filter((ag) => ag.nombre !== nombre));
+      setCantidad((prev) => Math.max(1, prev - agregado.count));
+    }
+  };
+
+  const handleIncrementAgregado = (nombre) => {
+    setSelectedAgregados((prev) =>
+      prev.map((ag) =>
+        ag.nombre === nombre ? { ...ag, count: ag.count + 1 } : ag
+      )
+    );
+    setCantidad((prev) => prev + 1);
+  };
+
+  const handleDecrementAgregado = (nombre) => {
+    const agregado = selectedAgregados.find((ag) => ag.nombre === nombre);
+    if (agregado && agregado.count > 1) {
+      setSelectedAgregados((prev) =>
+        prev.map((ag) =>
+          ag.nombre === nombre ? { ...ag, count: ag.count - 1 } : ag
+        )
+      );
+      setCantidad((prev) => prev - 1);
+    } else {
+      handleRemoveAgregado(nombre);
+    }
+  };
+
+  const formatAgregadosForBackend = (agregados) => {
+    return agregados.map((ag) => `${ag.nombre}:${ag.count}`).join(",");
+  };
+
+  const parseAgregadosFromBackend = (agregadosInput) => {
+    let agregadosString = "";
+    if (Array.isArray(agregadosInput)) {
+      agregadosString = agregadosInput.join(",");
+    } else if (typeof agregadosInput === "string" && agregadosInput.trim()) {
+      agregadosString = agregadosInput;
+    } else {
+      return [];
+    }
+
+    const agregadosArray = agregadosString.includes(",")
+      ? agregadosString.split(",")
+      : [agregadosString];
+
+    return agregadosArray
+      .filter((item) => item.includes(":"))
+      .map((item) => {
+        const [nombre, count] = item.split(":");
+        return {
+          nombre: nombre ? nombre.trim() : "",
+          count: parseInt(count) || 1,
+        };
+      })
+      .filter((ag) => ag.nombre);
   };
 
   const calculatePrice = (prenda, color, talle, tela, agregados) => {
@@ -275,8 +336,10 @@ export const Cotizacion = () => {
     }
 
     const agregadoPrices = agregados.reduce((sum, agregado) => {
-      const agregadoData = todosLosAgregados.find((a) => a.nombre === agregado);
-      return sum + (agregadoData ? agregadoData.precio : 0);
+      const agregadoData = todosLosAgregados.find(
+        (a) => a.nombre === agregado.nombre
+      );
+      return sum + (agregadoData ? agregadoData.precio * agregado.count : 0);
     }, 0);
 
     const costosTotal = costosProduccion.reduce((sum, costo) => {
@@ -345,7 +408,7 @@ export const Cotizacion = () => {
           color_id: colorObj ? colorObj.id : null,
           talle: talle,
           tela: selectedTela,
-          agregados: selectedAgregados,
+          agregados: formatAgregadosForBackend(selectedAgregados),
           cantidad: Number(cantidad),
           costo: Number(calculos.costoUnitario),
           precio: Number(calculos.precioUnitario),
@@ -438,21 +501,24 @@ export const Cotizacion = () => {
 
   const handleStartEdit = async (articulo) => {
     try {
+      console.log("Editing articulo:", articulo);
+      console.log("Raw agregados:", articulo.agregados);
       const colorObj = colores.find((c) => c.id === articulo.color_id);
-      setNumeroArticulo(articulo.numero_articulo);
-      setSelectedPrenda(articulo.nombre);
+      setNumeroArticulo(articulo.numero_articulo || "");
+      setSelectedPrenda(articulo.nombre || "");
       setSelectedColor(colorObj ? colorObj.nombre : "");
-      setSelectedTalle(articulo.talle);
-      setSelectedTela(articulo.tela);
-      setSelectedAgregados(
-        Array.isArray(articulo.agregados) ? [...articulo.agregados] : []
-      );
-      setCantidad(articulo.cantidad);
+      setSelectedTalle(articulo.talle || "");
+      setSelectedTela(articulo.tela || "");
+      const parsedAgregados = parseAgregadosFromBackend(articulo.agregados);
+      console.log("Parsed agregados:", parsedAgregados);
+      setSelectedAgregados(parsedAgregados);
+      setCantidad(articulo.cantidad || 1);
       setComentario(articulo.comentario || "");
       setGanancia(articulo.ganancia || 0);
       setPrioridad(articulo.prioridad || null);
       setIsEditing(true);
       setEditingArticulo(articulo);
+      setAgregadoParaAgregar("");
 
       const response = await fetch(
         `${API_URL}/costos_articulo_produccion?articulo_id=${articulo.id}`
@@ -466,7 +532,9 @@ export const Cotizacion = () => {
 
       setCostosCantidades(nuevosCostos);
     } catch (error) {
-      console.error("Error al cargar costos existentes:", error);
+      console.error("Error al cargar datos para edición:", error);
+      setSelectedAgregados([]);
+      setAgregadoParaAgregar("");
     }
   };
 
@@ -509,10 +577,10 @@ export const Cotizacion = () => {
         color_id: colorObj ? colorObj.id : null,
         talle: selectedTalle,
         tela: selectedTela,
-        agregados: selectedAgregados,
+        agregados: formatAgregadosForBackend(selectedAgregados),
         cantidad: Number(cantidad),
-        costo: Number(calculos.costoUnitario.toFixed(2)),
-        precio: Number(calculos.precioUnitario.toFixed(2)),
+        costo: Number(calculos.costoUnitario),
+        precio: Number(calculos.precioUnitario),
         ganancia: Number(ganancia),
         comentario: comentario,
         prioridad: prioridad ? Number(prioridad) : null,
@@ -635,7 +703,7 @@ export const Cotizacion = () => {
         <div className="mt-4">
           <button
             onClick={handleBackClick}
-            className="flex items-center bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+            className="flex items-center bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
           >
             <ArrowLeftIcon className="h-5 w-5 mr-2" />
             Volver a la lista de cotizaciones
@@ -673,6 +741,8 @@ export const Cotizacion = () => {
           setComentario={setComentario}
           handleAgregarAgregado={handleAgregarAgregado}
           handleRemoveAgregado={handleRemoveAgregado}
+          handleIncrementAgregado={handleIncrementAgregado}
+          handleDecrementAgregado={handleDecrementAgregado}
         />
 
         <CostosProduccion
@@ -694,14 +764,14 @@ export const Cotizacion = () => {
               <button
                 type="button"
                 onClick={handleUpdateArticulo}
-                className="bg-green-500 text-white px-4 py-2 rounded"
+                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
               >
                 Actualizar Artículo
               </button>
               <button
                 type="button"
                 onClick={resetForm}
-                className="bg-gray-500 text-white px-4 py-2 rounded"
+                className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
               >
                 Cancelar
               </button>
@@ -710,7 +780,7 @@ export const Cotizacion = () => {
             <button
               type="button"
               onClick={handleGuardar}
-              className="bg-blue-500 text-white px-4 py-2 rounded"
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
             >
               Guardar Artículo
             </button>
@@ -735,7 +805,7 @@ export const Cotizacion = () => {
         <div className="flex gap-2">
           {sendStatus && (
             <div
-              className={`mt-2 p-2 rounded ${
+              className={`mt-2 p-2 rounded-md shadow-sm ${
                 sendStatus.success
                   ? "bg-green-100 text-green-800"
                   : "bg-red-100 text-red-800"
@@ -744,7 +814,7 @@ export const Cotizacion = () => {
               {sendStatus.message}
             </div>
           )}
-          <div className="flex items-center justify-center">
+          <div className="flex items-center">
             <input
               type="email"
               id="email"
@@ -754,7 +824,6 @@ export const Cotizacion = () => {
               placeholder="Ingrese el email del cliente"
             />
           </div>
-
           <button
             onClick={enviarCotizacionPorEmail}
             disabled={isSending}

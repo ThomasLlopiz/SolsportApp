@@ -1,12 +1,14 @@
+import { PlusIcon, MinusIcon } from "@heroicons/react/24/outline";
+
 const ArticuloForm = ({
   prendas,
-  colores, 
+  colores,
   talles,
   telas,
   todosLosAgregados,
   numeroArticulo,
   selectedPrenda,
-  selectedColor, 
+  selectedColor,
   selectedTalle,
   selectedTela,
   selectedAgregados,
@@ -16,7 +18,7 @@ const ArticuloForm = ({
   comentario,
   setNumeroArticulo,
   setSelectedPrenda,
-  setSelectedColor, 
+  setSelectedColor,
   setSelectedTalle,
   setSelectedTela,
   setSelectedAgregados,
@@ -26,9 +28,11 @@ const ArticuloForm = ({
   setComentario,
   handleAgregarAgregado,
   handleRemoveAgregado,
+  handleIncrementAgregado,
+  handleDecrementAgregado,
 }) => {
   return (
-    <div className="flex flex-col gap-4 w-">
+    <div className="flex flex-col gap-4 w-full">
       <div className="flex w-full gap-4">
         {/* Número de Artículo */}
         <div className="w-full">
@@ -58,7 +62,7 @@ const ArticuloForm = ({
             ))}
           </select>
         </div>
-        {/*  COLOR */}
+        {/* COLOR */}
         <div className="w-full">
           <label className="block text-gray-700">Color</label>
           <select
@@ -123,7 +127,7 @@ const ArticuloForm = ({
               setGanancia(Math.min(parseFloat(e.target.value), 100))
             }
             className="w-full p-2 border border-gray-300 rounded"
-            min=""
+            min="0"
             max="100"
             step="0.1"
           />
@@ -133,15 +137,18 @@ const ArticuloForm = ({
         {/* CANTIDAD */}
         <div className="w-full">
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Cantidad
+            Cantidad Total
           </label>
           <input
             type="number"
             value={cantidad}
-            onChange={(e) => setCantidad(e.target.value)}
+            onChange={(e) =>
+              setCantidad(Math.max(1, parseInt(e.target.value) || 1))
+            }
             className="w-full p-2 border border-gray-300 rounded"
             min="1"
             required
+            readOnly
           />
         </div>
         {/* AGREGADOS */}
@@ -151,14 +158,17 @@ const ArticuloForm = ({
           </label>
           <div className="flex">
             <select
-              value={agregadoParaAgregar}
+              value={agregadoParaAgregar || ""}
               onChange={(e) => setAgregadoParaAgregar(e.target.value)}
               className="flex-1 p-2 border border-gray-300 rounded"
             >
               <option value="">Seleccionar agregado</option>
               {todosLosAgregados
                 .filter(
-                  (agregado) => !selectedAgregados.includes(agregado.nombre)
+                  (agregado) =>
+                    !selectedAgregados.some(
+                      (sel) => sel.nombre === agregado.nombre
+                    )
                 )
                 .map((agregado, index) => (
                   <option key={index} value={agregado.nombre}>
@@ -185,14 +195,32 @@ const ArticuloForm = ({
               <ul className="space-y-1">
                 {selectedAgregados.map((agregado, index) => (
                   <li key={index} className="flex justify-between items-center">
-                    <span>{agregado}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveAgregado(agregado)}
-                      className="text-red-500"
-                    >
-                      ×
-                    </button>
+                    <span>
+                      {agregado.nombre} (x{agregado.count})
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleIncrementAgregado(agregado.nombre)}
+                        className="text-green-500 hover:text-green-700"
+                      >
+                        <PlusIcon className="h-5 w-5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDecrementAgregado(agregado.nombre)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <MinusIcon className="h-5 w-5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveAgregado(agregado.nombre)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        ×
+                      </button>
+                    </div>
                   </li>
                 ))}
               </ul>
