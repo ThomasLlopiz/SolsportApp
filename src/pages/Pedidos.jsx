@@ -20,6 +20,7 @@ export const Pedidos = () => {
   const [editPedido, setEditPedido] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [showTerminados, setShowTerminados] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
 
   const API_URL = import.meta.env.VITE_API_URL;
@@ -29,11 +30,15 @@ export const Pedidos = () => {
   }, []);
 
   useEffect(() => {
-    const filtered = pedidos.filter((pedido) =>
-      showTerminados
-        ? pedido.terminado === 1
-        : pedido.terminado === 0 || pedido.estado === 0
-    );
+    const filtered = pedidos
+      .filter((pedido) =>
+        showTerminados
+          ? pedido.terminado === 1
+          : pedido.terminado === 0 || pedido.estado === 0
+      )
+      .filter((pedido) =>
+        pedido.numero_pedido.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     const sorted = filtered.sort((a, b) => {
       const dateA = a.fecha_estimada
         ? new Date(Date.parse(a.fecha_estimada))
@@ -44,7 +49,7 @@ export const Pedidos = () => {
       return dateA - dateB;
     });
     setFilteredPedidos(sorted);
-  }, [showTerminados, pedidos]);
+  }, [showTerminados, pedidos, searchTerm]);
 
   useEffect(() => {
     if (
@@ -176,22 +181,6 @@ export const Pedidos = () => {
     navigate(`/pedidos/${pedidoId}`);
   };
 
-  useEffect(() => {
-    const filtered = pedidos.filter((pedido) =>
-      showTerminados ? pedido.terminado === 1 : pedido.terminado === 0
-    );
-    const sorted = filtered.sort((a, b) => {
-      const dateA = a.fecha_estimada
-        ? new Date(Date.parse(a.fecha_estimada))
-        : new Date(9999, 11, 31);
-      const dateB = b.fecha_estimada
-        ? new Date(Date.parse(b.fecha_estimada))
-        : new Date(9999, 11, 31);
-      return dateA - dateB;
-    });
-    setFilteredPedidos(sorted);
-  }, [showTerminados, pedidos]);
-
   const getRowColor = (pedido) => {
     if (pedido.estado !== 1 || pedido.terminado !== 0) return "";
     if (!pedido.fecha_estimada) return "";
@@ -251,6 +240,15 @@ export const Pedidos = () => {
           </div>
         </div>
       </div>
+      <div className="mb-6">
+        <input
+          type="text"
+          placeholder="Buscar por número de pedido..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full max-w-md p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
       <div className="overflow-x-auto bg-white shadow-md rounded">
         <table className="min-w-full bg-white">
           <thead className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
@@ -270,7 +268,7 @@ export const Pedidos = () => {
             {filteredPedidos.map((pedido) => (
               <tr
                 key={pedido.id}
-                className={`border-b border-gray-200 rounder-md ${getRowColor(
+                className={`border-b border-gray-200 rounded-md ${getRowColor(
                   pedido
                 )}`}
               >
