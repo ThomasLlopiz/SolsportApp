@@ -29,7 +29,10 @@ export const Login = () => {
           navigate("/cotizador");
         } else if (data.rol === "usuario") {
           navigate("/pedidos");
+        } else if (data.rol === "superadmin") {
+          navigate("/usuarios");
         }
+
       } else {
         setError("Credenciales incorrectas");
       }
