@@ -185,7 +185,6 @@ export const Articulos = ({ pedidoId }) => {
       }
 
       for (let pair of formData.entries()) {
-        console.log(`${pair[0]}: ${pair[1]}`);
       }
 
       const response = await fetch(`${API_URL}/articulos/${editArticulo.id}`, {
