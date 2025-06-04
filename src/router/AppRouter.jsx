@@ -1,20 +1,19 @@
 import { Routes, Route } from "react-router-dom";
-
-import { Login } from "../pages/Login";
-import { Pedidos } from "../pages/Pedidos";
-import { Pedido } from "../pages/Pedido";
-import { Articulos } from "../pages/Articulos";
-import { Articulo } from "../pages/Articulo";
-// import { PrePage } from "../pages/PrePage";
-import { Cotizador } from "../pages/Cotizador";
-import { Cotizacion } from "../pages/Cotizacion";
-import { Telas } from "../pages/Telas";
-import { Agregados } from "../pages/Agregados";
 import {
   PrivateAdminRoute,
   PrivateUserRoute,
   PrivateSuperAdminRoute,
 } from "../hooks/PrivateRoutes";
+import { Login } from "../pages/Login";
+import { Pedidos } from "../pages/Pedidos";
+import { Pedido } from "../pages/Pedido";
+import { Articulos } from "../pages/Articulos";
+import { Articulo } from "../pages/Articulo";
+import { Cotizador } from "../pages/Cotizador";
+import { Cotizacion } from "../pages/Cotizacion";
+import { Telas } from "../pages/Telas";
+import { Agregados } from "../pages/Agregados";
+
 import { CostoProduccion } from "../pages/CostoProduccion";
 import { Prendas } from "../pages/Prendas";
 import { Usuarios } from "../pages/Usuarios";
@@ -24,12 +23,7 @@ export const AppRouter = () => {
   return (
     <Routes>
       <Route path="/" element={<Login />} />
-
       {/* RUTAS USUARIOS */}
-      {/* <Route
-        path="/prepage"
-        element={<PrivateUserRoute element={<PrePage />} />}
-      /> */}
       <Route
         path="/pedidos"
         element={<PrivateUserRoute element={<Pedidos />} />}
@@ -73,12 +67,12 @@ export const AppRouter = () => {
         element={<PrivateAdminRoute element={<Agregados />} />}
       />
       <Route
-        path="/usuarios"
-        element={<PrivateSuperAdminRoute element={<Usuarios />} />}
-      />
-      <Route
         path="/colores"
         element={<PrivateAdminRoute element={<Colores />} />}
+      />
+            <Route
+        path="/usuarios"
+        element={<PrivateSuperAdminRoute element={<Usuarios />} />}
       />
     </Routes>
   );
