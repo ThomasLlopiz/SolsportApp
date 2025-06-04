@@ -26,10 +26,9 @@ export const Agregados = () => {
     try {
       const response = await fetch(`${API_URL}/agregados`);
       const data = await response.json();
-      setAgregados(data);
-    } catch (error) {
-      console.error("Error fetching agregados", error);
-    }
+      const sortedData = data.sort((a, b) => a.nombre.localeCompare(b.nombre));
+      setAgregados(sortedData);
+    } catch (error) {}
   };
 
   const handleUpdateAgregado = async (e) => {
@@ -45,9 +44,7 @@ export const Agregados = () => {
       setEditAgregado(null);
       setIsEditModalOpen(false);
       fetchAgregados();
-    } catch (error) {
-      console.error("Error updating agregado", error);
-    }
+    } catch (error) {}
   };
 
   const handleCreateAgregado = async (e) => {
@@ -63,9 +60,7 @@ export const Agregados = () => {
       setNewAgregado({ nombre: "", precio: "" });
       setIsCreateModalOpen(false);
       fetchAgregados();
-    } catch (error) {
-      console.error("Error creating agregado", error);
-    }
+    } catch (error) {}
   };
 
   const handleDeleteAgregado = async () => {
@@ -75,9 +70,7 @@ export const Agregados = () => {
       });
       setIsDeleteModalOpen(false);
       fetchAgregados();
-    } catch (error) {
-      console.error("Error deleting agregado", error);
-    }
+    } catch (error) {}
   };
 
   const handleEditClick = (agregado) => {
@@ -108,7 +101,6 @@ export const Agregados = () => {
         </button>
       </div>
 
-      {/* Modal de edición */}
       {isEditModalOpen && editAgregado && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
@@ -160,7 +152,6 @@ export const Agregados = () => {
         </div>
       )}
 
-      {/* Modal de creación */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
@@ -212,7 +203,6 @@ export const Agregados = () => {
         </div>
       )}
 
-      {/* Modal de confirmación de eliminación */}
       {isDeleteModalOpen && agregadoToDelete && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-sm">
@@ -238,7 +228,6 @@ export const Agregados = () => {
         </div>
       )}
 
-      {/* Botón para abrir el modal de creación */}
       <div className="flex mb-6 w-3/4 mx-auto">
         <button
           onClick={() => setIsCreateModalOpen(true)}
@@ -249,7 +238,6 @@ export const Agregados = () => {
         </button>
       </div>
 
-      {/* Tabla de Agregados */}
       <table className="w-3/4 mx-auto bg-white border border-gray-200">
         <thead>
           <tr>
