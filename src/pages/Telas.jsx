@@ -26,10 +26,9 @@ export const Telas = () => {
     try {
       const response = await fetch(`${API_URL}/telas`);
       const data = await response.json();
-      setTelas(data);
-    } catch (error) {
-      console.error("Error fetching telas", error);
-    }
+      const sortedData = data.sort((a, b) => a.nombre.localeCompare(b.nombre));
+      setTelas(sortedData);
+    } catch (error) {}
   };
 
   const handleUpdateTela = async (e) => {
@@ -45,9 +44,7 @@ export const Telas = () => {
       setEditTela(null);
       setIsEditModalOpen(false);
       fetchTelas();
-    } catch (error) {
-      console.error("Error updating tela", error);
-    }
+    } catch (error) {}
   };
 
   const handleCreateTela = async (e) => {
@@ -63,9 +60,7 @@ export const Telas = () => {
       setNewTela({ nombre: "", precio: "" });
       setIsCreateModalOpen(false);
       fetchTelas();
-    } catch (error) {
-      console.error("Error creating tela", error);
-    }
+    } catch (error) {}
   };
 
   const handleDeleteTela = async () => {
@@ -75,9 +70,7 @@ export const Telas = () => {
       });
       setIsDeleteModalOpen(false);
       fetchTelas();
-    } catch (error) {
-      console.error("Error deleting tela", error);
-    }
+    } catch (error) {}
   };
 
   const handleEditClick = (tela) => {
@@ -108,7 +101,6 @@ export const Telas = () => {
         </button>
       </div>
 
-      {/* Modal de edición */}
       {isEditModalOpen && editTela && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
@@ -160,7 +152,6 @@ export const Telas = () => {
         </div>
       )}
 
-      {/* Modal de creación */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
@@ -212,7 +203,6 @@ export const Telas = () => {
         </div>
       )}
 
-      {/* Modal de confirmación de eliminación */}
       {isDeleteModalOpen && telaToDelete && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-sm">
@@ -238,7 +228,6 @@ export const Telas = () => {
         </div>
       )}
 
-      {/* Botón para abrir el modal de creación */}
       <div className="flex mb-6 w-3/4 mx-auto">
         <button
           onClick={() => setIsCreateModalOpen(true)}
@@ -249,7 +238,6 @@ export const Telas = () => {
         </button>
       </div>
 
-      {/* Tabla de Telas */}
       <table className="w-3/4 mx-auto bg-white border border-gray-200">
         <thead>
           <tr>
