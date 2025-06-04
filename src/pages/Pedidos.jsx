@@ -21,12 +21,23 @@ export const Pedidos = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [showTerminados, setShowTerminados] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [usuarioNombre, setUsuarioNombre] = useState("Usuario desconocido");
   const navigate = useNavigate();
 
   const API_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     fetchPedidos();
+  }, []);
+
+  useEffect(() => {
+    const usuarioId = localStorage.getItem("usuario_id");
+    if (usuarioId) {
+      fetch(`${API_URL}/usuarios/${usuarioId}`)
+        .then((response) => response.json())
+        .then((data) => setUsuarioNombre(data.usuario || "Usuario desconocido"))
+        .catch(() => setUsuarioNombre("Usuario desconocido"));
+    }
   }, []);
 
   useEffect(() => {
@@ -126,7 +137,7 @@ export const Pedidos = () => {
           {
             body: `El pedido ahora está ${
               newTerminado === 1 ? "Terminado" : "En producción"
-            }.`,
+            }. Cambiado por ${usuarioNombre}.`,
             icon: "/icon.png",
           }
         );
@@ -138,7 +149,7 @@ export const Pedidos = () => {
             {
               body: `El pedido ahora está ${
                 newTerminado === 1 ? "Terminado" : "En producción"
-              }.`,
+              }. Cambiado por ${usuarioNombre}.`,
               icon: "/icon.png",
             }
           );
@@ -148,7 +159,7 @@ export const Pedidos = () => {
       toast.success(
         `El pedido #${pedidoActual.numero_pedido} ahora está ${
           newTerminado === 1 ? "Terminado" : "En producción"
-        }.`,
+        }. Cambiado por ${usuarioNombre}.`,
         {
           position: "top-right",
           autoClose: 3000,

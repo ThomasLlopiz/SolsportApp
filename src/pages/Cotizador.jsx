@@ -5,6 +5,7 @@ import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { useParams } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+
 const formatDate = (dateString) => {
   if (!dateString) return "";
   const date = new Date(dateString);
@@ -36,11 +37,31 @@ export const Cotizador = () => {
   const [editPedido, setEditPedido] = useState(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [usuarioNombre, setUsuarioNombre] = useState("Usuario desconocido");
   const navigate = useNavigate();
   const API_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     fetchPedidos();
+  }, []);
+
+  useEffect(() => {
+    const usuarioId = localStorage.getItem("usuario_id");
+    if (usuarioId) {
+      fetch(`${API_URL}/usuarios/${usuarioId}`)
+        .then((response) => response.json())
+        .then((data) => setUsuarioNombre(data.usuario || "Usuario desconocido"))
+        .catch(() => setUsuarioNombre("Usuario desconocido"));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (
+      Notification.permission !== "granted" &&
+      Notification.permission !== "denied"
+    ) {
+      Notification.requestPermission();
+    }
   }, []);
 
   const handleBackClick = () => {
@@ -59,9 +80,7 @@ export const Cotizador = () => {
         estado: pedido.estado || false,
       }));
       setPedidos(pedidosConEstado);
-    } catch (error) {
-      console.error("Error fetching pedidos", error);
-    }
+    } catch (error) {}
   };
 
   const handleCreatePedido = async (e) => {
@@ -80,6 +99,7 @@ export const Cotizador = () => {
       }
 
       setNewPedido({
+        numero_pedido: "",
         nombre_cliente: "",
         correo: "",
         telefono: "",
@@ -89,8 +109,15 @@ export const Cotizador = () => {
       });
       setIsCreateModalOpen(false);
       fetchPedidos();
+      toast.success("Cotización creada exitosamente.", {
+        position: "top-right",
+        autoClose: 3000,
+      });
     } catch (error) {
-      console.error("Error creating pedido", error);
+      toast.error("Error al crear la cotización: " + error.message, {
+        position: "top-right",
+        autoClose: 3000,
+      });
     }
   };
 
@@ -112,8 +139,15 @@ export const Cotizador = () => {
       setEditPedido(null);
       setIsEditModalOpen(false);
       fetchPedidos();
+      toast.success("Cotización actualizada exitosamente.", {
+        position: "top-right",
+        autoClose: 3000,
+      });
     } catch (error) {
-      console.error("Error updating pedido", error);
+      toast.error("Error al actualizar la cotización: " + error.message, {
+        position: "top-right",
+        autoClose: 3000,
+      });
     }
   };
 
@@ -171,7 +205,7 @@ export const Cotizador = () => {
           {
             body: `El pedido ahora está ${
               nuevoEstado ? "Pagado" : "No pagado"
-            }.`,
+            }. Cambiado por ${usuarioNombre}.`,
             icon: "/path/to/icon.png",
           }
         );
@@ -183,7 +217,7 @@ export const Cotizador = () => {
             {
               body: `El pedido ahora está ${
                 nuevoEstado ? "Pagado" : "No pagado"
-              }.`,
+              }. Cambiado por ${usuarioNombre}.`,
               icon: "/path/to/icon.png",
             }
           );
@@ -193,7 +227,7 @@ export const Cotizador = () => {
       toast.success(
         `El estado del pedido #${pedidoActual.numero_pedido} ha cambiado a ${
           nuevoEstado ? "Pagado" : "No pagado"
-        }.`,
+        }. Cambiado por ${usuarioNombre}.`,
         {
           position: "top-right",
           autoClose: 3000,
@@ -204,21 +238,13 @@ export const Cotizador = () => {
         }
       );
     } catch (error) {
-      console.error("Error updating estado", error);
       toast.error("Error al actualizar el estado: " + error.message, {
         position: "top-right",
         autoClose: 3000,
       });
     }
   };
-  useEffect(() => {
-    if (
-      Notification.permission !== "granted" &&
-      Notification.permission !== "denied"
-    ) {
-      Notification.requestPermission();
-    }
-  }, []);
+
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <ToastContainer />
@@ -249,7 +275,9 @@ export const Cotizador = () => {
       {isCreateModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
-            <h2 className="text-xl font-semibold mb-4">Crear nueva cotización</h2>
+            <h2 className="text-xl font-semibold mb-4">
+              Crear nueva cotización
+            </h2>
             <form onSubmit={handleCreatePedido}>
               <div className="mb-4">
                 <label className="block text-gray-700">Número de Pedido</label>
@@ -446,7 +474,7 @@ export const Cotizador = () => {
               <th className="py-3 px-6 text-left">Fecha de Pago</th>
               <th className="py-3 px-6 text-left">Fecha Estimada</th>
               <th className="py-3 px-6 text-center">Acciones</th>
-              <th className="py-3 px-6 text-center">Estado</th>
+              <th className="py-3 px-6 text-center">Pagado</th>
             </tr>
           </thead>
           <tbody className="text-gray-600 text-sm font-light">
