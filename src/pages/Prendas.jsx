@@ -26,7 +26,8 @@ export const Prendas = () => {
     try {
       const response = await fetch(`${API_URL}/prendas`);
       const data = await response.json();
-      setPrendas(data);
+      const sortedData = data.sort((a, b) => a.nombre.localeCompare(b.nombre));
+      setPrendas(sortedData);
     } catch (error) {
       console.error("Error fetching prendas", error);
     }
@@ -108,7 +109,6 @@ export const Prendas = () => {
         </button>
       </div>
 
-      {/* Modal de edición */}
       {isEditModalOpen && editPrenda && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
@@ -160,7 +160,6 @@ export const Prendas = () => {
         </div>
       )}
 
-      {/* Modal de creación */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
@@ -212,7 +211,6 @@ export const Prendas = () => {
         </div>
       )}
 
-      {/* Modal de confirmación de eliminación */}
       {isDeleteModalOpen && prendaToDelete && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-sm">
@@ -238,7 +236,6 @@ export const Prendas = () => {
         </div>
       )}
 
-      {/* Botón para abrir el modal de creación */}
       <div className="flex mb-6 w-3/4 mx-auto">
         <button
           onClick={() => setIsCreateModalOpen(true)}
@@ -249,7 +246,6 @@ export const Prendas = () => {
         </button>
       </div>
 
-      {/* Tabla de Prendas */}
       <table className="w-3/4 mx-auto bg-white border border-gray-200">
         <thead>
           <tr>
