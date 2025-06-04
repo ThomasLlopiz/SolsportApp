@@ -30,14 +30,16 @@ export const Pedidos = () => {
 
   useEffect(() => {
     const filtered = pedidos.filter((pedido) =>
-      showTerminados ? pedido.terminado === 1 : pedido.terminado === 0
+      showTerminados
+        ? pedido.terminado === 1
+        : pedido.terminado === 0 || pedido.estado === 0
     );
     const sorted = filtered.sort((a, b) => {
       const dateA = a.fecha_estimada
-        ? new Date(a.fecha_estimada)
+        ? new Date(Date.parse(a.fecha_estimada))
         : new Date(9999, 11, 31);
       const dateB = b.fecha_estimada
-        ? new Date(b.fecha_estimada)
+        ? new Date(Date.parse(b.fecha_estimada))
         : new Date(9999, 11, 31);
       return dateA - dateB;
     });
@@ -57,11 +59,8 @@ export const Pedidos = () => {
     try {
       const response = await fetch(`${API_URL}/pedidos`);
       const data = await response.json();
-      const pedidosFiltrados = data.filter((pedido) => pedido.estado === 1);
-      setPedidos(pedidosFiltrados);
-    } catch (error) {
-      console.error("Error fetching pedidos", error);
-    }
+      setPedidos(data);
+    } catch (error) {}
   };
 
   const handleUpdatePedido = async (e) => {
@@ -79,14 +78,12 @@ export const Pedidos = () => {
         setIsEditModalOpen(false);
         fetchPedidos();
       } else {
-        console.error("Error updating pedido");
         toast.error("Error al actualizar el pedido", {
           position: "top-right",
           autoClose: 3000,
         });
       }
     } catch (error) {
-      console.error("Error updating pedido", error);
       toast.error("Error al actualizar el pedido: " + error.message, {
         position: "top-right",
         autoClose: 3000,
@@ -157,7 +154,6 @@ export const Pedidos = () => {
         }
       );
     } catch (error) {
-      console.error("Error updating terminado", error);
       toast.error("Error al actualizar el estado: " + error.message, {
         position: "top-right",
         autoClose: 3000,
@@ -180,9 +176,43 @@ export const Pedidos = () => {
     navigate(`/pedidos/${pedidoId}`);
   };
 
+  useEffect(() => {
+    const filtered = pedidos.filter((pedido) =>
+      showTerminados ? pedido.terminado === 1 : pedido.terminado === 0
+    );
+    const sorted = filtered.sort((a, b) => {
+      const dateA = a.fecha_estimada
+        ? new Date(Date.parse(a.fecha_estimada))
+        : new Date(9999, 11, 31);
+      const dateB = b.fecha_estimada
+        ? new Date(Date.parse(b.fecha_estimada))
+        : new Date(9999, 11, 31);
+      return dateA - dateB;
+    });
+    setFilteredPedidos(sorted);
+  }, [showTerminados, pedidos]);
+
+  const getRowColor = (pedido) => {
+    if (pedido.estado !== 1 || pedido.terminado !== 0) return "";
+    if (!pedido.fecha_estimada) return "";
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const estimatedDate = new Date(Date.parse(pedido.fecha_estimada));
+    estimatedDate.setHours(0, 0, 0, 0);
+    const diffTime = estimatedDate.getTime() - today.getTime();
+    const diffDays = Math.round(diffTime / (1000 * 3600 * 24));
+    if (diffDays < 0) {
+      return "bg-red-300";
+    }
+    if (diffDays <= 10) {
+      return "bg-yellow-300";
+    }
+    return "";
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 p-6">
-      <ToastContainer /> {/* Agregar para renderizar notificaciones */}
+      <ToastContainer />
       <div className="flex items-center justify-center mb-6">
         <h1 className="text-2xl font-bold mr-6">
           {showTerminados ? "PEDIDOS TERMINADOS" : "PEDIDOS EN PRODUCCIÓN"}
@@ -221,8 +251,7 @@ export const Pedidos = () => {
           </div>
         </div>
       </div>
-      {/* Tabla de Pedidos */}
-      <div className="overflow-x-auto bg-white shadow-md rounded coordenador">
+      <div className="overflow-x-auto bg-white shadow-md rounded">
         <table className="min-w-full bg-white">
           <thead className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
             <tr>
@@ -241,7 +270,9 @@ export const Pedidos = () => {
             {filteredPedidos.map((pedido) => (
               <tr
                 key={pedido.id}
-                className="border-b border-gray-200 hover:bg-gray-100"
+                className={`border-b border-gray-200 rounder-md ${getRowColor(
+                  pedido
+                )}`}
               >
                 <td className="py-3 px-6 text-left whitespace-nowrap">
                   {pedido.numero_pedido}
@@ -282,44 +313,45 @@ export const Pedidos = () => {
                   </div>
                 </td>
                 <td className="py-3 px-6 text-center">
-                  {localStorage.getItem("rol") === "admin" ? (
-                    <div className="relative inline-block w-11 h-5">
-                      <input
-                        id={`switch-${pedido.id}`}
-                        type="checkbox"
-                        checked={pedido.terminado === 1}
-                        onChange={() =>
-                          handleToggleTerminado(pedido.id, pedido.terminado)
-                        }
-                        className="peer appearance-none w-11 h-5 bg-slate-100 border border-slate-300 rounded-full checked:bg-slate-800 checked:border-slate-800 cursor-pointer transition-colors duration-300"
-                      />
-                      <label
-                        htmlFor={`switch-${pedido.id}`}
-                        className="absolute top-0 left-0 w-5 h-5 bg-white rounded-full border border-slate-300 shadow transition-transform duration-300 peer-checked:translate-x-6 peer-checked:border-slate-800 cursor-pointer"
-                      ></label>
-                    </div>
-                  ) : (
-                    <div className="relative inline-block w-11 h-5">
-                      <input
-                        id={`switch-${pedido.id}`}
-                        type="checkbox"
-                        checked={pedido.terminado === 1}
-                        disabled
-                        className="peer appearance-none w-11 h-5 bg-slate-100 border border-slate-300 rounded-full checked:bg-slate-800 checked:border-slate-800 opacity-50 cursor-not-allowed transition-colors duration-300"
-                      />
-                      <label
-                        htmlFor={`switch-${pedido.id}`}
-                        className="absolute top-0 left-0 w-5 h-5 bg-white rounded-full border border-slate-300 shadow transition-transform duration-300 peer-checked:translate-x-6 peer-checked:border-slate-800 opacity-50 cursor-not-allowed"
-                      ></label>
-                    </div>
-                  )}
+                  <div className="relative inline-block w-11 h-5">
+                    {localStorage.getItem("rol") === "admin" ? (
+                      <>
+                        <input
+                          id={`switch-${pedido.id}`}
+                          type="checkbox"
+                          checked={pedido.terminado === 1}
+                          onChange={() =>
+                            handleToggleTerminado(pedido.id, pedido.terminado)
+                          }
+                          className="peer appearance-none w-11 h-5 bg-slate-100 border border-slate-300 rounded-full checked:bg-slate-800 checked:border-slate-800 cursor-pointer transition-colors duration-300"
+                        />
+                        <label
+                          htmlFor={`switch-${pedido.id}`}
+                          className="absolute top-0 left-0 w-5 h-5 bg-white rounded-full border border-slate-300 shadow transition-transform duration-300 peer-checked:translate-x-6 peer-checked:border-slate-800 cursor-pointer"
+                        ></label>
+                      </>
+                    ) : (
+                      <>
+                        <input
+                          id={`switch-${pedido.id}`}
+                          type="checkbox"
+                          checked={pedido.terminado === 1}
+                          disabled
+                          className="peer appearance-none w-11 h-5 bg-slate-100 border border-slate-300 rounded-full checked:bg-slate-800 checked:border-slate-800 opacity-50 cursor-not-allowed transition-colors duration-300"
+                        />
+                        <label
+                          htmlFor={`switch-${pedido.id}`}
+                          className="absolute top-0 left-0 w-5 h-5 bg-white rounded-full border border-slate-300 shadow transition-transform duration-300 peer-checked:translate-x-6 peer-checked:border-slate-800 opacity-50 cursor-not-allowed"
+                        ></label>
+                      </>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      {/* Modal de Edición de Pedido */}
       {isEditModalOpen && editPedido && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
@@ -375,7 +407,10 @@ export const Pedidos = () => {
                   type="text"
                   value={editPedido.telefono}
                   onChange={(e) =>
-                    setEditPedido({ ...editPedido, telefono: e.target.value })
+                    setEditPedido({
+                      ...editPedido,
+                      telefono: e.target.value,
+                    })
                   }
                   className="w-full p-2 border border-gray-300 rounded mt-1"
                   required
