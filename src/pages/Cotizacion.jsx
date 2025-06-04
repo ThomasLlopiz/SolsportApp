@@ -501,8 +501,6 @@ export const Cotizacion = () => {
 
   const handleStartEdit = async (articulo) => {
     try {
-      console.log("Editing articulo:", articulo);
-      console.log("Raw agregados:", articulo.agregados);
       const colorObj = colores.find((c) => c.id === articulo.color_id);
       setNumeroArticulo(articulo.numero_articulo || "");
       setSelectedPrenda(articulo.nombre || "");
@@ -510,7 +508,6 @@ export const Cotizacion = () => {
       setSelectedTalle(articulo.talle || "");
       setSelectedTela(articulo.tela || "");
       const parsedAgregados = parseAgregadosFromBackend(articulo.agregados);
-      console.log("Parsed agregados:", parsedAgregados);
       setSelectedAgregados(parsedAgregados);
       setCantidad(articulo.cantidad || 1);
       setComentario(articulo.comentario || "");
