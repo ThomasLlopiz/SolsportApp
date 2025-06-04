@@ -5,26 +5,31 @@ import { Pedidos } from "../pages/Pedidos";
 import { Pedido } from "../pages/Pedido";
 import { Articulos } from "../pages/Articulos";
 import { Articulo } from "../pages/Articulo";
-import { PrePage } from "../pages/PrePage";
+// import { PrePage } from "../pages/PrePage";
 import { Cotizador } from "../pages/Cotizador";
 import { Cotizacion } from "../pages/Cotizacion";
 import { Telas } from "../pages/Telas";
 import { Agregados } from "../pages/Agregados";
-import { PrivateAdminRoute, PrivateUserRoute } from "../hooks/PrivateRoutes";
+import {
+  PrivateAdminRoute,
+  PrivateUserRoute,
+  PrivateSuperAdminRoute,
+} from "../hooks/PrivateRoutes";
 import { CostoProduccion } from "../pages/CostoProduccion";
 import { Prendas } from "../pages/Prendas";
 import { Usuarios } from "../pages/Usuarios";
 import { Colores } from "../pages/Colores";
+
 export const AppRouter = () => {
   return (
     <Routes>
-      {/* Ruta pública */}
       <Route path="/" element={<Login />} />
 
       {/* RUTAS USUARIOS */}
-      <Route
-        element={<PrivateUserRoute path="/prepage" element={<PrePage />} />}
-      />
+      {/* <Route
+        path="/prepage"
+        element={<PrivateUserRoute element={<PrePage />} />}
+      /> */}
       <Route
         path="/pedidos"
         element={<PrivateUserRoute element={<Pedidos />} />}
@@ -69,9 +74,9 @@ export const AppRouter = () => {
       />
       <Route
         path="/usuarios"
-        element={<PrivateAdminRoute element={<Usuarios />} />}
+        element={<PrivateSuperAdminRoute element={<Usuarios />} />}
       />
-            <Route
+      <Route
         path="/colores"
         element={<PrivateAdminRoute element={<Colores />} />}
       />
