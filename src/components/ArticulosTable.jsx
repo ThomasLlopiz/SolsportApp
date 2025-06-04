@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 const ArticulosTable = ({
   articulos,
@@ -30,6 +31,7 @@ const ArticulosTable = ({
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify({ prioridad: nuevaPrioridad }),
       });
@@ -42,8 +44,9 @@ const ArticulosTable = ({
       if (onPrioridadChange) {
         onPrioridadChange();
       }
+      toast.success("Prioridad actualizada correctamente.");
     } catch (error) {
-      console.error("Error al actualizar prioridad:", error);
+      toast.error("Error al actualizar prioridad: " + error.message);
     }
   };
 
@@ -77,7 +80,7 @@ const ArticulosTable = ({
               <th className="py-2 px-4 text-left">Costo Total</th>
               <th className="py-2 px-4 text-left">Ganancia</th>
               <th className="py-2 px-4 text-left">Precio Total</th>
-              <th className="py-2 px-4 text-left">Prioridad</th>{" "}
+              <th className="py-2 px-4 text-left">Prioridad</th>
               <th className="py-2 px-4 text-center">Acciones</th>
             </tr>
           </thead>
@@ -99,14 +102,12 @@ const ArticulosTable = ({
                       : articulo.agregados}
                   </td>
                   <td className="py-2 px-4">
-                    {articulo.precio ? formatCurrency(articulo.precio) : "0.00"}{" "}
-                    $
+                    {articulo.precio ? formatCurrency(articulo.precio) : "0.00"} $
                   </td>
                   <td className="py-2 px-4">
                     {articulo.precio
                       ? formatCurrency(articulo.precio * articulo.cantidad)
-                      : "0.00"}{" "}
-                    $
+                      : "0.00"} $
                   </td>
                   <td className="py-2 px-4">
                     {articulo.ganancia ? `${articulo.ganancia}%` : "0%"}
@@ -120,8 +121,7 @@ const ArticulosTable = ({
                             100 +
                             articulo.precio * articulo.cantidad
                         )
-                      : "0.00"}{" "}
-                    $
+                      : "0.00"} $
                   </td>
                   <td className="py-2 px-4">
                     <select

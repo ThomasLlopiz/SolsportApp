@@ -4,6 +4,8 @@ import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import ArticuloForm from "../components/ArticuloForm";
 import CostosProduccion from "../components/CostosProduccion";
 import ArticulosTable from "../components/ArticulosTable";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import {
   GenerarCotizacionPdf,
   EnviarCotizacionPorEmail,
@@ -85,11 +87,14 @@ export const Cotizacion = () => {
 
   const fetchPrendas = async () => {
     try {
-      const response = await fetch(`${API_URL}/prendas`);
+      const response = await fetch(`${API_URL}/prendas`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      if (!response.ok) throw new Error("Error al cargar prendas");
       const data = await response.json();
       setPrendas(data);
     } catch (error) {
-      console.error("Error fetching prendas", error);
+      toast.error(error.message);
     }
   };
 
@@ -97,91 +102,113 @@ export const Cotizacion = () => {
     if (editingArticulo && editingArticulo.id) {
       try {
         const response = await fetch(
-          `${API_URL}/costos_articulo_produccion?articulo_id=${editingArticulo.id}`
+          `${API_URL}/costos_articulo_produccion?articulo_id=${editingArticulo.id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
         );
+        if (!response.ok) throw new Error("Error al cargar costos existentes");
         const data = await response.json();
-
         const cantidades = {};
         data.forEach((item) => {
           cantidades[item.costo_id] = item.cantidad;
         });
         setCostosCantidades(cantidades);
       } catch (error) {
-        console.error("Error al cargar costos existentes:", error);
+        toast.error(error.message);
       }
     }
   };
 
   const fetchAgregados = async () => {
     try {
-      const response = await fetch(`${API_URL}/agregados`);
+      const response = await fetch(`${API_URL}/agregados`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      if (!response.ok) throw new Error("Error al cargar agregados");
       const data = await response.json();
       setTodosLosAgregados(data);
     } catch (error) {
-      console.error("Error fetching agregados", error);
+      toast.error(error.message);
     }
   };
 
   const fetchCostosProduccion = async () => {
     try {
-      const response = await fetch(`${API_URL}/costos_produccion`);
+      const response = await fetch(`${API_URL}/costos_produccion`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      if (!response.ok) throw new Error("Error al cargar costos de producción");
       const data = await response.json();
       setCostosProduccion(data);
     } catch (error) {
-      console.error("Error fetching costos de producción", error);
+      toast.error(error.message);
     }
   };
 
   const fetchTelas = async () => {
     try {
-      const response = await fetch(`${API_URL}/telas`);
+      const response = await fetch(`${API_URL}/telas`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      if (!response.ok) throw new Error("Error al cargar telas");
       const data = await response.json();
       setTelas(data);
     } catch (error) {
-      console.error("Error fetching telas", error);
+      toast.error(error.message);
     }
   };
 
   const fetchPedido = async () => {
     try {
-      const response = await fetch(`${API_URL}/pedidos/${pedidoId}`);
+      const response = await fetch(`${API_URL}/pedidos/${pedidoId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      if (!response.ok) throw new Error("Error al cargar pedido");
       const data = await response.json();
       setPedido(data);
     } catch (error) {
-      console.error("Error fetching pedido", error);
+      toast.error(error.message);
     }
   };
 
   const fetchArticulosDelPedido = async () => {
     try {
       const response = await fetch(
-        `${API_URL}/articulos?pedidos_id=${pedidoId}`
+        `${API_URL}/articulos?pedidos_id=${pedidoId}`,
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        }
       );
+      if (!response.ok) throw new Error("Error al cargar artículos del pedido");
       const data = await response.json();
       const articulosFiltrados = data.filter(
         (articulo) => articulo.pedidos_id === Number(pedidoId)
       );
       setArticulos(articulosFiltrados);
     } catch (error) {
-      console.error("Error fetching articulos del pedido", error);
+      toast.error(error.message);
     }
   };
 
   const fetchColores = async () => {
     try {
-      const response = await fetch(`${API_URL}/colores`);
+      const response = await fetch(`${API_URL}/colores`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      if (!response.ok) throw new Error("Error al cargar colores");
       const data = await response.json();
       setColores(data);
     } catch (error) {
-      console.error("Error fetching colores", error);
+      toast.error(error.message);
     }
   };
 
   const enviarCotizacionPorEmail = async () => {
     if (!pedido || !articulos.length) {
-      alert(
-        "No se puede enviar la cotización: falta el pedido o los artículos."
-      );
+      toast.error("Falta el pedido o los artículos para enviar la cotización.");
       return;
     }
     try {
@@ -194,23 +221,23 @@ export const Cotizacion = () => {
         setIsSending,
         setSendStatus,
       });
+      toast.success("Cotización enviada correctamente.");
     } catch (error) {
-      console.error("Error en enviarCotizacionPorEmail:", error);
-      alert("Error al enviar la cotización: " + error.message);
+      toast.error("Error al enviar la cotización: " + error.message);
     }
   };
 
   const descargarCotizacionPdf = async () => {
     if (!pedido || !articulos.length) {
-      alert("No se puede generar el PDF: falta el pedido o los artículos.");
+      toast.error("Falta el pedido o los artículos para generar el PDF.");
       return;
     }
     try {
       const doc = await GenerarCotizacionPdf({ pedido, articulos });
       doc.save(`cotizacion_pedido_${pedido.numero_pedido}.pdf`);
+      toast.success("PDF generado correctamente.");
     } catch (error) {
-      console.error("Error al descargar PDF:", error);
-      alert("Error al generar el PDF: " + error.message);
+      toast.error("Error al generar el PDF: " + error.message);
     }
   };
 
@@ -377,9 +404,7 @@ export const Cotizacion = () => {
         !selectedColor &&
         !selectedTalle
       ) {
-        alert(
-          "Por favor seleccione al menos un agregado o complete los campos de prenda, tela, color o talle."
-        );
+        toast.error("Complete al menos un campo o seleccione un agregado.");
         return;
       }
 
@@ -424,6 +449,7 @@ export const Cotizacion = () => {
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
           body: JSON.stringify(articuloData),
         });
@@ -453,6 +479,7 @@ export const Cotizacion = () => {
                 headers: {
                   "Content-Type": "application/json",
                   Accept: "application/json",
+                  Authorization: `Bearer ${localStorage.getItem("token")}`,
                 },
                 body: JSON.stringify(costo),
               }
@@ -472,9 +499,9 @@ export const Cotizacion = () => {
       setArticulos((prev) => [...prev, ...nuevosArticulos]);
       resetForm();
       fetchArticulosDelPedido();
+      toast.success("Artículo guardado correctamente.");
     } catch (error) {
-      console.error("Error completo en handleGuardar:", error);
-      alert("Error al guardar el artículo: " + error.message);
+      toast.error("Error al guardar el artículo: " + error.message);
     }
   };
 
@@ -518,8 +545,12 @@ export const Cotizacion = () => {
       setAgregadoParaAgregar("");
 
       const response = await fetch(
-        `${API_URL}/costos_articulo_produccion?articulo_id=${articulo.id}`
+        `${API_URL}/costos_articulo_produccion?articulo_id=${articulo.id}`,
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        }
       );
+      if (!response.ok) throw new Error("Error al cargar costos existentes");
       const costosExistentes = await response.json();
 
       const nuevosCostos = {};
@@ -529,7 +560,7 @@ export const Cotizacion = () => {
 
       setCostosCantidades(nuevosCostos);
     } catch (error) {
-      console.error("Error al cargar datos para edición:", error);
+      toast.error("Error al cargar datos para edición: " + error.message);
       setSelectedAgregados([]);
       setAgregadoParaAgregar("");
     }
@@ -546,9 +577,7 @@ export const Cotizacion = () => {
         !selectedColor &&
         !selectedTalle
       ) {
-        alert(
-          "Por favor seleccione al menos un agregado o complete los campos de prenda, tela, color o talle."
-        );
+        toast.error("Complete al menos un campo o seleccione un agregado.");
         return;
       }
 
@@ -591,6 +620,7 @@ export const Cotizacion = () => {
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
           body: JSON.stringify(articuloActualizado),
         }
@@ -604,8 +634,13 @@ export const Cotizacion = () => {
       const articuloActualizadoResp = await response.json();
 
       const existingCostsResponse = await fetch(
-        `${API_URL}/costos_articulo_produccion?articulo_id=${editingArticulo.id}`
+        `${API_URL}/costos_articulo_produccion?articulo_id=${editingArticulo.id}`,
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        }
       );
+      if (!existingCostsResponse.ok)
+        throw new Error("Error al cargar costos existentes");
       const existingCosts = await existingCostsResponse.json();
 
       const costosConCantidades = costosProduccion
@@ -624,26 +659,43 @@ export const Cotizacion = () => {
 
           if (existingCost) {
             if (costoData.cantidad > 0) {
-              return fetch(
+              const response = await fetch(
                 `${API_URL}/costos_articulo_produccion/${existingCost.id}`,
                 {
                   method: "PUT",
-                  headers: { "Content-Type": "application/json" },
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${localStorage.getItem("token")}`,
+                  },
                   body: JSON.stringify(costoData),
                 }
               );
+              if (!response.ok) throw new Error("Error al actualizar costo");
             } else {
-              return fetch(
+              const response = await fetch(
                 `${API_URL}/costos_articulo_produccion/${existingCost.id}`,
-                { method: "DELETE" }
+                {
+                  method: "DELETE",
+                  headers: {
+                    Authorization: `Bearer ${localStorage.getItem("token")}`,
+                  },
+                }
               );
+              if (!response.ok) throw new Error("Error al eliminar costo");
             }
           } else if (costoData.cantidad > 0) {
-            return fetch(`${API_URL}/costos_articulo_produccion`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(costoData),
-            });
+            const response = await fetch(
+              `${API_URL}/costos_articulo_produccion`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+                body: JSON.stringify(costoData),
+              }
+            );
+            if (!response.ok) throw new Error("Error al crear costo");
           }
         })
       );
@@ -655,9 +707,9 @@ export const Cotizacion = () => {
       );
       resetForm();
       fetchArticulosDelPedido();
+      toast.success("Artículo actualizado correctamente.");
     } catch (error) {
-      console.error("Error al actualizar:", error);
-      alert("Error al actualizar el artículo: " + error.message);
+      toast.error("Error al actualizar el artículo: " + error.message);
     }
   };
 
@@ -667,17 +719,59 @@ export const Cotizacion = () => {
     }
 
     try {
-      const response = await fetch(`${API_URL}/articulos/${articuloId}`, {
-        method: "DELETE",
-      });
+      const token = localStorage.getItem("token");
 
-      if (!response.ok) {
-        throw new Error("Error al eliminar el artículo");
+      const etapasResponse = await fetch(
+        `${API_URL}/etapas?articulos_id=${articuloId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (!etapasResponse.ok) {
+        const errorData = await etapasResponse.json();
+        throw new Error(errorData.message || "Error al obtener etapas");
+      }
+      const etapas = await etapasResponse.json();
+
+      await Promise.all(
+        etapas.map(async (etapa) => {
+          const deleteResponse = await fetch(`${API_URL}/etapas/${etapa.id}`, {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          if (!deleteResponse.ok) {
+            const errorData = await deleteResponse.json();
+            throw new Error(
+              errorData.message || `Error al eliminar etapa ${etapa.id}`
+            );
+          }
+        })
+      );
+
+      const articuloResponse = await fetch(
+        `${API_URL}/articulos/${articuloId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (!articuloResponse.ok) {
+        const errorData = await articuloResponse.json();
+        throw new Error(errorData.message || "Error al eliminar el artículo");
       }
 
       setArticulos(articulos.filter((a) => a.id !== articuloId));
+      toast.success("Artículo y sus etapas eliminados correctamente.");
     } catch (error) {
-      console.error("Error al eliminar el artículo:", error);
+      toast.error(
+        "Error al eliminar el artículo o sus etapas: " + error.message
+      );
     }
   };
 
@@ -688,6 +782,7 @@ export const Cotizacion = () => {
 
   return (
     <div className="p-6 w-3/4 mx-auto">
+      <ToastContainer position="top-right" autoClose={3000} />
       <div className="mb-6 flex justify-between items-center">
         <div>
           <h2 className="text-2xl text-left font-semibold">
