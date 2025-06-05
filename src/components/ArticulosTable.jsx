@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { toast } from "react-toastify";
+import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 
 const ArticulosTable = ({
   articulos,
@@ -50,6 +51,32 @@ const ArticulosTable = ({
     }
   };
 
+  const handleConfirmadoChange = async (articuloId, confirmado) => {
+    try {
+      const response = await fetch(`${API_URL}/articulos/${articuloId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ confirmado }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Error al actualizar confirmado");
+      }
+
+      if (onPrioridadChange) {
+        onPrioridadChange();
+      }
+      toast.success("Estado confirmado actualizado correctamente.");
+    } catch (error) {
+      toast.error("Error al actualizar confirmado: " + error.message);
+    }
+  };
+
   const articulosOrdenados = [...articulos].sort((a, b) => {
     if (a.prioridad === null && b.prioridad === null) return 0;
     if (a.prioridad === null) return 1;
@@ -81,6 +108,7 @@ const ArticulosTable = ({
               <th className="py-2 px-4 text-left">Ganancia</th>
               <th className="py-2 px-4 text-left">Precio Total</th>
               <th className="py-2 px-4 text-left">Prioridad</th>
+              <th className="py-2 px-4 text-left">Confirmado</th>
               <th className="py-2 px-4 text-center">Acciones</th>
             </tr>
           </thead>
@@ -102,12 +130,14 @@ const ArticulosTable = ({
                       : articulo.agregados}
                   </td>
                   <td className="py-2 px-4">
-                    {articulo.precio ? formatCurrency(articulo.precio) : "0.00"} $
+                    {articulo.precio ? formatCurrency(articulo.precio) : "0.00"}{" "}
+                    $
                   </td>
                   <td className="py-2 px-4">
                     {articulo.precio
                       ? formatCurrency(articulo.precio * articulo.cantidad)
-                      : "0.00"} $
+                      : "0.00"}{" "}
+                    $
                   </td>
                   <td className="py-2 px-4">
                     {articulo.ganancia ? `${articulo.ganancia}%` : "0%"}
@@ -121,7 +151,8 @@ const ArticulosTable = ({
                             100 +
                             articulo.precio * articulo.cantidad
                         )
-                      : "0.00"} $
+                      : "0.00"}{" "}
+                    $
                   </td>
                   <td className="py-2 px-4">
                     <select
@@ -141,25 +172,40 @@ const ArticulosTable = ({
                       ))}
                     </select>
                   </td>
-                  <td className="py-2 px-4 text-center">
+                  <td className="py-2 px-4">
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={articulo.confirmado || false}
+                        onChange={(e) =>
+                          handleConfirmadoChange(articulo.id, e.target.checked)
+                        }
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                  </td>
+                  <td className="py-2 px-4 text-center flex justify-center space-x-2">
                     <button
                       onClick={() => handleStartEdit(articulo)}
-                      className="text-blue-500 hover:text-blue-700 mr-2"
+                      className="text-blue-500 hover:text-blue-700"
+                      title="Editar"
                     >
-                      Editar
+                      <PencilIcon className="h-5 w-5" />
                     </button>
                     <button
                       onClick={() => handleRemoveArticulo(articulo.id)}
                       className="text-red-500 hover:text-red-700"
+                      title="Eliminar"
                     >
-                      Eliminar
+                      <TrashIcon className="h-5 w-5" />
                     </button>
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="12" className="py-4 text-center text-gray-500">
+                <td colSpan="13" className="py-4 text-center text-gray-500">
                   No hay artículos en este pedido
                 </td>
               </tr>

@@ -180,13 +180,6 @@ export const Articulos = ({ pedidoId }) => {
         formData.append("file", file);
       }
 
-      if (file) {
-        formData.append("file", file);
-      }
-
-      for (let pair of formData.entries()) {
-      }
-
       const response = await fetch(`${API_URL}/articulos/${editArticulo.id}`, {
         method: "POST",
         headers: {
@@ -214,6 +207,7 @@ export const Articulos = ({ pedidoId }) => {
       console.error("Error updating articulo:", error.message);
     }
   };
+
   const handleEditClick = (articulo) => {
     let agregadosArray = [];
 
@@ -256,9 +250,9 @@ export const Articulos = ({ pedidoId }) => {
     navigate(`/articulos/${id}`);
   };
 
-  const sortedArticulos = [...articulos].sort(
-    (a, b) => a.prioridad - b.prioridad
-  );
+  const sortedArticulos = [...articulos]
+    .filter((articulo) => articulo.confirmado === 1)
+    .sort((a, b) => a.prioridad - b.prioridad);
 
   return (
     <div className="text-sm">
