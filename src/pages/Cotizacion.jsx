@@ -262,17 +262,12 @@ export const Cotizacion = () => {
         ...prev,
         { nombre: agregadoParaAgregar, count: 1 },
       ]);
-      setCantidad((prev) => prev + 1);
       setAgregadoParaAgregar("");
     }
   };
 
   const handleRemoveAgregado = (nombre) => {
-    const agregado = selectedAgregados.find((ag) => ag.nombre === nombre);
-    if (agregado) {
-      setSelectedAgregados((prev) => prev.filter((ag) => ag.nombre !== nombre));
-      setCantidad((prev) => Math.max(1, prev - agregado.count));
-    }
+    setSelectedAgregados((prev) => prev.filter((ag) => ag.nombre !== nombre));
   };
 
   const handleIncrementAgregado = (nombre) => {
@@ -281,7 +276,6 @@ export const Cotizacion = () => {
         ag.nombre === nombre ? { ...ag, count: ag.count + 1 } : ag
       )
     );
-    setCantidad((prev) => prev + 1);
   };
 
   const handleDecrementAgregado = (nombre) => {
@@ -292,7 +286,6 @@ export const Cotizacion = () => {
           ag.nombre === nombre ? { ...ag, count: ag.count - 1 } : ag
         )
       );
-      setCantidad((prev) => prev - 1);
     } else {
       handleRemoveAgregado(nombre);
     }
@@ -700,8 +693,8 @@ export const Cotizacion = () => {
         })
       );
 
-      setArticulos(
-        articulos.map((a) =>
+      setArticulos((prev) =>
+        prev.map((a) =>
           a.id === articuloActualizadoResp.id ? articuloActualizadoResp : a
         )
       );
