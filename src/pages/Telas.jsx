@@ -9,6 +9,7 @@ export const Telas = () => {
   const [newTela, setNewTela] = useState({
     nombre: "",
     precio: "",
+    codigo: "", // Añadir campo para código
   });
   const [telas, setTelas] = useState([]);
   const [editTela, setEditTela] = useState(null);
@@ -28,7 +29,9 @@ export const Telas = () => {
       const data = await response.json();
       const sortedData = data.sort((a, b) => a.nombre.localeCompare(b.nombre));
       setTelas(sortedData);
-    } catch (error) {}
+    } catch (error) {
+      console.error("Error fetching telas:", error);
+    }
   };
 
   const handleUpdateTela = async (e) => {
@@ -44,7 +47,9 @@ export const Telas = () => {
       setEditTela(null);
       setIsEditModalOpen(false);
       fetchTelas();
-    } catch (error) {}
+    } catch (error) {
+      console.error("Error updating tela:", error);
+    }
   };
 
   const handleCreateTela = async (e) => {
@@ -57,10 +62,12 @@ export const Telas = () => {
         },
         body: JSON.stringify(newTela),
       });
-      setNewTela({ nombre: "", precio: "" });
+      setNewTela({ nombre: "", precio: "", codigo: "" }); // Resetear código también
       setIsCreateModalOpen(false);
       fetchTelas();
-    } catch (error) {}
+    } catch (error) {
+      console.error("Error creating tela:", error);
+    }
   };
 
   const handleDeleteTela = async () => {
@@ -70,7 +77,9 @@ export const Telas = () => {
       });
       setIsDeleteModalOpen(false);
       fetchTelas();
-    } catch (error) {}
+    } catch (error) {
+      console.error("Error deleting tela:", error);
+    }
   };
 
   const handleEditClick = (tela) => {
@@ -91,7 +100,6 @@ export const Telas = () => {
     <div className="p-4">
       <div className="flex justify-between w-3/4 mx-auto">
         <h1 className="text-2xl font-bold mb-6 text-center">TELAS</h1>
-
         <button
           onClick={handleBackClick}
           className="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600 transition flex items-center"
@@ -106,6 +114,18 @@ export const Telas = () => {
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
             <h2 className="text-xl font-semibold mb-4">Editar Tela</h2>
             <form onSubmit={handleUpdateTela}>
+              <div className="mb-4">
+                <label className="block text-gray-700">Código</label>
+                <input
+                  type="text"
+                  value={editTela.codigo || ""}
+                  onChange={(e) =>
+                    setEditTela({ ...editTela, codigo: e.target.value })
+                  }
+                  className="w-full border border-gray-300 p-2 rounded"
+                  required
+                />
+              </div>
               <div className="mb-4">
                 <label className="block text-gray-700">Nombre</label>
                 <input
@@ -157,6 +177,18 @@ export const Telas = () => {
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
             <h2 className="text-xl font-semibold mb-4">Crear Tela</h2>
             <form onSubmit={handleCreateTela}>
+              <div className="mb-4">
+                <label className="block text-gray-700">Código</label>
+                <input
+                  type="text"
+                  value={newTela.codigo}
+                  onChange={(e) =>
+                    setNewTela({ ...newTela, codigo: e.target.value })
+                  }
+                  className="w-full border border-gray-300 p-2 rounded"
+                  required
+                />
+              </div>
               <div className="mb-4">
                 <label className="block text-gray-700">Nombre</label>
                 <input
@@ -241,6 +273,7 @@ export const Telas = () => {
       <table className="w-3/4 mx-auto bg-white border border-gray-200">
         <thead>
           <tr>
+            <th className="py-2 px-4 border-b text-left">Código</th>
             <th className="py-2 px-4 border-b text-left">Nombre</th>
             <th className="py-2 px-4 border-b text-left">Precio</th>
             <th className="py-2 px-4 border-b text-left">Acciones</th>
@@ -249,6 +282,7 @@ export const Telas = () => {
         <tbody>
           {telas.map((tela) => (
             <tr key={tela.id}>
+              <td className="py-2 px-4 border-b">{tela.codigo || "N/A"}</td>
               <td className="py-2 px-4 border-b">{tela.nombre}</td>
               <td className="py-2 px-4 border-b">
                 {tela.precio ? tela.precio.toFixed(2) : "N/A"}
