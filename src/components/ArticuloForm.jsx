@@ -2,13 +2,11 @@ import { PlusIcon, MinusIcon } from "@heroicons/react/24/outline";
 
 const ArticuloForm = ({
   prendas,
-  colores,
   talles,
   telas,
   todosLosAgregados,
   numeroArticulo,
   selectedPrenda,
-  selectedColor,
   selectedTalle,
   selectedTela,
   selectedAgregados,
@@ -18,7 +16,6 @@ const ArticuloForm = ({
   comentario,
   setNumeroArticulo,
   setSelectedPrenda,
-  setSelectedColor,
   setSelectedTalle,
   setSelectedTela,
   setSelectedAgregados,
@@ -56,31 +53,12 @@ const ArticuloForm = ({
           >
             <option value="">Seleccione una prenda</option>
             {prendas.map((prenda) => (
-              <option key={prenda.id} value={prenda.nombre}>
+              <option key={prenda.id} value={prenda.nombre} required>
                 {prenda.nombre}
               </option>
             ))}
           </select>
         </div>
-        {/* COLOR */}
-        <div className="w-full">
-          <label className="block text-gray-700">Color</label>
-          <select
-            value={selectedColor}
-            onChange={(e) => setSelectedColor(e.target.value)}
-            className="w-full border border-gray-300 p-2 rounded"
-            required
-          >
-            <option value="">Seleccione un color</option>
-            {colores.map((color) => (
-              <option key={color.id} value={color.nombre}>
-                {color.nombre}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-      <div className="flex w-full gap-4">
         {/* TALLE */}
         <div className="w-full">
           <label className="block text-gray-700">Talle</label>
@@ -98,6 +76,8 @@ const ArticuloForm = ({
             ))}
           </select>
         </div>
+      </div>
+      <div className="flex w-full gap-4">
         {/* TELA */}
         <div className="w-full">
           <label className="block text-gray-700">Tela</label>
@@ -132,8 +112,6 @@ const ArticuloForm = ({
             step="0.1"
           />
         </div>
-      </div>
-      <div className="flex w-full gap-4">
         {/* CANTIDAD */}
         <div className="w-full">
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -150,6 +128,8 @@ const ArticuloForm = ({
             required
           />
         </div>
+      </div>
+      <div className="flex w-full gap-4">
         {/* AGREGADOS */}
         <div className="w-full">
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -228,19 +208,19 @@ const ArticuloForm = ({
             )}
           </div>
         </div>
-      </div>
-      {/* COMENTARIO */}
-      <div className="col-span-4">
-        <label className="block text-sm font-medium text-gray-700">
-          Comentario
-        </label>
-        <textarea
-          value={comentario}
-          onChange={(e) => setComentario(e.target.value)}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2"
-          rows="3"
-          placeholder="Ingrese un comentario (opcional)"
-        />
+        {/* COMENTARIO */}
+        <div className="w-full">
+          <label className="block text-sm font-medium text-gray-700">
+            Comentario
+          </label>
+          <textarea
+            value={comentario}
+            onChange={(e) => setComentario(e.target.value)}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2"
+            rows="3"
+            placeholder="Ingrese un comentario (opcional)"
+          />
+        </div>
       </div>
     </div>
   );

@@ -12,14 +12,75 @@ const ArticulosTable = ({
   const [prioridades, setPrioridades] = useState({});
   const API_URL = import.meta.env.VITE_API_URL;
 
+  // Definir talleFactor localmente (similar al usado en Cotizacion)
+  const talleFactor = {
+    2: 0.4,
+    4: 0.45,
+    6: 0.5,
+    8: 0.55,
+    10: 0.6,
+    12: 0.65,
+    14: 0.7,
+    XS: 0.7,
+    S: 0.7,
+    M: 0.75,
+    L: 0.8,
+    XL: 0.85,
+    "2XL": 1.03,
+    "3XL": 1.15,
+    "4XL": 1.2,
+  };
+
+  // Función para obtener el multiplicador del talle más grande
+  const getLargestTalleMultiplier = (talle) => {
+    const talleRange = {
+      "2 a 8": ["2", "4", "6", "8"],
+      "10 a XS": ["10", "XS"],
+      "S a XL": ["S", "M", "L", "XL"],
+      "2XL a 3XL": ["2XL", "3XL"],
+    };
+    const talles = talleRange[talle] || [talle];
+    const largestTalle = talles.reduce((largest, current) => {
+      const currentIdx = Object.keys(talleFactor).indexOf(current);
+      const largestIdx = Object.keys(talleFactor).indexOf(largest);
+      return currentIdx > largestIdx ? current : largest;
+    }, talles[0]);
+    return talleFactor[largestTalle] || 0.7;
+  };
+
+  // Recalcular costoUnitario basado en los datos del artículo
+  const calculateLocalCost = (articulo) => {
+    let costoUnitario = 0;
+    const talleMultiplier = talleFactor[articulo.talle] || 0.7;
+
+    if (articulo.tela && articulo.nombre) {
+      // Simulamos valores de tela y prenda basados en los logs (ajústalos según tu data real)
+      const telaPrecio = 6200; // Valor de telaObj.precio del log
+      const consumoPrenda = 1.01; // Valor de prendaObj.consumo del log
+      costoUnitario += telaPrecio * consumoPrenda * talleMultiplier;
+    }
+
+    // Agregados (simplificado, asumimos que no hay datos de agregados en los logs)
+    // Si tienes datos de agregados, intégralos aquí
+    const agregadoPrices = 0; // Ajusta si hay agregados con precios
+
+    costoUnitario += agregadoPrices;
+    return Number(costoUnitario.toFixed(2));
+  };
+
+  // Calcular precio ajustado con el talle más grande
+  const getAdjustedPrice = (articulo) => {
+    if (!articulo.precio || !articulo.cantidad || !articulo.ganancia) return 0;
+    const basePrice = articulo.precio || calculateLocalCost(articulo); // Usa precio si existe, sino calcula
+    const currentMultiplier = talleFactor[articulo.talle] || 0.7;
+    const largestMultiplier = getLargestTalleMultiplier(articulo.talle);
+    const adjustedPrice = (basePrice / currentMultiplier) * largestMultiplier;
+    return adjustedPrice * (1 + (articulo.ganancia || 0) / 100);
+  };
+
   const total = articulos.reduce((sum, item) => {
-    return (
-      sum +
-      (item.precio
-        ? (item.precio * item.cantidad * item.ganancia) / 100 +
-          item.precio * item.cantidad
-        : 0)
-    );
+    const adjustedPrice = getAdjustedPrice(item);
+    return sum + adjustedPrice * item.cantidad;
   }, 0);
 
   const handlePrioridadChange = async (articuloId, value) => {
@@ -106,6 +167,7 @@ const ArticulosTable = ({
               <th className="py-2 px-4 text-left">Costo Unitario</th>
               <th className="py-2 px-4 text-left">Costo Total</th>
               <th className="py-2 px-4 text-left">Ganancia</th>
+              <th className="py-2 px-4 text-left">Precio Unitario</th>
               <th className="py-2 px-4 text-left">Precio Total</th>
               <th className="py-2 px-4 text-left">Prioridad</th>
               <th className="py-2 px-4 text-left">Confirmado</th>
@@ -130,28 +192,29 @@ const ArticulosTable = ({
                       : articulo.agregados}
                   </td>
                   <td className="py-2 px-4">
-                    {articulo.precio ? formatCurrency(articulo.precio) : "0.00"}{" "}
+                    {articulo.costo
+                      ? formatCurrency(articulo.costo)
+                      : formatCurrency(calculateLocalCost(articulo))}{" "}
                     $
                   </td>
                   <td className="py-2 px-4">
-                    {articulo.precio
-                      ? formatCurrency(articulo.precio * articulo.cantidad)
-                      : "0.00"}{" "}
+                    {articulo.costo
+                      ? formatCurrency(articulo.costo * articulo.cantidad)
+                      : formatCurrency(
+                          calculateLocalCost(articulo) * articulo.cantidad
+                        )}{" "}
                     $
                   </td>
                   <td className="py-2 px-4">
                     {articulo.ganancia ? `${articulo.ganancia}%` : "0%"}
                   </td>
                   <td className="py-2 px-4">
-                    {articulo.precio
-                      ? formatCurrency(
-                          (articulo.precio *
-                            articulo.cantidad *
-                            articulo.ganancia) /
-                            100 +
-                            articulo.precio * articulo.cantidad
-                        )
-                      : "0.00"}{" "}
+                    {formatCurrency(getAdjustedPrice(articulo))} $
+                  </td>
+                  <td className="py-2 px-4">
+                    {formatCurrency(
+                      getAdjustedPrice(articulo) * articulo.cantidad
+                    )}{" "}
                     $
                   </td>
                   <td className="py-2 px-4">
@@ -205,7 +268,7 @@ const ArticulosTable = ({
               ))
             ) : (
               <tr>
-                <td colSpan="13" className="py-4 text-center text-gray-500">
+                <td colSpan="14" className="py-4 text-center text-gray-500">
                   No hay artículos en este pedido
                 </td>
               </tr>

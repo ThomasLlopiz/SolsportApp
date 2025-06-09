@@ -11,12 +11,30 @@ import {
   EnviarCotizacionPorEmail,
 } from "../components/EnviarCotizacionPdf";
 
+// Definir talleFactor como constante fuera de las funciones
+const talleFactor = {
+  2: 0.4,
+  4: 0.45,
+  6: 0.5,
+  8: 0.55,
+  10: 0.6,
+  12: 0.65,
+  14: 0.7,
+  XS: 0.7,
+  S: 0.7,
+  M: 0.75,
+  L: 0.8,
+  XL: 0.85,
+  "2XL": 1.03,
+  "3XL": 1.15,
+  "4XL": 1.2,
+};
+
 export const Cotizacion = () => {
   const { id: pedidoId } = useParams();
   const navigate = useNavigate();
   const API_URL = import.meta.env.VITE_API_URL;
   const [prendas, setPrendas] = useState([]);
-  const [colores, setColores] = useState([]);
   const [talles] = useState([
     "2",
     "4",
@@ -43,7 +61,6 @@ export const Cotizacion = () => {
   const [telas, setTelas] = useState([]);
   const [costosProduccion, setCostosProduccion] = useState([]);
   const [selectedPrenda, setSelectedPrenda] = useState("");
-  const [selectedColor, setSelectedColor] = useState("");
   const [selectedTalle, setSelectedTalle] = useState("");
   const [selectedTela, setSelectedTela] = useState("");
   const [selectedAgregados, setSelectedAgregados] = useState([]);
@@ -68,7 +85,6 @@ export const Cotizacion = () => {
     fetchArticulosDelPedido();
     fetchCostosProduccion();
     fetchPrendas();
-    fetchColores();
   }, [pedidoId]);
 
   useEffect(() => {
@@ -193,19 +209,6 @@ export const Cotizacion = () => {
     }
   };
 
-  const fetchColores = async () => {
-    try {
-      const response = await fetch(`${API_URL}/colores`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
-      if (!response.ok) throw new Error("Error al cargar colores");
-      const data = await response.json();
-      setColores(data);
-    } catch (error) {
-      toast.error(error.message);
-    }
-  };
-
   const enviarCotizacionPorEmail = async () => {
     if (!pedido || !articulos.length) {
       toast.error("Falta el pedido o los artículos para enviar la cotización.");
@@ -321,37 +324,53 @@ export const Cotizacion = () => {
       .filter((ag) => ag.nombre);
   };
 
-  const calculatePrice = (prenda, color, talle, tela, agregados) => {
-    let costoUnitario = 0;
+  const getTalleRange = (talle) => {
+    const talleRanges = {
+      "2 a 8": ["2", "4", "6", "8"],
+      "10 a XS": ["10", "XS"],
+      "S a XL": ["S", "M", "L", "XL"],
+      "2XL a 3XL": ["2XL", "3XL"],
+    };
+    return talleRanges[talle] || [talle];
+  };
 
-    if (tela && prenda && color) {
+  const getLargestTalle = (talles) => {
+    const talleOrden = [
+      "2",
+      "4",
+      "6",
+      "8",
+      "10",
+      "12",
+      "14",
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "2XL",
+      "3XL",
+      "4XL",
+    ];
+    return talles.reduce((largest, current) => {
+      const currentIdx = talleOrden.indexOf(current);
+      const largestIdx = talleOrden.indexOf(largest);
+      return currentIdx > largestIdx ? current : largest;
+    }, talles[0]);
+  };
+
+  const calculatePrice = (prenda, talle, tela, agregados) => {
+    let costoUnitario = 0;
+    let talleMultiplier = 0.7; // Valor por defecto fuera del if
+
+    if (tela && prenda) {
       const telaObj = telas.find((t) => t.nombre === tela);
       const prendaObj = prendas.find((p) => p.nombre === prenda);
-      const colorObj = colores.find((c) => c.nombre === color);
       const basePrice = telaObj ? telaObj.precio : 0;
       const consumoPrenda = prendaObj ? prendaObj.consumo : 0;
-      const consumoColor = colorObj ? colorObj.consumo : 0;
 
-      const talleFactor = {
-        2: 0.4,
-        4: 0.45,
-        6: 0.5,
-        8: 0.55,
-        10: 0.6,
-        12: 0.65,
-        14: 0.7,
-        XS: 0.7,
-        S: 0.7,
-        M: 0.75,
-        L: 0.8,
-        XL: 0.85,
-        "2XL": 1.03,
-        "3XL": 1.15,
-        "4XL": 1.2,
-      };
-
-      const talleMultiplier = talle ? talleFactor[talle] || 0.7 : 0.7;
-      const consumoTotal = consumoPrenda + consumoColor;
+      talleMultiplier = talleFactor[talle] || 0.7; // Actualizar dentro del if
+      const consumoTotal = consumoPrenda;
       costoUnitario += basePrice * consumoTotal * talleMultiplier;
     }
 
@@ -371,21 +390,30 @@ export const Cotizacion = () => {
     const costoTotal = costoUnitario * cantidad;
     const precioUnitario = costoUnitario * (1 + ganancia / 100);
 
+    // Si el talle es un rango, devolver el precio del talle más grande
+    const talleRange = getTalleRange(talle);
+    const largestTalle = getLargestTalle(talleRange);
+    const largestTalleMultiplier = talleFactor[largestTalle] || 0.7;
+    const precioUnitarioConMayorTalle =
+      (costoUnitario / talleMultiplier) *
+      largestTalleMultiplier *
+      (1 + ganancia / 100);
+    // Dentro de calculatePrice, después de los cálculos
+    console.log("Cálculo de precio:", {
+      costoUnitario,
+      costoTotal,
+      precioUnitario,
+      talle,
+      talleMultiplier,
+      telaObj: telas.find((t) => t.nombre === tela),
+      prendaObj: prendas.find((p) => p.nombre === prenda),
+    });
+
     return {
       costoUnitario: Number(costoUnitario.toFixed(2)),
       costoTotal: Number(costoTotal.toFixed(2)),
-      precioUnitario: Number(precioUnitario.toFixed(2)),
+      precioUnitario: Number(precioUnitarioConMayorTalle.toFixed(2)),
     };
-  };
-
-  const getTalleRange = (talle) => {
-    const talleRanges = {
-      "2 a 8": ["2", "4", "6", "8"],
-      "10 a XS": ["10", "XS"],
-      "S a XL": ["S", "M", "L", "XL"],
-      "2XL a 3XL": ["2XL", "3XL"],
-    };
-    return talleRanges[talle] || [talle];
   };
 
   const handleGuardar = async () => {
@@ -394,7 +422,6 @@ export const Cotizacion = () => {
         selectedAgregados.length === 0 &&
         !selectedPrenda &&
         !selectedTela &&
-        !selectedColor &&
         !selectedTalle
       ) {
         toast.error("Complete al menos un campo o seleccione un agregado.");
@@ -402,16 +429,25 @@ export const Cotizacion = () => {
       }
 
       const tallesToCreate = getTalleRange(selectedTalle);
-      const colorObj = selectedColor
-        ? colores.find((c) => c.nombre === selectedColor)
-        : null;
-
       const nuevosArticulos = [];
+
       for (const talle of tallesToCreate) {
+        // Calcular precio para cada talle individualmente
         const calculos = calculatePrice(
           selectedPrenda,
-          selectedColor,
           talle,
+          selectedTela,
+          selectedAgregados
+        ) || {
+          costoUnitario: 0,
+          costoTotal: 0,
+          precioUnitario: 0,
+        };
+
+        // Usar el precioUnitario del talle más grande para todos
+        const calculosMayorTalle = calculatePrice(
+          selectedPrenda,
+          getLargestTalle(tallesToCreate),
           selectedTela,
           selectedAgregados
         ) || {
@@ -423,19 +459,19 @@ export const Cotizacion = () => {
         const articuloData = {
           numero_articulo: numeroArticulo,
           nombre: selectedPrenda,
-          color_id: colorObj ? colorObj.id : null,
           talle: talle,
           tela: selectedTela,
           agregados: formatAgregadosForBackend(selectedAgregados),
           cantidad: Number(cantidad),
-          costo: Number(calculos.costoUnitario),
-          precio: Number(calculos.precioUnitario),
+          costo: Number(calculos.costoUnitario), // Costo específico del talle
+          precio: Number(calculosMayorTalle.precioUnitario), // Precio del talle más grande
           ganancia: Number(ganancia),
           comentario: comentario,
           prioridad: prioridad ? Number(prioridad) : null,
           pedidos_id: pedidoId,
           ruta: "",
         };
+        console.log("Datos enviados al backend:", articuloData);
 
         const articuloResponse = await fetch(`${API_URL}/articulos`, {
           method: "POST",
@@ -454,6 +490,7 @@ export const Cotizacion = () => {
 
         const nuevoArticulo = await articuloResponse.json();
         nuevosArticulos.push(nuevoArticulo);
+        console.log("Respuesta del backend:", nuevoArticulo);
 
         const costosAGuardar = costosProduccion
           .filter((costo) => (costosCantidades[costo.id] || 0) > 0)
@@ -489,6 +526,9 @@ export const Cotizacion = () => {
         );
       }
 
+      // En handleGuardar, antes de la solicitud POST
+
+      // Después de obtener nuevoArticulo
       setArticulos((prev) => [...prev, ...nuevosArticulos]);
       resetForm();
       fetchArticulosDelPedido();
@@ -502,7 +542,6 @@ export const Cotizacion = () => {
     setNumeroArticulo("");
     setCantidad(1);
     setSelectedPrenda("");
-    setSelectedColor("");
     setSelectedTalle("");
     setSelectedTela("");
     setSelectedAgregados([]);
@@ -521,10 +560,8 @@ export const Cotizacion = () => {
 
   const handleStartEdit = async (articulo) => {
     try {
-      const colorObj = colores.find((c) => c.id === articulo.color_id);
       setNumeroArticulo(articulo.numero_articulo || "");
       setSelectedPrenda(articulo.nombre || "");
-      setSelectedColor(colorObj ? colorObj.nombre : "");
       setSelectedTalle(articulo.talle || "");
       setSelectedTela(articulo.tela || "");
       const parsedAgregados = parseAgregadosFromBackend(articulo.agregados);
@@ -567,20 +604,14 @@ export const Cotizacion = () => {
         selectedAgregados.length === 0 &&
         !selectedPrenda &&
         !selectedTela &&
-        !selectedColor &&
         !selectedTalle
       ) {
         toast.error("Complete al menos un campo o seleccione un agregado.");
         return;
       }
 
-      const colorObj = selectedColor
-        ? colores.find((c) => c.nombre === selectedColor)
-        : null;
-
       const calculos = calculatePrice(
         selectedPrenda,
-        selectedColor,
         selectedTalle,
         selectedTela,
         selectedAgregados
@@ -593,7 +624,6 @@ export const Cotizacion = () => {
       const articuloActualizado = {
         numero_articulo: numeroArticulo,
         nombre: selectedPrenda,
-        color_id: colorObj ? colorObj.id : null,
         talle: selectedTalle,
         tela: selectedTela,
         agregados: formatAgregadosForBackend(selectedAgregados),
@@ -774,7 +804,7 @@ export const Cotizacion = () => {
   };
 
   return (
-    <div className="p-6 w-3/4 mx-auto">
+    <div className="p-6 mx-auto">
       <ToastContainer position="top-right" autoClose={3000} />
       <div className="mb-6 flex justify-between items-center">
         <div>
@@ -800,13 +830,11 @@ export const Cotizacion = () => {
         <h3 className="text-lg font-semibold mb-4">Agregar Artículo</h3>
         <ArticuloForm
           prendas={prendas}
-          colores={colores}
           talles={talles}
           telas={telas}
           todosLosAgregados={todosLosAgregados}
           numeroArticulo={numeroArticulo}
           selectedPrenda={selectedPrenda}
-          selectedColor={selectedColor}
           selectedTalle={selectedTalle}
           selectedTela={selectedTela}
           selectedAgregados={selectedAgregados}
@@ -816,7 +844,6 @@ export const Cotizacion = () => {
           comentario={comentario}
           setNumeroArticulo={setNumeroArticulo}
           setSelectedPrenda={setSelectedPrenda}
-          setSelectedColor={setSelectedColor}
           setSelectedTalle={setSelectedTalle}
           setSelectedTela={setSelectedTela}
           setSelectedAgregados={setSelectedAgregados}
@@ -836,7 +863,6 @@ export const Cotizacion = () => {
           handleCostoCantidadChange={handleCostoCantidadChange}
           calculatePrice={calculatePrice}
           selectedPrenda={selectedPrenda}
-          selectedColor={selectedColor}
           selectedTalle={selectedTalle}
           selectedTela={selectedTela}
           selectedAgregados={selectedAgregados}
