@@ -173,73 +173,153 @@ export const GenerarCotizacionPdf = async ({
   y += 10;
 
   doc.setFont("helvetica", "normal");
-  formattedArticulos.forEach((articulo) => {
-    const row = isEnviar
-      ? [articulo.nombre, articulo.talle, `$${articulo.precio.toFixed(2)}`]
-      : [
-          articulo.cantidad,
+  if (isEnviar) {
+    formattedArticulos.forEach((articulo) => {
+      const row = isEnviar
+        ? [articulo.nombre, articulo.talle, `$${articulo.precio.toFixed(2)}`]
+        : [
+            articulo.cantidad,
+            articulo.nombre,
+            articulo.talle,
+            "",
+            `$${articulo.precio.toFixed(2)}`,
+          ];
+
+      row.forEach((cell, index) => {
+        const safeText =
+          typeof cell === "string" || typeof cell === "number"
+            ? String(cell)
+            : "";
+        doc.text(safeText, headerXPositions[index], y);
+      });
+
+      let rowHeight = 10;
+
+      if (!isEnviar) {
+        let agregadosHeight = 0;
+        if (articulo.agregados.length > 0) {
+          articulo.agregados.forEach((agregado, index) => {
+            const offsetY = y + index * 5;
+            const splitAgregado = doc.splitTextToSize(agregado, 36);
+            splitAgregado.forEach((line, lineIndex) => {
+              doc.text(line, 125, offsetY + lineIndex * 5);
+            });
+            agregadosHeight = (index + 1 + (splitAgregado.length - 1)) * 5;
+          });
+        }
+        rowHeight = Math.max(10, agregadosHeight);
+
+        if (articulo.tela) {
+          y += rowHeight;
+          doc.text(`Tela: ${articulo.tela}`, 15, y);
+          y += 5;
+          rowHeight += 5;
+        }
+      }
+
+      y += rowHeight;
+
+      if (articulo.comentario) {
+        const splitComentario = doc.splitTextToSize(articulo.comentario, 180);
+        y += 5;
+        doc.text(splitComentario, 15, y);
+        y += splitComentario.length * 5;
+      }
+
+      doc.setDrawColor(0, 0, 0);
+      doc.line(15, y, 195, y);
+      y += 5;
+
+      if (y > 250) {
+        doc.addPage();
+        y = 20;
+      }
+    });
+  } else {
+    articulos.forEach((articulo) => {
+      const basePrice = parseFloat(articulo.precio) || 0;
+      const ganancia = parseFloat(articulo.ganancia) || 0;
+      const precioConGanancia = basePrice * (1 + ganancia / 100);
+      const cantidad = parseInt(articulo.cantidad) || 1;
+      const talles = getTallesInRange(articulo.talle);
+
+      talles.forEach((talle) => {
+        const row = [
+          cantidad,
           articulo.nombre,
-          articulo.talle,
+          talle,
           "",
-          `$${articulo.precio.toFixed(2)}`,
+          `$${precioConGanancia.toFixed(2)}`,
         ];
 
-    row.forEach((cell, index) => {
-      const safeText =
-        typeof cell === "string" || typeof cell === "number"
-          ? String(cell)
-          : "";
-      doc.text(safeText, headerXPositions[index], y);
-    });
-
-    let rowHeight = 10;
-
-    if (!isEnviar) {
-      let agregadosHeight = 0;
-      if (articulo.agregados.length > 0) {
-        articulo.agregados.forEach((agregado, index) => {
-          const offsetY = y + index * 5;
-          const splitAgregado = doc.splitTextToSize(agregado, 36);
-          splitAgregado.forEach((line, lineIndex) => {
-            doc.text(line, 125, offsetY + lineIndex * 5);
-          });
-          agregadosHeight = (index + 1 + (splitAgregado.length - 1)) * 5;
+        row.forEach((cell, index) => {
+          const safeText =
+            typeof cell === "string" || typeof cell === "number"
+              ? String(cell)
+              : "";
+          doc.text(safeText, headerXPositions[index], y);
         });
-      }
-      rowHeight = Math.max(10, agregadosHeight);
 
-      if (articulo.tela) {
+        let rowHeight = 10;
+
+        let agregadosHeight = 0;
+        if (articulo.agregados && articulo.agregados.length > 0) {
+          articulo.agregados.forEach((agregado, index) => {
+            const offsetY = y + index * 5;
+            const splitAgregado = doc.splitTextToSize(agregado, 36);
+            splitAgregado.forEach((line, lineIndex) => {
+              doc.text(line, 125, offsetY + lineIndex * 5);
+            });
+            agregadosHeight = (index + 1 + (splitAgregado.length - 1)) * 5;
+          });
+        }
+        rowHeight = Math.max(10, agregadosHeight);
+
+        if (articulo.tela) {
+          y += rowHeight;
+          doc.text(`Tela: ${articulo.tela}`, 15, y);
+          y += 5;
+          rowHeight += 5;
+        }
+
         y += rowHeight;
-        doc.text(`Tela: ${articulo.tela}`, 15, y);
+
+        if (articulo.comentario) {
+          const splitComentario = doc.splitTextToSize(articulo.comentario, 180);
+          y += 5;
+          doc.text(splitComentario, 15, y);
+          y += splitComentario.length * 5;
+        }
+
+        doc.setDrawColor(0, 0, 0);
+        doc.line(15, y, 195, y);
         y += 5;
-        rowHeight += 5;
-      }
-    }
 
-    y += rowHeight;
-
-    if (articulo.comentario) {
-      const splitComentario = doc.splitTextToSize(articulo.comentario, 180);
-      y += 5;
-      doc.text(splitComentario, 15, y);
-      y += splitComentario.length * 5;
-    }
-
-    doc.setDrawColor(0, 0, 0);
-    doc.line(15, y, 195, y);
-    y += 5;
-
-    if (y > 250) {
-      doc.addPage();
-      y = 20;
-    }
-  });
+        if (y > 250) {
+          doc.addPage();
+          y = 20;
+        }
+      });
+    });
+  }
 
   doc.setFont("helvetica", "bold");
-  const total = formattedArticulos
-    .reduce((sum, articulo) => sum + articulo.precio * articulo.cantidad, 0)
-    .toFixed(2)
-    .replace(".", ",");
+  const total = isEnviar
+    ? formattedArticulos
+        .reduce((sum, articulo) => sum + articulo.precio, 0)
+        .toFixed(2)
+        .replace(".", ",")
+    : articulos
+        .reduce(
+          (sum, articulo) =>
+            sum +
+            parseFloat(articulo.precio) *
+              (parseInt(articulo.cantidad) || 1) *
+              getTallesInRange(articulo.talle).length,
+          0
+        )
+        .toFixed(2)
+        .replace(".", ",");
 
   doc.text(`Total: $${total}`, 150, y + 10);
 
