@@ -1,10 +1,123 @@
 import jsPDF from "jspdf";
 import logo from "../../public/faviconsolsports.png";
 
+const talleFactor = {
+  2: 0.4,
+  4: 0.45,
+  6: 0.5,
+  8: 0.55,
+  10: 0.6,
+  12: 0.65,
+  14: 0.7,
+  XS: 0.7,
+  S: 0.7,
+  M: 0.75,
+  L: 0.8,
+  XL: 0.85,
+  "2XL": 1.03,
+  "3XL": 1.15,
+  "4XL": 1.2,
+};
+
+const getTalleRange = (talle) => {
+  const talleRanges = {
+    "2 a 8": ["2", "4", "6", "8"],
+    "10 a XS": ["10", "12", "14", "XS"],
+    "S a XL": ["S", "M", "L", "XL"],
+    "2XL a 3XL": ["2XL", "3XL"],
+  };
+  return talleRanges[talle] || [talle];
+};
+
+const getLargestTalle = (talles) => {
+  const talleOrden = [
+    "2",
+    "4",
+    "6",
+    "8",
+    "10",
+    "12",
+    "14",
+    "XS",
+    "S",
+    "M",
+    "L",
+    "XL",
+    "2XL",
+    "3XL",
+    "4XL",
+  ];
+  return talles.reduce((largest, current) => {
+    const currentIdx = talleOrden.indexOf(current);
+    const largestIdx = talleOrden.indexOf(largest);
+    return currentIdx > largestIdx ? current : largest;
+  }, talles[0]);
+};
+
+const calculatePrice = (
+  prenda,
+  talle,
+  tela,
+  agregados,
+  telas,
+  prendas,
+  costosProduccion,
+  costosCantidades,
+  ganancia,
+  cantidad
+) => {
+  let costoUnitario = 0;
+  let talleMultiplier = talleFactor[talle] || 0.7;
+
+  if (tela && prenda) {
+    const telaObj = telas.find((t) => t.nombre === tela);
+    const prendaObj = prendas.find((p) => p.nombre === prenda);
+    const basePrice = telaObj ? telaObj.precio : 0;
+    const consumoPrenda = prendaObj ? prendaObj.consumo : 0;
+
+    const consumoTotal = consumoPrenda;
+    costoUnitario += basePrice * consumoTotal * talleMultiplier;
+  }
+
+  const agregadoPrices = agregados.reduce((sum, agregado) => {
+    const agregadoData = todosLosAgregados.find(
+      (a) => a.nombre === agregado.nombre
+    );
+    return sum + (agregadoData ? agregadoData.precio * agregado.count : 0);
+  }, 0);
+
+  const costosTotal = costosProduccion.reduce((sum, costo) => {
+    const cantidadCosto = costosCantidades[costo.id] || 0;
+    return sum + costo.precio * cantidadCosto;
+  }, 0);
+
+  costoUnitario += agregadoPrices + costosTotal;
+  const costoTotal = costoUnitario * cantidad;
+  const precioUnitario = costoUnitario * (1 + ganancia / 100);
+  const talleRange = getTalleRange(talle);
+  const largestTalle = getLargestTalle(talleRange);
+  const largestTalleMultiplier = talleFactor[largestTalle] || 0.7;
+  const precioUnitarioConMayorTalle =
+    (costoUnitario / talleMultiplier) *
+    largestTalleMultiplier *
+    (1 + ganancia / 100);
+
+  return {
+    costoUnitario: Number(costoUnitario.toFixed(2)),
+    costoTotal: Number(costoTotal.toFixed(2)),
+    precioUnitario: Number(precioUnitarioConMayorTalle.toFixed(2)),
+  };
+};
+
 export const GenerarCotizacionPdf = async ({
   pedido,
   articulos,
   isEnviar = false,
+  telas,
+  prendas,
+  costosProduccion,
+  costosCantidades,
+  todosLosAgregados,
 }) => {
   const doc = new jsPDF();
 
@@ -37,39 +150,52 @@ export const GenerarCotizacionPdf = async ({
     return talleRanges[talle] || [talle];
   };
 
-  const getLargestTalle = (talles) => {
-    return talles.reduce((largest, current) => {
-      const currentIdx = talleOrden.indexOf(current);
-      const largestIdx = talleOrden.indexOf(largest);
-      return currentIdx > largestIdx ? current : largest;
-    }, talles[0]);
+  const parseAgregadosFromBackend = (agregadosInput) => {
+    let agregadosString = "";
+    if (Array.isArray(agregadosInput)) {
+      agregadosString = agregadosInput.join(",");
+    } else if (typeof agregadosInput === "string" && agregadosInput.trim()) {
+      agregadosString = agregadosInput;
+    } else {
+      return [];
+    }
+
+    const agregadosArray = agregadosString.includes(",")
+      ? agregadosString.split(",")
+      : [agregadosString];
+
+    return agregadosArray
+      .filter((item) => item.includes(":"))
+      .map((item) => {
+        const [nombre, count] = item.split(":");
+        return {
+          nombre: nombre ? nombre.trim() : "",
+          count: parseInt(count) || 1,
+        };
+      })
+      .filter((ag) => ag.nombre);
   };
 
   const groupedArticulos = articulos.reduce((acc, articulo) => {
-    const agregadosArray = Array.isArray(articulo.agregados)
-      ? articulo.agregados
-      : typeof articulo.agregados === "string" && articulo.agregados
-      ? articulo.agregados.split(/[,;]/).map((item) => item.trim())
-      : [];
-
-    const key = `${articulo.nombre}|${
-      articulo.tela || ""
-    }|${agregadosArray.join(",")}`;
+    const agregadosArray = parseAgregadosFromBackend(articulo.agregados);
+    const key = `${articulo.nombre}|${articulo.tela || ""}|${agregadosArray
+      .map((ag) => `${ag.nombre}:${ag.count}`)
+      .join(",")}`;
     if (!acc[key]) {
       acc[key] = {
         nombre: articulo.nombre,
         tela: articulo.tela || "",
         agregados: agregadosArray,
         talles: [],
-        precios: [],
         cantidades: [],
+        precios: [], // Store individual prices
         ganancia: articulo.ganancia || 0,
         comentario: articulo.comentario || "",
       };
     }
     acc[key].talles.push(articulo.talle);
-    acc[key].precios.push(parseFloat(articulo.precio) || 0);
     acc[key].cantidades.push(parseInt(articulo.cantidad) || 1);
+    acc[key].precios.push(parseFloat(articulo.precio) || 0); // Store precio from articulo
     return acc;
   }, {});
 
@@ -85,23 +211,19 @@ export const GenerarCotizacionPdf = async ({
     );
     const talleDisplay = matchingRange
       ? matchingRange[0]
-      : [...new Set(allTalles)].join(", ");
+      : [...new Set(allTalles)]
+          .sort((a, b) => talleOrden.indexOf(a) - talleOrden.indexOf(b))
+          .join(", ");
 
-    const largestTalle = getLargestTalle(allTalles);
-    const talleIndex = group.talles.findIndex((t) =>
-      getTallesInRange(t).includes(largestTalle)
-    );
-    const basePrice = group.precios[talleIndex] || 0;
-    const ganancia = parseFloat(group.ganancia) || 0;
-    const precioConGanancia = basePrice * (1 + ganancia / 100);
-
-    const totalCantidad = group.cantidades.reduce((sum, qty) => sum + qty, 0);
+    const cantidadTotal = group.cantidades.reduce((sum, qty) => sum + qty, 0);
+    // Sum the precios for this group to get the total price for the grouped articulo
+    const precioTotal = group.precios.reduce((sum, precio) => sum + precio, 0);
 
     return {
       ...group,
       talle: talleDisplay,
-      precio: isNaN(precioConGanancia) ? 0 : precioConGanancia,
-      cantidad: totalCantidad,
+      precioUnitario: isEnviar ? precioTotal : 0, // Use precioTotal for display when isEnviar
+      cantidad: cantidadTotal,
     };
   });
 
@@ -161,9 +283,9 @@ export const GenerarCotizacionPdf = async ({
   doc.setFont("helvetica", "bold");
 
   const headers = isEnviar
-    ? ["Prenda", "Talle", "Precio"]
-    : ["Cantidad", "Prenda", "Talle", "Agregados", "Precio"];
-  const headerXPositions = isEnviar ? [15, 75, 150] : [15, 35, 80, 125, 180];
+    ? ["Prenda", "Talle", "Precio Unitario"]
+    : ["Cantidad", "Prenda", "Talle", "Agregados"];
+  const headerXPositions = isEnviar ? [15, 75, 150] : [15, 35, 80, 125];
 
   headers.forEach((header, index) => {
     doc.text(header, headerXPositions[index], y);
@@ -173,157 +295,81 @@ export const GenerarCotizacionPdf = async ({
   y += 10;
 
   doc.setFont("helvetica", "normal");
-  if (isEnviar) {
-    formattedArticulos.forEach((articulo) => {
-      const row = isEnviar
-        ? [articulo.nombre, articulo.talle, `$${articulo.precio.toFixed(2)}`]
-        : [
-            articulo.cantidad,
-            articulo.nombre,
-            articulo.talle,
-            "",
-            `$${articulo.precio.toFixed(2)}`,
-          ];
-
-      row.forEach((cell, index) => {
-        const safeText =
-          typeof cell === "string" || typeof cell === "number"
-            ? String(cell)
-            : "";
-        doc.text(safeText, headerXPositions[index], y);
-      });
-
-      let rowHeight = 10;
-
-      if (!isEnviar) {
-        let agregadosHeight = 0;
-        if (articulo.agregados.length > 0) {
-          articulo.agregados.forEach((agregado, index) => {
-            const offsetY = y + index * 5;
-            const splitAgregado = doc.splitTextToSize(agregado, 36);
-            splitAgregado.forEach((line, lineIndex) => {
-              doc.text(line, 125, offsetY + lineIndex * 5);
-            });
-            agregadosHeight = (index + 1 + (splitAgregado.length - 1)) * 5;
-          });
-        }
-        rowHeight = Math.max(10, agregadosHeight);
-
-        if (articulo.tela) {
-          y += rowHeight;
-          doc.text(`Tela: ${articulo.tela}`, 15, y);
-          y += 5;
-          rowHeight += 5;
-        }
-      }
-
-      y += rowHeight;
-
-      if (articulo.comentario) {
-        const splitComentario = doc.splitTextToSize(articulo.comentario, 180);
-        y += 5;
-        doc.text(splitComentario, 15, y);
-        y += splitComentario.length * 5;
-      }
-
-      doc.setDrawColor(0, 0, 0);
-      doc.line(15, y, 195, y);
-      y += 5;
-
-      if (y > 250) {
-        doc.addPage();
-        y = 20;
-      }
-    });
-  } else {
-    articulos.forEach((articulo) => {
-      const basePrice = parseFloat(articulo.precio) || 0;
-      const ganancia = parseFloat(articulo.ganancia) || 0;
-      const precioConGanancia = basePrice * (1 + ganancia / 100);
-      const cantidad = parseInt(articulo.cantidad) || 1;
-      const talles = getTallesInRange(articulo.talle);
-
-      talles.forEach((talle) => {
-        const row = [
-          cantidad,
+  formattedArticulos.forEach((articulo) => {
+    const row = isEnviar
+      ? [
           articulo.nombre,
-          talle,
-          "",
-          `$${precioConGanancia.toFixed(2)}`,
-        ];
+          articulo.talle,
+          `$${articulo.precioUnitario.toFixed(2)}`,
+        ]
+      : [articulo.cantidad, articulo.nombre, articulo.talle, ""];
 
-        row.forEach((cell, index) => {
-          const safeText =
-            typeof cell === "string" || typeof cell === "number"
-              ? String(cell)
-              : "";
-          doc.text(safeText, headerXPositions[index], y);
-        });
-
-        let rowHeight = 10;
-
-        let agregadosHeight = 0;
-        if (articulo.agregados && articulo.agregados.length > 0) {
-          articulo.agregados.forEach((agregado, index) => {
-            const offsetY = y + index * 5;
-            const splitAgregado = doc.splitTextToSize(agregado, 36);
-            splitAgregado.forEach((line, lineIndex) => {
-              doc.text(line, 125, offsetY + lineIndex * 5);
-            });
-            agregadosHeight = (index + 1 + (splitAgregado.length - 1)) * 5;
-          });
-        }
-        rowHeight = Math.max(10, agregadosHeight);
-
-        if (articulo.tela) {
-          y += rowHeight;
-          doc.text(`Tela: ${articulo.tela}`, 15, y);
-          y += 5;
-          rowHeight += 5;
-        }
-
-        y += rowHeight;
-
-        if (articulo.comentario) {
-          const splitComentario = doc.splitTextToSize(articulo.comentario, 180);
-          y += 5;
-          doc.text(splitComentario, 15, y);
-          y += splitComentario.length * 5;
-        }
-
-        doc.setDrawColor(0, 0, 0);
-        doc.line(15, y, 195, y);
-        y += 5;
-
-        if (y > 250) {
-          doc.addPage();
-          y = 20;
-        }
-      });
+    row.forEach((cell, index) => {
+      const safeText =
+        typeof cell === "string" || typeof cell === "number"
+          ? String(cell)
+          : "";
+      doc.text(safeText, headerXPositions[index], y);
     });
+
+    let rowHeight = 10;
+
+    let agregadosHeight = 0;
+    if (articulo.agregados.length > 0) {
+      articulo.agregados.forEach((agregado, index) => {
+        const offsetY = y + index * 5;
+        const splitAgregado = doc.splitTextToSize(
+          `${agregado.nombre} (${agregado.count})`,
+          36
+        );
+        splitAgregado.forEach((line, lineIndex) => {
+          doc.text(line, 125, offsetY + lineIndex * 5);
+        });
+        agregadosHeight = (index + 1 + (splitAgregado.length - 1)) * 5;
+      });
+    }
+    rowHeight = Math.max(10, agregadosHeight);
+
+    if (articulo.tela) {
+      y += rowHeight;
+      doc.text(`Tela: ${articulo.tela}`, 15, y);
+      y += 5;
+      rowHeight += 5;
+    }
+
+    y += rowHeight;
+
+    if (articulo.comentario) {
+      const splitComentario = doc.splitTextToSize(articulo.comentario, 180);
+      y += 5;
+      doc.text(splitComentario, 15, y);
+      y += splitComentario.length * 5;
+    }
+
+    doc.setDrawColor(0, 0, 0);
+    doc.line(15, y, 195, y);
+    y += 5;
+
+    if (y > 250) {
+      doc.addPage();
+      y = 20;
+    }
+  });
+
+  // Solo mostrar el total si isEnviar es true
+  if (isEnviar) {
+    doc.setFont("helvetica", "bold");
+    const total = formattedArticulos
+      .reduce((sum, articulo) => sum + articulo.precioUnitario, 0)
+      .toFixed(2)
+      .replace(".", ",");
+
+    doc.text(`Total: $${total}`, 150, y + 10);
+    y += 30;
+  } else {
+    y += 10; // Espacio adicional sin total
   }
 
-  doc.setFont("helvetica", "bold");
-  const total = isEnviar
-    ? formattedArticulos
-        .reduce((sum, articulo) => sum + articulo.precio, 0)
-        .toFixed(2)
-        .replace(".", ",")
-    : articulos
-        .reduce(
-          (sum, articulo) =>
-            sum +
-            parseFloat(articulo.precio) *
-              (parseInt(articulo.cantidad) || 1) *
-              getTallesInRange(articulo.talle).length,
-          0
-        )
-        .toFixed(2)
-        .replace(".", ",");
-
-  doc.text(`Total: $${total}`, 150, y + 10);
-
-  y += 30;
   doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
   doc.text("Plazo de entrega: a convenir", 15, y);
@@ -350,6 +396,11 @@ export const EnviarCotizacionPorEmail = async ({
   API_URL,
   setIsSending,
   setSendStatus,
+  telas,
+  prendas,
+  costosProduccion,
+  costosCantidades,
+  todosLosAgregados,
 }) => {
   if (!email) {
     alert("Por favor ingrese un email válido");
@@ -364,6 +415,11 @@ export const EnviarCotizacionPorEmail = async ({
       pedido,
       articulos,
       isEnviar: true,
+      telas,
+      prendas,
+      costosProduccion,
+      costosCantidades,
+      todosLosAgregados,
     });
     const pdfBlob = doc.output("blob");
     const reader = new FileReader();

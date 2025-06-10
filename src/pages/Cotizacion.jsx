@@ -222,6 +222,11 @@ export const Cotizacion = () => {
         API_URL,
         setIsSending,
         setSendStatus,
+        telas,
+        prendas,
+        costosProduccion,
+        costosCantidades,
+        todosLosAgregados,
       });
       toast.success("Cotización enviada correctamente.");
     } catch (error) {
@@ -235,7 +240,15 @@ export const Cotizacion = () => {
       return;
     }
     try {
-      const doc = await GenerarCotizacionPdf({ pedido, articulos });
+      const doc = await GenerarCotizacionPdf({
+        pedido,
+        articulos,
+        telas,
+        prendas,
+        costosProduccion,
+        costosCantidades,
+        todosLosAgregados,
+      });
       doc.save(`cotizacion_pedido_${pedido.numero_pedido}.pdf`);
       toast.success("PDF generado correctamente.");
     } catch (error) {
@@ -285,7 +298,7 @@ export const Cotizacion = () => {
     if (agregado && agregado.count > 1) {
       setSelectedAgregados((prev) =>
         prev.map((ag) =>
-          ag.nombre === nombre ? { ...ag, count: ag.count - 1 } : ag
+          ag.nombre === nombre ? { ...agregado, count: agregado.count - 1 } : ag
         )
       );
     } else {
@@ -360,14 +373,13 @@ export const Cotizacion = () => {
 
   const calculatePrice = (prenda, talle, tela, agregados) => {
     let costoUnitario = 0;
-    let talleMultiplier = 0.7;
+    let talleMultiplier = talleFactor[talle] || 0.7;
     if (tela && prenda) {
       const telaObj = telas.find((t) => t.nombre === tela);
       const prendaObj = prendas.find((p) => p.nombre === prenda);
       const basePrice = telaObj ? telaObj.precio : 0;
       const consumoPrenda = prendaObj ? prendaObj.consumo : 0;
 
-      talleMultiplier = talleFactor[talle] || 0.7;
       const consumoTotal = consumoPrenda;
       costoUnitario += basePrice * consumoTotal * talleMultiplier;
     }
@@ -596,7 +608,7 @@ export const Cotizacion = () => {
       ) || {
         costoUnitario: 0,
         costoTotal: 0,
-        precioUnitario: 0,
+        precioUnitario: precio
       };
 
       const articuloActualizado = {
@@ -605,11 +617,11 @@ export const Cotizacion = () => {
         talle: selectedTalle,
         tela: selectedTela,
         agregados: formatAgregadosForBackend(selectedAgregados),
-        cantidad: Number(cantidad),
-        costo: Number(calculos.costoUnitario),
-        precio: Number(calculos.precioUnitario),
-        ganancia: Number(ganancia),
-        comentario: comentario,
+        cantidad: Number(cant),
+        costo: Number(calc.costoUnitario),
+        precio: Number(calc.preciosUnitario),
+        ganancia: Number(gancia),
+        comentario: coment,
         prioridad: prioridad ? Number(prioridad) : null,
         pedidos_id: pedidoId,
       };
@@ -640,11 +652,12 @@ export const Cotizacion = () => {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
       );
-      if (!existingCostsResponse.ok)
+      if (!existingCostsResponse.ok) {
         throw new Error("Error al cargar costos existentes");
-      const existingCosts = await existingCostsResponse.json();
+      }
+        const existingCosts = await existingCostsResponse.json();
 
-      const costosConCantidades = costosProduccion
+        const costosConCantidades = costosProduccion
         .filter((costo) => (costosCantidades[costo.id] || 0) >= 0)
         .map((costo) => ({
           articulo_id: editingArticulo.id,
@@ -914,7 +927,7 @@ export const Cotizacion = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="block w-56 rounded-md border-gray-300 shadow-sm px-4 py-3 border"
-              placeholder="Ingrese el email del cliente"
+              placeholder="Ingrese el email del cliente correo"
             />
           </div>
           <button
