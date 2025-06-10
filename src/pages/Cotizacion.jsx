@@ -298,7 +298,7 @@ export const Cotizacion = () => {
     if (agregado && agregado.count > 1) {
       setSelectedAgregados((prev) =>
         prev.map((ag) =>
-          ag.nombre === nombre ? { ...agregado, count: agregado.count - 1 } : ag
+          ag.nombre === nombre ? { ...ag, count: ag.count - 1 } : ag
         )
       );
     } else {
@@ -374,38 +374,47 @@ export const Cotizacion = () => {
   const calculatePrice = (prenda, talle, tela, agregados) => {
     let costoUnitario = 0;
     let talleMultiplier = talleFactor[talle] || 0.7;
+
     if (tela && prenda) {
       const telaObj = telas.find((t) => t.nombre === tela);
       const prendaObj = prendas.find((p) => p.nombre === prenda);
       const basePrice = telaObj ? telaObj.precio : 0;
       const consumoPrenda = prendaObj ? prendaObj.consumo : 0;
-
-      const consumoTotal = consumoPrenda;
-      costoUnitario += basePrice * consumoTotal * talleMultiplier;
+      const consumoAjustado = talleMultiplier * consumoPrenda;
+      const costoTela = basePrice * consumoAjustado;
+      costoUnitario += costoTela;
     }
 
     const agregadoPrices = agregados.reduce((sum, agregado) => {
       const agregadoData = todosLosAgregados.find(
         (a) => a.nombre === agregado.nombre
       );
-      return sum + (agregadoData ? agregadoData.precio * agregado.count : 0);
+      const agregadoPrice = agregadoData
+        ? agregadoData.precio * agregado.count
+        : 0;
+
+      return sum + agregadoPrice;
     }, 0);
+
+    costoUnitario += agregadoPrices;
 
     const costosTotal = costosProduccion.reduce((sum, costo) => {
-      const cantidad = costosCantidades[costo.id] || 0;
-      return sum + costo.precio * cantidad;
+      const cantidadCosto = costosCantidades[costo.id] || 0;
+      const costoTotal = costo.precio * cantidadCosto;
+      return sum + costoTotal;
     }, 0);
-
-    costoUnitario += agregadoPrices + costosTotal;
+    costoUnitario += costosTotal;
     const costoTotal = costoUnitario * cantidad;
     const precioUnitario = costoUnitario * (1 + ganancia / 100);
     const talleRange = getTalleRange(talle);
     const largestTalle = getLargestTalle(talleRange);
     const largestTalleMultiplier = talleFactor[largestTalle] || 0.7;
+
     const precioUnitarioConMayorTalle =
       (costoUnitario / talleMultiplier) *
       largestTalleMultiplier *
       (1 + ganancia / 100);
+
     return {
       costoUnitario: Number(costoUnitario.toFixed(2)),
       costoTotal: Number(costoTotal.toFixed(2)),
@@ -608,7 +617,7 @@ export const Cotizacion = () => {
       ) || {
         costoUnitario: 0,
         costoTotal: 0,
-        precioUnitario: precio
+        precioUnitario: 0,
       };
 
       const articuloActualizado = {
@@ -617,11 +626,11 @@ export const Cotizacion = () => {
         talle: selectedTalle,
         tela: selectedTela,
         agregados: formatAgregadosForBackend(selectedAgregados),
-        cantidad: Number(cant),
-        costo: Number(calc.costoUnitario),
-        precio: Number(calc.preciosUnitario),
-        ganancia: Number(gancia),
-        comentario: coment,
+        cantidad: Number(cantidad),
+        costo: Number(calculos.costoUnitario),
+        precio: Number(calculos.precioUnitario),
+        ganancia: Number(ganancia),
+        comentario: comentario,
         prioridad: prioridad ? Number(prioridad) : null,
         pedidos_id: pedidoId,
       };
@@ -655,9 +664,9 @@ export const Cotizacion = () => {
       if (!existingCostsResponse.ok) {
         throw new Error("Error al cargar costos existentes");
       }
-        const existingCosts = await existingCostsResponse.json();
+      const existingCosts = await existingCostsResponse.json();
 
-        const costosConCantidades = costosProduccion
+      const costosConCantidades = costosProduccion
         .filter((costo) => (costosCantidades[costo.id] || 0) >= 0)
         .map((costo) => ({
           articulo_id: editingArticulo.id,
@@ -900,7 +909,7 @@ export const Cotizacion = () => {
         costosCantidades={costosCantidades}
         calculatePrice={calculatePrice}
       />
-      
+
       <div className="mt-4 flex justify-between items-center space-x-4">
         <button
           onClick={descargarCotizacionPdf}
@@ -926,7 +935,7 @@ export const Cotizacion = () => {
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="block w-56 rounded-md border-gray-300 shadow-sm px-4 py-3 border"
+              className="block w-56 rounded-md border-gray-300 shadow-sm px-4 py-2 border"
               placeholder="Ingrese el email del cliente correo"
             />
           </div>
