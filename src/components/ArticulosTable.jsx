@@ -99,14 +99,17 @@ const ArticulosTable = ({
   };
 
   const calculateCostUnitario = (articulo) => {
-    if (!articulo.precio || !articulo.ganancia) return 0;
+    if (!articulo.precio || !articulo.ganancia) return articulo.precio || 0;
+    // Si la ganancia es 0, mostrar el precio directamente
+    if (articulo.ganancia === 0) return articulo.precio;
     // Restar la ganancia al precio almacenado en la base de datos
     const gananciaFactor = articulo.ganancia / 100;
     return articulo.precio / (1 + gananciaFactor);
   };
 
   const calculateCostTotal = (articulo) => {
-    return calculateCostUnitario(articulo) * articulo.cantidad;
+    const costUnitario = calculateCostUnitario(articulo);
+    return costUnitario * articulo.cantidad;
   };
 
   const total = articulos.reduce((sum, item) => {
