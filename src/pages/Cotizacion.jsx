@@ -11,7 +11,6 @@ import {
   EnviarCotizacionPorEmail,
 } from "../components/EnviarCotizacionPdf";
 
-// Definir talleFactor como constante fuera de las funciones
 const talleFactor = {
   2: 0.4,
   4: 0.45,
@@ -327,7 +326,7 @@ export const Cotizacion = () => {
   const getTalleRange = (talle) => {
     const talleRanges = {
       "2 a 8": ["2", "4", "6", "8"],
-      "10 a XS": ["10", "XS"],
+      "10 a XS": ["10", "12", "14", "XS"],
       "S a XL": ["S", "M", "L", "XL"],
       "2XL a 3XL": ["2XL", "3XL"],
     };
@@ -361,15 +360,14 @@ export const Cotizacion = () => {
 
   const calculatePrice = (prenda, talle, tela, agregados) => {
     let costoUnitario = 0;
-    let talleMultiplier = 0.7; // Valor por defecto fuera del if
-
+    let talleMultiplier = 0.7;
     if (tela && prenda) {
       const telaObj = telas.find((t) => t.nombre === tela);
       const prendaObj = prendas.find((p) => p.nombre === prenda);
       const basePrice = telaObj ? telaObj.precio : 0;
       const consumoPrenda = prendaObj ? prendaObj.consumo : 0;
 
-      talleMultiplier = talleFactor[talle] || 0.7; // Actualizar dentro del if
+      talleMultiplier = talleFactor[talle] || 0.7;
       const consumoTotal = consumoPrenda;
       costoUnitario += basePrice * consumoTotal * talleMultiplier;
     }
@@ -389,8 +387,6 @@ export const Cotizacion = () => {
     costoUnitario += agregadoPrices + costosTotal;
     const costoTotal = costoUnitario * cantidad;
     const precioUnitario = costoUnitario * (1 + ganancia / 100);
-
-    // Si el talle es un rango, devolver el precio del talle más grande
     const talleRange = getTalleRange(talle);
     const largestTalle = getLargestTalle(talleRange);
     const largestTalleMultiplier = talleFactor[largestTalle] || 0.7;
@@ -398,17 +394,6 @@ export const Cotizacion = () => {
       (costoUnitario / talleMultiplier) *
       largestTalleMultiplier *
       (1 + ganancia / 100);
-    // Dentro de calculatePrice, después de los cálculos
-    console.log("Cálculo de precio:", {
-      costoUnitario,
-      costoTotal,
-      precioUnitario,
-      talle,
-      talleMultiplier,
-      telaObj: telas.find((t) => t.nombre === tela),
-      prendaObj: prendas.find((p) => p.nombre === prenda),
-    });
-
     return {
       costoUnitario: Number(costoUnitario.toFixed(2)),
       costoTotal: Number(costoTotal.toFixed(2)),
@@ -432,7 +417,6 @@ export const Cotizacion = () => {
       const nuevosArticulos = [];
 
       for (const talle of tallesToCreate) {
-        // Calcular precio para cada talle individualmente
         const calculos = calculatePrice(
           selectedPrenda,
           talle,
@@ -444,7 +428,6 @@ export const Cotizacion = () => {
           precioUnitario: 0,
         };
 
-        // Usar el precioUnitario del talle más grande para todos
         const calculosMayorTalle = calculatePrice(
           selectedPrenda,
           getLargestTalle(tallesToCreate),
@@ -463,15 +446,14 @@ export const Cotizacion = () => {
           tela: selectedTela,
           agregados: formatAgregadosForBackend(selectedAgregados),
           cantidad: Number(cantidad),
-          costo: Number(calculos.costoUnitario), // Costo específico del talle
-          precio: Number(calculosMayorTalle.precioUnitario), // Precio del talle más grande
+          costo: Number(calculos.costoUnitario),
+          precio: Number(calculosMayorTalle.precioUnitario),
           ganancia: Number(ganancia),
           comentario: comentario,
           prioridad: prioridad ? Number(prioridad) : null,
           pedidos_id: pedidoId,
           ruta: "",
         };
-        console.log("Datos enviados al backend:", articuloData);
 
         const articuloResponse = await fetch(`${API_URL}/articulos`, {
           method: "POST",
@@ -490,7 +472,6 @@ export const Cotizacion = () => {
 
         const nuevoArticulo = await articuloResponse.json();
         nuevosArticulos.push(nuevoArticulo);
-        console.log("Respuesta del backend:", nuevoArticulo);
 
         const costosAGuardar = costosProduccion
           .filter((costo) => (costosCantidades[costo.id] || 0) > 0)
@@ -526,9 +507,6 @@ export const Cotizacion = () => {
         );
       }
 
-      // En handleGuardar, antes de la solicitud POST
-
-      // Después de obtener nuevoArticulo
       setArticulos((prev) => [...prev, ...nuevosArticulos]);
       resetForm();
       fetchArticulosDelPedido();
