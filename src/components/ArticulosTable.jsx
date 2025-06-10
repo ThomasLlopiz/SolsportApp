@@ -8,9 +8,9 @@ const ArticulosTable = ({
   handleRemoveArticulo,
   formatCurrency,
   onPrioridadChange,
-  costosProduccion, // Añade costosProduccion como prop
-  costosCantidades, // Añade costosCantidades como prop
-  calculatePrice, // Añade calculatePrice como prop
+  costosProduccion,
+  costosCantidades,
+  calculatePrice,
 }) => {
   const [prioridades, setPrioridades] = useState({});
   const API_URL = import.meta.env.VITE_API_URL;
@@ -77,8 +77,6 @@ const ArticulosTable = ({
 
   const getAdjustedPrice = (articulo) => {
     if (!articulo.cantidad || !articulo.ganancia) return 0;
-
-    // Usar calculatePrice para consistencia con CostosProduccion
     const parsedAgregados = parseAgregadosFromBackend(articulo.agregados);
     const calculos = calculatePrice(
       articulo.nombre,
@@ -87,11 +85,28 @@ const ArticulosTable = ({
       parsedAgregados
     );
 
+    // Si articulo.precio existe, usarlo directamente con la ganancia aplicada
+    if (articulo.precio) {
+      return articulo.precio;
+    }
+
+    // Si no hay precio, usar el cálculo ajustado con el talle más grande
     const currentMultiplier = talleFactor[articulo.talle] || 0.7;
     const largestMultiplier = getLargestTalleMultiplier(articulo.talle);
     const adjustedPrice =
       (calculos.costoUnitario / currentMultiplier) * largestMultiplier;
     return adjustedPrice * (1 + articulo.ganancia / 100);
+  };
+
+  const calculateCostUnitario = (articulo) => {
+    if (!articulo.precio || !articulo.ganancia) return 0;
+    // Restar la ganancia al precio almacenado en la base de datos
+    const gananciaFactor = articulo.ganancia / 100;
+    return articulo.precio / (1 + gananciaFactor);
+  };
+
+  const calculateCostTotal = (articulo) => {
+    return calculateCostUnitario(articulo) * articulo.cantidad;
   };
 
   const total = articulos.reduce((sum, item) => {
@@ -219,21 +234,25 @@ const ArticulosTable = ({
                         : articulo.agregados}
                     </td>
                     <td className="py-2 px-4">
-                      {formatCurrency(calculos.costoUnitario)} $
+                      {formatCurrency(calculateCostUnitario(articulo))} $
                     </td>
                     <td className="py-2 px-4">
-                      {formatCurrency(calculos.costoTotal)} $
+                      {formatCurrency(calculateCostTotal(articulo))} $
                     </td>
                     <td className="py-2 px-4">
                       {articulo.ganancia ? `${articulo.ganancia}%` : "0%"}
                     </td>
                     <td className="py-2 px-4">
-                      {formatCurrency(getAdjustedPrice(articulo))} $
+                      {formatCurrency(
+                        articulo.precio || getAdjustedPrice(articulo)
+                      )}{" "}
+                      $
                     </td>
                     <td className="py-2 px-4">
                       {formatCurrency(
-                        getAdjustedPrice(articulo) * articulo.cantidad
-                      )}{" "}
+                        (articulo.precio || getAdjustedPrice(articulo)) *
+                          articulo.cantidad
+                      )}
                       $
                     </td>
                     <td className="py-2 px-4">
