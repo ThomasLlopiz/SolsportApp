@@ -883,7 +883,11 @@ export const Cotizacion = () => {
         handleRemoveArticulo={handleRemoveArticulo}
         formatCurrency={formatCurrency}
         onPrioridadChange={fetchArticulosDelPedido}
+        costosProduccion={costosProduccion}
+        costosCantidades={costosCantidades}
+        calculatePrice={calculatePrice}
       />
+      
       <div className="mt-4 flex justify-between items-center space-x-4">
         <button
           onClick={descargarCotizacionPdf}

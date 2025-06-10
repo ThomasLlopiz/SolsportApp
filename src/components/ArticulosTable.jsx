@@ -8,11 +8,13 @@ const ArticulosTable = ({
   handleRemoveArticulo,
   formatCurrency,
   onPrioridadChange,
+  costosProduccion, // Añade costosProduccion como prop
+  costosCantidades, // Añade costosCantidades como prop
+  calculatePrice, // Añade calculatePrice como prop
 }) => {
   const [prioridades, setPrioridades] = useState({});
   const API_URL = import.meta.env.VITE_API_URL;
 
-  // Definir talleFactor localmente (similar al usado en Cotizacion)
   const talleFactor = {
     2: 0.4,
     4: 0.45,
@@ -31,7 +33,6 @@ const ArticulosTable = ({
     "4XL": 1.2,
   };
 
-  // Función para obtener el multiplicador del talle más grande
   const getLargestTalleMultiplier = (talle) => {
     const talleRange = {
       "2 a 8": ["2", "4", "6", "8"],
@@ -48,34 +49,49 @@ const ArticulosTable = ({
     return talleFactor[largestTalle] || 0.7;
   };
 
-  // Recalcular costoUnitario basado en los datos del artículo
-  const calculateLocalCost = (articulo) => {
-    let costoUnitario = 0;
-    const talleMultiplier = talleFactor[articulo.talle] || 0.7;
-
-    if (articulo.tela && articulo.nombre) {
-      // Simulamos valores de tela y prenda basados en los logs (ajústalos según tu data real)
-      const telaPrecio = 6200; // Valor de telaObj.precio del log
-      const consumoPrenda = 1.01; // Valor de prendaObj.consumo del log
-      costoUnitario += telaPrecio * consumoPrenda * talleMultiplier;
+  const parseAgregadosFromBackend = (agregadosInput) => {
+    let agregadosString = "";
+    if (Array.isArray(agregadosInput)) {
+      agregadosString = agregadosInput.join(",");
+    } else if (typeof agregadosInput === "string" && agregadosInput.trim()) {
+      agregadosString = agregadosInput;
+    } else {
+      return [];
     }
 
-    // Agregados (simplificado, asumimos que no hay datos de agregados en los logs)
-    // Si tienes datos de agregados, intégralos aquí
-    const agregadoPrices = 0; // Ajusta si hay agregados con precios
+    const agregadosArray = agregadosString.includes(",")
+      ? agregadosString.split(",")
+      : [agregadosString];
 
-    costoUnitario += agregadoPrices;
-    return Number(costoUnitario.toFixed(2));
+    return agregadosArray
+      .filter((item) => item.includes(":"))
+      .map((item) => {
+        const [nombre, count] = item.split(":");
+        return {
+          nombre: nombre ? nombre.trim() : "",
+          count: parseInt(count) || 1,
+        };
+      })
+      .filter((ag) => ag.nombre);
   };
 
-  // Calcular precio ajustado con el talle más grande
   const getAdjustedPrice = (articulo) => {
-    if (!articulo.precio || !articulo.cantidad || !articulo.ganancia) return 0;
-    const basePrice = articulo.precio || calculateLocalCost(articulo); // Usa precio si existe, sino calcula
+    if (!articulo.cantidad || !articulo.ganancia) return 0;
+
+    // Usar calculatePrice para consistencia con CostosProduccion
+    const parsedAgregados = parseAgregadosFromBackend(articulo.agregados);
+    const calculos = calculatePrice(
+      articulo.nombre,
+      articulo.talle,
+      articulo.tela,
+      parsedAgregados
+    );
+
     const currentMultiplier = talleFactor[articulo.talle] || 0.7;
     const largestMultiplier = getLargestTalleMultiplier(articulo.talle);
-    const adjustedPrice = (basePrice / currentMultiplier) * largestMultiplier;
-    return adjustedPrice * (1 + (articulo.ganancia || 0) / 100);
+    const adjustedPrice =
+      (calculos.costoUnitario / currentMultiplier) * largestMultiplier;
+    return adjustedPrice * (1 + articulo.ganancia / 100);
   };
 
   const total = articulos.reduce((sum, item) => {
@@ -176,96 +192,103 @@ const ArticulosTable = ({
           </thead>
           <tbody>
             {articulosOrdenados.length > 0 ? (
-              articulosOrdenados.map((articulo) => (
-                <tr
-                  key={articulo.id}
-                  className="border-t border-gray-200 hover:bg-gray-50"
-                >
-                  <td className="py-2 px-4">{articulo.numero_articulo}</td>
-                  <td className="py-2 px-4">{articulo.nombre}</td>
-                  <td className="py-2 px-4">{articulo.talle}</td>
-                  <td className="py-2 px-4">{articulo.tela}</td>
-                  <td className="py-2 px-4">{articulo.cantidad}</td>
-                  <td className="py-2 px-4">
-                    {Array.isArray(articulo.agregados)
-                      ? articulo.agregados.join(", ")
-                      : articulo.agregados}
-                  </td>
-                  <td className="py-2 px-4">
-                    {articulo.costo
-                      ? formatCurrency(articulo.costo)
-                      : formatCurrency(calculateLocalCost(articulo))}{" "}
-                    $
-                  </td>
-                  <td className="py-2 px-4">
-                    {articulo.costo
-                      ? formatCurrency(articulo.costo * articulo.cantidad)
-                      : formatCurrency(
-                          calculateLocalCost(articulo) * articulo.cantidad
-                        )}{" "}
-                    $
-                  </td>
-                  <td className="py-2 px-4">
-                    {articulo.ganancia ? `${articulo.ganancia}%` : "0%"}
-                  </td>
-                  <td className="py-2 px-4">
-                    {formatCurrency(getAdjustedPrice(articulo))} $
-                  </td>
-                  <td className="py-2 px-4">
-                    {formatCurrency(
-                      getAdjustedPrice(articulo) * articulo.cantidad
-                    )}{" "}
-                    $
-                  </td>
-                  <td className="py-2 px-4">
-                    <select
-                      value={
-                        prioridades[articulo.id] ?? articulo.prioridad ?? ""
-                      }
-                      onChange={(e) =>
-                        handlePrioridadChange(articulo.id, e.target.value)
-                      }
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                    >
-                      <option value="">Sin prioridad</option>
-                      {[...Array(20)].map((_, i) => (
-                        <option key={i + 1} value={i + 1}>
-                          {i + 1}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="py-2 px-4">
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={articulo.confirmado || false}
-                        onChange={(e) =>
-                          handleConfirmadoChange(articulo.id, e.target.checked)
+              articulosOrdenados.map((articulo) => {
+                const parsedAgregados = parseAgregadosFromBackend(
+                  articulo.agregados
+                );
+                const calculos = calculatePrice(
+                  articulo.nombre,
+                  articulo.talle,
+                  articulo.tela,
+                  parsedAgregados
+                );
+
+                return (
+                  <tr
+                    key={articulo.id}
+                    className="border-t border-gray-200 hover:bg-gray-50"
+                  >
+                    <td className="py-2 px-4">{articulo.numero_articulo}</td>
+                    <td className="py-2 px-4">{articulo.nombre}</td>
+                    <td className="py-2 px-4">{articulo.talle}</td>
+                    <td className="py-2 px-4">{articulo.tela}</td>
+                    <td className="py-2 px-4">{articulo.cantidad}</td>
+                    <td className="py-2 px-4">
+                      {Array.isArray(articulo.agregados)
+                        ? articulo.agregados.join(", ")
+                        : articulo.agregados}
+                    </td>
+                    <td className="py-2 px-4">
+                      {formatCurrency(calculos.costoUnitario)} $
+                    </td>
+                    <td className="py-2 px-4">
+                      {formatCurrency(calculos.costoTotal)} $
+                    </td>
+                    <td className="py-2 px-4">
+                      {articulo.ganancia ? `${articulo.ganancia}%` : "0%"}
+                    </td>
+                    <td className="py-2 px-4">
+                      {formatCurrency(getAdjustedPrice(articulo))} $
+                    </td>
+                    <td className="py-2 px-4">
+                      {formatCurrency(
+                        getAdjustedPrice(articulo) * articulo.cantidad
+                      )}{" "}
+                      $
+                    </td>
+                    <td className="py-2 px-4">
+                      <select
+                        value={
+                          prioridades[articulo.id] ?? articulo.prioridad ?? ""
                         }
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                  </td>
-                  <td className="py-2 px-4 text-center flex justify-center space-x-2">
-                    <button
-                      onClick={() => handleStartEdit(articulo)}
-                      className="text-blue-500 hover:text-blue-700"
-                      title="Editar"
-                    >
-                      <PencilIcon className="h-5 w-5" />
-                    </button>
-                    <button
-                      onClick={() => handleRemoveArticulo(articulo.id)}
-                      className="text-red-500 hover:text-red-700"
-                      title="Eliminar"
-                    >
-                      <TrashIcon className="h-5 w-5" />
-                    </button>
-                  </td>
-                </tr>
-              ))
+                        onChange={(e) =>
+                          handlePrioridadChange(articulo.id, e.target.value)
+                        }
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                      >
+                        <option value="">Sin prioridad</option>
+                        {[...Array(20)].map((_, i) => (
+                          <option key={i + 1} value={i + 1}>
+                            {i + 1}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="py-2 px-4">
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={articulo.confirmado || false}
+                          onChange={(e) =>
+                            handleConfirmadoChange(
+                              articulo.id,
+                              e.target.checked
+                            )
+                          }
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      </label>
+                    </td>
+                    <td className="py-2 px-4 text-center flex justify-center space-x-2">
+                      <button
+                        onClick={() => handleStartEdit(articulo)}
+                        className="text-blue-500 hover:text-blue-700"
+                        title="Editar"
+                      >
+                        <PencilIcon className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={() => handleRemoveArticulo(articulo.id)}
+                        className="text-red-500 hover:text-red-700"
+                        title="Eliminar"
+                      >
+                        <TrashIcon className="h-5 w-5" />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
             ) : (
               <tr>
                 <td colSpan="14" className="py-4 text-center text-gray-500">
