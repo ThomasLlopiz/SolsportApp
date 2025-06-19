@@ -260,7 +260,7 @@ export const GenerarCotizacionPdf = async ({
     15
   );
   doc.setFont("helvetica", "normal");
-  doc.text("Correo Electrónico: Solsportindumentaria@gmail.com", 60, 22);
+  doc.text("Correo Electrónico: atencionalcliente@sol-sport.com.ar", 60, 22);
   doc.text("Dirección: Bv. 25 de Mayo 850", 60, 29);
   doc.text("Horarios de atención: Lunes a Viernes de 7 a 16 hrs.", 60, 36);
   doc.text(`CUIT: 30-66915469-7`, 60, 43);
